@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FIELD LAB — vista previa</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #08070b;
+      --panel: #100e15;
+      --panel-2: #15121c;
+      --panel-3: #1b1724;
+      --line: #2a2434;
+      --line-soft: #201c29;
+      --text: #f2eef8;
+      --muted: #a49bad;
+      --faint: #6d6478;
+      --accent: #c4a9ff;
+      --accent-strong: #a787ec;
+      --accent-ink: #20152e;
+      --good: #a9dfbd;
+      --warn: #f4c585;
+      --bad: #ee9d9d;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .42);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; background: var(--canvas); color: var(--text); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, input, textarea, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    [hidden] { display: none !important; }
+    .icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; flex: 0 0 auto; }
+    .icon.small { width: 14px; height: 14px; }
+    .icon.large { width: 20px; height: 20px; }
+    .frame { width: min(1440px, calc(100vw - 32px)); height: min(900px, calc(100vh - 32px)); min-height: 720px; margin: 16px auto; display: grid; grid-template-columns: 236px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow); }
+    .sidebar { display: flex; flex-direction: column; min-width: 0; padding: 22px 14px 16px; border-right: 1px solid var(--line); background: #0d0b11; }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 1px 10px 26px; }
+    .brand-mark { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid #695a80; border-radius: 7px; color: var(--accent); background: #1b1525; }
+    .brand-mark .icon { width: 15px; height: 15px; }
+    .brand-name { font-size: 14px; font-weight: 720; letter-spacing: .14em; }
+    .brand-subtitle { margin-top: 2px; color: var(--faint); font-size: 11px; letter-spacing: .02em; }
+    .nav-label { padding: 0 10px 8px; color: var(--faint); font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .nav-stack { display: grid; gap: 4px; }
+    .nav-item { width: 100%; display: flex; align-items: center; gap: 11px; padding: 10px 11px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; text-align: left; transition: background .18s ease, border-color .18s ease, color .18s ease; }
+    .nav-item:hover { color: var(--text); background: #15121c; }
+    .nav-item.active { border-color: #3d3150; background: #211a2d; color: var(--text); }
+    .nav-item.active .icon { color: var(--accent); }
+    .nav-item .nav-count { min-width: 20px; margin-left: auto; padding: 1px 5px; border: 1px solid #58466f; border-radius: 99px; color: var(--accent); font-size: 10px; text-align: center; }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-note { margin: 18px 8px 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); color: var(--faint); font-size: 11px; }
+    .sidebar-note strong { display: block; margin-bottom: 4px; color: var(--muted); font-size: 11px; font-weight: 600; }
+    .main-shell { min-width: 0; display: flex; flex-direction: column; background: var(--panel); }
+    .topbar { min-height: 102px; display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 26px 32px 22px; border-bottom: 1px solid var(--line); }
+    .title-stack { min-width: 0; }
+    .eyebrow { display: block; margin-bottom: 5px; color: var(--accent); font-size: 10px; font-weight: 720; letter-spacing: .17em; text-transform: uppercase; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(23px, 2vw, 31px); letter-spacing: -.035em; line-height: 1.08; }
+    .title-stack p { margin-top: 6px; color: var(--muted); }
+    .top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; flex-wrap: wrap; }
+    .search-control { min-width: 218px; height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: #0d0b12; color: var(--faint); }
+    .search-control input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
+    .search-control input::placeholder { color: var(--faint); }
+    kbd { padding: 2px 5px; border: 1px solid var(--line); border-radius: 4px; color: var(--faint); font-size: 10px; white-space: nowrap; }
+    .button { height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 650; transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease; }
+    .button:hover { border-color: #59486e; color: var(--text); background: var(--panel-3); }
+    .button:active { transform: translateY(1px); }
+    .button.primary { border-color: var(--accent-strong); background: var(--accent); color: var(--accent-ink); }
+    .button.primary:hover { border-color: #d2c0ff; background: #d2bfff; }
+    .button.quiet { border-color: transparent; background: transparent; }
+    .screen-wrap { min-height: 0; flex: 1; overflow: auto; }
+    .screen { display: none; padding: 26px 32px 34px; }
+    .screen.active { display: block; }
+    .screen-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .section-kicker { color: var(--faint); font-size: 10px; font-weight: 720; letter-spacing: .14em; text-transform: uppercase; }
+    .section-title { margin-top: 3px; font-size: 17px; letter-spacing: -.02em; }
+    .muted { color: var(--muted); }
+    .faint { color: var(--faint); }
+
+    .lab-layout { min-height: 520px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .experiment-list { min-width: 0; padding-right: 20px; border-right: 1px solid var(--line); }
+    .list-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .list-heading .count { color: var(--faint); font-size: 11px; }
+    .experiment-item { width: 100%; display: block; margin-bottom: 5px; padding: 13px 13px 12px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+    .experiment-item:hover { background: #17131e; }
+    .experiment-item.active { border-color: #3e3151; background: #211a2d; }
+    .experiment-item h3 { overflow: hidden; color: var(--text); font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .experiment-item p { margin-top: 5px; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .experiment-meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--faint); font-size: 10px; }
+    .dot { width: 6px; height: 6px; display: inline-block; border-radius: 50%; background: var(--muted); }
+    .dot.good { background: var(--good); }
+    .dot.warn { background: var(--warn); }
+    .dot.bad { background: var(--bad); }
+    .workspace { min-width: 0; }
+    .workspace-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .workspace-heading h2 { font-size: 24px; letter-spacing: -.035em; line-height: 1.1; }
+    .workspace-heading p { max-width: 620px; margin-top: 7px; color: var(--muted); }
+    .status { display: inline-flex; align-items: center; gap: 6px; min-height: 25px; padding: 0 8px; border: 1px solid #3a5b4a; border-radius: 99px; color: var(--good); font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .workspace-section { padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .workspace-section:last-child { border-bottom: 0; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .section-head h3 { color: var(--muted); font-size: 10px; font-weight: 720; letter-spacing: .14em; text-transform: uppercase; }
+    .section-head button { height: 28px; padding: 0 8px; font-size: 11px; }
+    .setup-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-soft); border-left: 1px solid var(--line-soft); }
+    .setup-cell { min-height: 67px; padding: 11px 12px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+    .setup-cell span { display: block; margin-bottom: 5px; color: var(--faint); font-size: 10px; }
+    .setup-cell strong { font-size: 12px; font-weight: 600; }
+    .input-strip, .run-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .input-card { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #0d0b12; }
+    .thumb { position: relative; width: 45px; height: 45px; flex: 0 0 auto; overflow: hidden; border-radius: 5px; background: #28202e; }
+    .thumb::before, .run-visual::before { content: ""; position: absolute; inset: 10% 18%; border-radius: 48% 52% 38% 62%; background: rgba(243, 222, 189, .8); box-shadow: 12px 9px 0 rgba(77, 54, 75, .55); transform: rotate(-18deg); }
+    .thumb.lilac, .run-visual.lilac { background: #55406c; }
+    .thumb.sand, .run-visual.sand { background: #9c765f; }
+    .thumb.rose, .run-visual.rose { background: #6f3f50; }
+    .thumb.ink, .run-visual.ink { background: #283e45; }
+    .thumb.pale, .run-visual.pale { background: #c4a783; }
+    .thumb.coral, .run-visual.coral { background: #a85f52; }
+    .thumb.ink::before, .run-visual.ink::before { background: rgba(185, 224, 216, .72); }
+    .thumb.pale::before, .run-visual.pale::before { background: rgba(73, 48, 63, .75); }
+    .thumb.coral::before, .run-visual.coral::before { background: rgba(250, 206, 157, .78); }
+    .input-copy { min-width: 0; }
+    .input-copy strong, .input-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .input-copy strong { font-size: 11px; font-weight: 600; }
+    .input-copy span { margin-top: 2px; color: var(--faint); font-size: 10px; }
+    .run-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: #0d0b12; transition: border-color .18s ease, transform .18s ease; }
+    .run-card:hover { border-color: #5a4b6e; transform: translateY(-1px); }
+    .run-card.best { border-color: #735e92; }
+    .run-visual { position: relative; height: 132px; overflow: hidden; background: #55406c; }
+    .run-visual::before { inset: 18% 25% 14% 22%; }
+    .run-label { position: absolute; top: 9px; left: 9px; padding: 3px 6px; border: 1px solid rgba(255,255,255,.25); border-radius: 4px; background: rgba(12, 9, 18, .44); color: #f5eef9; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .run-details { padding: 11px 12px 12px; }
+    .run-details h4 { font-size: 12px; font-weight: 650; }
+    .run-details p { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .run-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; color: var(--faint); font-size: 10px; }
+    .run-footer .best-label { color: var(--accent); }
+    .conclusion { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 18px; padding: 14px 16px; border: 1px solid #3d3150; border-radius: 9px; background: #171226; }
+    .conclusion p { max-width: 650px; color: #d4c9df; font-size: 12px; }
+    .conclusion small { display: block; margin-bottom: 7px; color: var(--accent); font-size: 10px; font-weight: 720; letter-spacing: .12em; text-transform: uppercase; }
+
+    /* LAB workbench */
+    .experiment-list { display: flex; align-items: center; gap: 7px; padding: 0 0 15px; border: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .list-heading { flex: 0 0 auto; gap: 8px; margin: 0 6px 0 0; }
+    .experiment-item { width: auto; min-width: 150px; margin: 0; padding: 8px 10px; border-color: var(--line-soft); background: #0d0b12; }
+    .experiment-item h3 { font-size: 11px; }
+    .experiment-item p, .experiment-item .experiment-meta { display: none; }
+    .workspace-heading { align-items: center; padding-bottom: 15px; }
+    .workspace-heading h2 { font-size: 22px; }
+    .workspace-heading p { margin-top: 4px; font-size: 12px; }
+    .workbench-tabs { flex: 0 0 auto; }
+    .workbench-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
+    .workbench-main { min-width: 0; }
+    .workbench-inspector { position: sticky; top: 16px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #0d0b12; }
+    .inspector-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+    .inspector-title h3 { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .inspector-image { position: relative; height: 190px; overflow: hidden; border-radius: 7px; background: #55406c; }
+    .inspector-image::before { content: ""; position: absolute; inset: 17% 24%; border-radius: 48% 52% 38% 62%; background: rgba(243,222,189,.8); box-shadow: 22px 15px 0 rgba(77,54,75,.55); transform: rotate(-18deg); }
+    .inspector-image.sand { background: #9c765f; }
+    .inspector-image.ink { background: #283e45; }
+    .inspector-image.coral { background: #a85f52; }
+    .inspector-run-name { margin-top: 11px; font-size: 14px; font-weight: 650; }
+    .inspector-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .inspector-meta span { padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); font-size: 9px; }
+    .inspector-note { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .inspector-actions { display: grid; gap: 6px; margin-top: 12px; }
+    .inspector-actions .button { width: 100%; }
+    .workspace-section { padding: 15px 0; }
+    .workspace-section:first-child { padding-top: 12px; }
+    .section-head { margin-bottom: 10px; }
+    .ingredient-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(210px, .75fr); gap: 9px; }
+    .ingredient-card { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #0d0b12; }
+    .ingredient-card.prompt-card { grid-row: span 2; }
+    .ingredient-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+    .ingredient-card-head strong { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .ingredient-card-head button { height: 26px; padding: 0 7px; font-size: 10px; }
+    .references-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .reference-chip { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 6px; border: 1px solid var(--line-soft); border-radius: 7px; }
+    .reference-chip:hover { border-color: #59486e; }
+    .reference-chip .thumb { width: 34px; height: 34px; }
+    .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .thumb.has-image::before { display: none; }
+    .reference-chip strong { display: block; overflow: hidden; color: var(--text); font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .reference-chip span { display: block; margin-top: 2px; color: var(--faint); font-size: 9px; }
+    .ingredient-textarea { width: 100%; min-height: 93px; padding: 9px; border: 1px solid var(--line); border-radius: 7px; resize: vertical; background: #09080d; color: var(--text); font-size: 11px; line-height: 1.5; }
+    .ingredient-textarea::placeholder { color: var(--faint); }
+    .inline-field { display: grid; gap: 4px; }
+    .inline-field label { color: var(--faint); font-size: 9px; }
+    .inline-field input, .inline-field select { width: 100%; min-width: 0; height: 31px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: #09080d; color: var(--text); font-size: 10px; }
+    .tool-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .settings-list { display: grid; gap: 6px; }
+    .setting-row { display: grid; grid-template-columns: minmax(60px, .8fr) minmax(80px, 1.2fr) 25px; align-items: center; gap: 6px; }
+    .setting-row input { width: 100%; min-width: 0; height: 29px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; background: #09080d; color: var(--text); font-size: 10px; }
+    .setting-row .remove-setting { width: 25px; height: 25px; border: 0; border-radius: 5px; background: transparent; color: var(--faint); cursor: pointer; }
+    .run-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .run-card { cursor: pointer; }
+    .run-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(196,169,255,.22); }
+    .run-visual { height: 112px; }
+    .run-details { padding: 9px 10px; }
+    .run-details h4 { font-size: 11px; }
+    .run-details p { font-size: 10px; }
+    .run-footer { margin-top: 8px; }
+    .workbench-actionbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 4px; }
+    .workbench-actionbar p { color: var(--faint); font-size: 10px; }
+    .workbench-actionbar .button { height: 33px; }
+    .conclusion-editor { width: 100%; min-height: 68px; padding: 10px; border: 1px solid #3d3150; border-radius: 8px; background: #171226; color: #d4c9df; resize: vertical; font-size: 11px; line-height: 1.5; }
+    .conclusion-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
+    .compare-panel { margin: 0 0 13px; padding: 12px; border: 1px solid #493b5e; border-radius: 9px; background: #171226; }
+    .workspace.compare-mode .workbench-main > .workspace-section:first-child,
+    .workspace.compare-mode .workbench-actionbar,
+    .workspace.compare-mode .workbench-main > .workspace-section:last-child { display: none; }
+    .compare-panel h3 { margin-bottom: 8px; font-size: 12px; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    .compare-table th, .compare-table td { padding: 7px 8px; border-top: 1px solid #342b42; text-align: left; }
+    .compare-table th { color: var(--faint); font-weight: 500; }
+    .compare-table td { color: var(--muted); }
+
+    .collection-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 24px; }
+    .collection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .collection-item { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: #0d0b12; cursor: pointer; text-align: left; }
+    .collection-item:hover, .collection-item.selected { border-color: #8d75b4; }
+    .collection-art { position: relative; height: 152px; overflow: hidden; }
+    .collection-art img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .collection-copy { padding: 11px 12px 12px; }
+    .collection-copy strong { display: block; font-size: 12px; font-weight: 650; }
+    .collection-copy span { display: block; margin-top: 4px; color: var(--faint); font-size: 10px; }
+    .collection-tags, .detail-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .collection-tags { margin-top: 8px; }
+    .collection-tags span, .detail-tags span { padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); font-size: 9px; }
+    .detail-panel { align-self: start; padding: 18px; border-left: 1px solid var(--line); }
+    .detail-panel h2 { font-size: 18px; letter-spacing: -.02em; }
+    .detail-panel > p { margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .detail-preview { height: 190px; margin: 15px 0 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: #101015; }
+    .detail-preview img { width: 100%; height: 100%; display: block; object-fit: contain; }
+    .detail-panel .detail-note { margin: 0 0 12px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .detail-list { display: grid; gap: 0; margin-top: 15px; border-top: 1px solid var(--line); }
+    .detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 11px; }
+    .detail-row span { color: var(--faint); }
+    .detail-row strong { color: var(--muted); font-weight: 600; text-align: right; }
+
+    .learn-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+    .segmented { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: #0d0b12; }
+    .segment { padding: 6px 10px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; }
+    .segment.active { background: #272034; color: var(--text); }
+    .learn-layout { display: grid; grid-template-columns: minmax(0, 1fr) 298px; gap: 28px; }
+    .learn-list { min-width: 0; }
+    .learn-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .learn-item:first-child { padding-top: 0; }
+    .learn-icon { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #594970; border-radius: 7px; color: var(--accent); background: #1a1424; }
+    .learn-item h3 { font-size: 13px; font-weight: 650; }
+    .learn-item p { margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .learn-item .kind { color: var(--faint); font-size: 10px; white-space: nowrap; }
+    .suggestions { align-self: start; padding: 16px; border: 1px solid #403652; border-radius: 10px; background: #171226; }
+    .suggestions h2 { font-size: 14px; }
+    .suggestions > p { margin-top: 6px; color: var(--muted); font-size: 11px; }
+    .suggestion { margin-top: 14px; padding-top: 13px; border-top: 1px solid #2e2740; }
+    .suggestion strong { display: block; font-size: 11px; }
+    .suggestion span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .suggestion .button { width: 100%; margin-top: 10px; }
+
+    .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .settings-card { padding: 17px; border: 1px solid var(--line); border-radius: 10px; background: #0d0b12; }
+    .settings-card.wide { grid-column: 1 / -1; }
+    .settings-card h2 { font-size: 14px; }
+    .settings-card > p { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0 0; margin-top: 12px; border-top: 1px solid var(--line); }
+    .settings-row strong { display: block; font-size: 12px; font-weight: 600; }
+    .settings-row span { display: block; margin-top: 3px; color: var(--faint); font-size: 10px; }
+    .connection-state { color: var(--good) !important; font-size: 10px; font-weight: 700; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(4, 3, 7, .72); }
+    .modal { width: min(480px, 100%); padding: 22px; border: 1px solid #4a3a5f; border-radius: 12px; background: #15111d; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .modal h2 { font-size: 18px; letter-spacing: -.025em; }
+    .modal p { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .icon-button { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+    .form-grid { display: grid; gap: 13px; margin-top: 20px; }
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); border-radius: 7px; outline: 0; background: #0d0b12; color: var(--text); padding: 10px; font-size: 12px; }
+    .field textarea { min-height: 82px; resize: vertical; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .toast { position: fixed; right: 28px; bottom: 28px; z-index: 30; max-width: 320px; padding: 12px 14px; border: 1px solid #57466e; border-radius: 8px; background: #20192b; color: var(--text); box-shadow: 0 16px 40px rgba(0,0,0,.35); font-size: 12px; }
+
+    @media (max-width: 1040px) {
+      .frame { grid-template-columns: 206px minmax(0, 1fr); }
+      .topbar { padding-left: 24px; padding-right: 24px; }
+      .screen { padding-left: 24px; padding-right: 24px; }
+      .collection-layout, .learn-layout { grid-template-columns: minmax(0, 1fr); }
+      .detail-panel { padding: 0; border-left: 0; }
+      .detail-preview { max-width: 360px; }
+      .workbench-layout { grid-template-columns: minmax(0, 1fr); }
+      .workbench-inspector { position: static; }
+      .inspector-image { height: 160px; }
+    }
+    @media (max-width: 760px) {
+      .frame { width: 100%; height: 100vh; min-height: 680px; margin: 0; border: 0; border-radius: 0; grid-template-columns: 1fr; grid-template-rows: 1fr 69px; }
+      .sidebar { grid-row: 2; flex-direction: row; align-items: stretch; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--line); border-right: 0; background: #0b0a0f; }
+      .brand, .nav-label, .sidebar-spacer, .sidebar-note { display: none; }
+      .nav-stack { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+      .nav-item { height: 52px; display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 5px; border-radius: 7px; text-align: center; font-size: 10px; }
+      .nav-item .nav-count { position: absolute; margin: -26px 0 0 22px; min-width: 16px; padding: 0 3px; }
+      .main-shell { grid-row: 1; }
+      .topbar { min-height: 110px; align-items: flex-start; padding: 20px 18px 17px; }
+      .top-actions { gap: 6px; }
+      .search-control { display: none; }
+      .top-actions .button { padding: 0 9px; }
+      .screen { padding: 20px 18px 28px; }
+      .lab-layout { grid-template-columns: 1fr; gap: 20px; }
+      .experiment-list { padding-right: 0; padding-bottom: 10px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; white-space: nowrap; }
+      .experiment-item { display: inline-block; width: 76%; margin-right: 4px; vertical-align: top; }
+      .experiment-item { width: auto; flex: 0 0 auto; }
+      .experiment-item h3, .experiment-item p { white-space: nowrap; }
+      .input-strip, .run-grid { grid-template-columns: 1fr; }
+      .setup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .collection-art { height: 120px; }
+      .learn-toolbar { align-items: flex-start; flex-direction: column; }
+      .settings-grid { grid-template-columns: 1fr; }
+      .settings-card.wide { grid-column: auto; }
+      .workspace-heading { flex-direction: column; }
+      .conclusion { grid-template-columns: 1fr; }
+      .workspace-heading { align-items: flex-start; }
+      .workbench-tabs { align-self: stretch; }
+      .workbench-layout { gap: 14px; }
+      .ingredient-grid { grid-template-columns: 1fr; }
+      .ingredient-card.prompt-card { grid-row: auto; }
+      .run-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .run-visual { height: 100px; }
+      .inspector-image { height: 200px; }
+      .workbench-actionbar { align-items: flex-start; flex-direction: column; }
+      .references-row { grid-template-columns: 1fr; }
+      .reference-chip { flex: auto; }
+      .compare-table { min-width: 490px; }
+      .compare-panel { overflow-x: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .001ms !important; animation-duration: .001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="icon-collect" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.4"/><path d="m4 17 4.5-4 3.2 3 2.7-2.5L20 18"/></symbol>
+    <symbol id="icon-lab" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.2l-5.3 8.5A2.2 2.2 0 0 0 6.6 21h10.8a2.2 2.2 0 0 0 1.9-3.3L14 9.2V3"/><path d="M7.2 16h9.6"/></symbol>
+    <symbol id="icon-learn" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M8.1 14.3A6.7 6.7 0 1 1 16 14c-.8.6-1.1 1.4-1.1 2H9.2c0-.7-.3-1.2-1.1-1.7Z"/><path d="M12 5v2"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2.6V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.6-1H6v-2.6h.4A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2H15V5a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2V14H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.4 4.4"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 3 1.5 6.2L20 11l-6.5 1.8L12 19l-1.5-6.2L4 11l6.5-1.8L12 3Z"/><path d="m19 17 .6 2.4L22 20l-2.4.6L19 23l-.6-2.4L16 20l2.4-.6L19 17Z"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></symbol>
+  </svg>
+
+  <div class="frame">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark"><svg class="icon"><use href="#icon-lab"/></svg></div><div><div class="brand-name">FIELD LAB</div><div class="brand-subtitle">Memoria creativa</div></div></div>
+      <div class="nav-label">Espacio de trabajo</div>
+      <nav class="nav-stack" aria-label="Primary navigation">
+        <button class="nav-item" data-screen="collect"><svg class="icon"><use href="#icon-collect"/></svg><span>Recopilar</span></button>
+        <button class="nav-item active" data-screen="lab"><svg class="icon"><use href="#icon-lab"/></svg><span>LAB</span></button>
+        <button class="nav-item" data-screen="learn"><svg class="icon"><use href="#icon-learn"/></svg><span>Aprender</span><span class="nav-count">3</span></button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-note"><strong>Espacio local</strong>Personal · 30 referencias</div>
+      <button class="nav-item" data-screen="settings"><svg class="icon"><use href="#icon-settings"/></svg><span>Ajustes</span></button>
+    </aside>
+
+    <main class="main-shell">
+      <header class="topbar">
+        <div class="title-stack"><span class="eyebrow" id="screenEyebrow">Creative workbench</span><h1 id="screenTitle">LAB</h1><p id="screenDescription">Test, compare and document what works.</p></div>
+        <div class="top-actions">
+          <label class="search-control" id="globalSearchWrap"><svg class="icon small"><use href="#icon-search"/></svg><input id="globalSearch" type="search" placeholder="Buscar experimentos" aria-label="Buscar"><kbd>⌘ K</kbd></label>
+          <button class="button primary" id="topAction" data-action="new-experiment"><svg class="icon small"><use href="#icon-plus"/></svg><span>Nuevo experimento</span></button>
+        </div>
+      </header>
+
+      <div class="screen-wrap">
+        <section class="screen active" id="screen-lab">
+          <div class="lab-layout">
+            <div class="experiment-list">
+              <div class="list-heading"><span class="section-kicker">Recientes</span><span class="count" id="experimentCount">3</span></div>
+              <button class="experiment-item active" data-experiment-title="Fotografía natural de producto" data-experiment-goal="Encontrar una forma más suave de encuadrar objetos pequeños sin perder el detalle del material."><h3>Fotografía natural de producto</h3></button>
+              <button class="experiment-item" data-experiment-title="Movimiento en Runway" data-experiment-goal="Hacer que el movimiento se sienta editorial sin dirigir demasiado el gesto."><h3>Movimiento en Runway</h3></button>
+              <button class="experiment-item" data-experiment-title="Estudio de luz editorial" data-experiment-goal="Comparar una luz principal dura con un relleno ambiental pálido para un lenguaje de retrato más sereno."><h3>Estudio de luz editorial</h3></button>
+            </div>
+            <article class="workspace">
+              <div class="workspace-heading"><div><div class="section-kicker">Experiment · Personal</div><h2 id="workspaceTitle">Materiales orgánicos en verde</h2><p id="workspaceGoal">Comparar pliegues translúcidos, formas botánicas y volúmenes escultóricos con una luz suave.</p></div><div class="segmented workbench-tabs" role="tablist" aria-label="Vista del experimento"><button class="segment active" data-lab-view="build" aria-selected="true">Build</button><button class="segment" data-lab-view="compare" aria-selected="false">Compare</button></div></div>
+              <div class="workbench-layout"><div class="workbench-main">
+                <section class="workspace-section"><div class="section-head"><h3>Ingredients</h3><button class="button" data-action="save-preset">Guardar como preset</button></div><div class="ingredient-grid">
+                  <div class="ingredient-card"><div class="ingredient-card-head"><strong>References · <span id="referenceCount">3</span></strong><button class="button" data-action="browse-references">Añadir desde Collect</button></div><div class="references-row" id="referencesRow"></div></div>
+                  <div class="ingredient-card prompt-card"><div class="ingredient-card-head"><strong>Prompt</strong><button class="button" data-action="copy-prompt">Copiar</button></div><textarea class="ingredient-textarea" id="promptInput" aria-label="Prompt">Editorial macro study of sculptural natural forms, translucent ivory folds with fine gold veins, pleated emerald petals, clipped topiary, soft diffused light, tactile detail, restrained contrast.</textarea><div class="inline-field" style="margin-top:7px"><label for="negativePrompt">Negative prompt</label><input id="negativePrompt" placeholder="Qué debe evitar la herramienta" value="harsh specular highlights, crushed shadows, oversaturated green"></div></div>
+                  <div class="ingredient-card"><div class="ingredient-card-head"><strong>Tool & model</strong><span class="faint" style="font-size:9px">Setup snapshot</span></div><div class="tool-fields"><div class="inline-field"><label for="toolSelect">Tool</label><select id="toolSelect"><option>Krea</option><option>Midjourney</option><option>Runway</option></select></div><div class="inline-field"><label for="modelInput">Model</label><input id="modelInput" value="Flux 1.1 Pro"></div></div></div>
+                  <div class="ingredient-card"><div class="ingredient-card-head"><strong>Settings</strong><button class="button" data-action="add-setting">+ Add</button></div><div class="settings-list" id="settingsList"><div class="setting-row"><input aria-label="Setting name" value="Aspect ratio"><input aria-label="Setting value" value="4:5"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button></div><div class="setting-row"><input aria-label="Setting name" value="Guidance"><input aria-label="Setting value" value="3.5"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button></div><div class="setting-row"><input aria-label="Setting name" value="Seed"><input aria-label="Setting value" value="Random"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button></div></div></div>
+                </div></section>
+                <div class="workbench-actionbar"><p>Each run saves an immutable snapshot of this setup.</p><button class="button primary" data-action="add-run"><svg class="icon small"><use href="#icon-spark"/></svg>Create run</button></div>
+                <section class="workspace-section"><div class="section-head"><h3>Runs</h3><span class="muted" id="runCount" style="font-size:10px">3 runs · select one to inspect</span></div>
+                  <div class="compare-panel" id="comparePanel" hidden><h3>Compare selected runs</h3><table class="compare-table"><thead><tr><th>Snapshot</th><th>Tool / model</th><th>What changed</th><th>Evaluation</th></tr></thead><tbody id="compareRows"><tr><td>Run 01</td><td>Krea · Flux 1.1 Pro</td><td>Close crop · low contrast</td><td>Best result</td></tr><tr><td>Run 02</td><td>Krea · Flux 1.1 Pro</td><td>Warm side light</td><td>In progress</td></tr><tr><td>Run 03</td><td>Krea · Flux 1.1 Pro</td><td>Cool ambient fill</td><td>In progress</td></tr></tbody></table></div>
+                  <div class="run-grid" id="runGrid"><article class="run-card best selected" tabindex="0" role="button" aria-label="Inspect Run 01" data-run="01" data-run-title="Close crop, lower contrast" data-run-tool="Krea" data-run-model="Flux 1.1 Pro" data-run-note="Soft light keeps the material detail. Shadow is present without pulling focus." data-run-visual="lilac" data-run-prompt="Editorial still life of a small sculptural object, close crop, soft pale ambient field, tactile natural material, gentle edge shadow, restrained contrast, quiet studio light." data-run-negative="hard specular highlights, harsh contrast" data-run-settings='[{"name":"Aspect ratio","value":"4:5"},{"name":"Guidance","value":"3.5"},{"name":"Seed","value":"Random"}]'><div class="run-visual lilac"><span class="run-label">Run 01</span></div><div class="run-details"><h4>Close crop, lower contrast</h4><p>Soft light, tactile material detail.</p><div class="run-footer"><span class="best-label">Best result · You</span><span>Today</span></div></div></article><article class="run-card" tabindex="0" role="button" aria-label="Inspect Run 02" data-run="02" data-run-title="Warm side light" data-run-tool="Krea" data-run-model="Flux 1.1 Pro" data-run-note="Color feels warm, but the object loses definition against the background." data-run-visual="sand" data-run-prompt="Editorial still life of a small sculptural object, warm side light, rich color, tactile natural material." data-run-negative="hard specular highlights, harsh contrast" data-run-settings='[{"name":"Aspect ratio","value":"4:5"},{"name":"Guidance","value":"5"},{"name":"Seed","value":"Random"}]'><div class="run-visual sand"><span class="run-label">Run 02</span></div><div class="run-details"><h4>Warm side light</h4><p>Good color; object loses definition.</p><div class="run-footer"><span>In progress</span><span>Yesterday</span></div></div></article><article class="run-card" tabindex="0" role="button" aria-label="Inspect Run 03" data-run="03" data-run-title="Cool ambient fill" data-run-tool="Krea" data-run-model="Flux 1.1 Pro" data-run-note="Nice separation; soften the shadow edge in the next variation." data-run-visual="ink" data-run-prompt="Editorial still life of a small sculptural object, cool ambient fill, clear separation, natural material." data-run-negative="hard specular highlights, harsh contrast" data-run-settings='[{"name":"Aspect ratio","value":"4:5"},{"name":"Guidance","value":"3.5"},{"name":"Seed","value":"Random"}]'><div class="run-visual ink"><span class="run-label">Run 03</span></div><div class="run-details"><h4>Cool ambient fill</h4><p>Good separation; soften shadow edge.</p><div class="run-footer"><span>In progress</span><span>Yesterday</span></div></div></article></div>
+                </section>
+                <section class="workspace-section"><div class="section-head"><h3>Conclusion</h3><span class="faint" style="font-size:10px">Human-authored</span></div><textarea class="conclusion-editor" id="conclusionInput">Keep the close crop, lower the contrast and leave the object in a pale ambient field. The material reads better when the shadow is present but does not demand attention.</textarea><div class="conclusion-actions"><button class="button" data-action="save-recipe">Save as Recipe</button><button class="button primary" data-action="save-learning">Save Learning</button></div></section>
+              </div>
+              <aside class="workbench-inspector"><div class="inspector-title"><h3>Selected run</h3><span class="section-kicker" id="inspectorRunId">Run 01</span></div><div class="inspector-image" id="inspectorImage"></div><div class="inspector-run-name" id="inspectorRunName">Close crop, lower contrast</div><div class="inspector-meta"><span id="inspectorTool">Krea</span><span id="inspectorModel">Flux 1.1 Pro</span><span>Snapshot saved</span></div><p class="inspector-note" id="inspectorNote">Soft light keeps the material detail. Shadow is present without pulling focus.</p><div class="inspector-actions"><button class="button" data-action="duplicate-run">Duplicate setup into Ingredients</button><button class="button" data-action="copy-run-prompt">Copy prompt</button></div></aside>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-collect">
+          <div class="screen-toolbar"><div><div class="section-kicker">Biblioteca visual</div><div class="section-title">Recopila referencias, notas y fragmentos útiles</div></div><div style="display:flex;gap:8px;position:relative"><button class="button" data-action="toast" data-message="Los filtros están listos para tu recopilación."><svg class="icon small"><use href="#icon-filter"/></svg>Filtrar</button><button class="button primary" data-action="open-add-menu"><svg class="icon small"><use href="#icon-plus"/></svg>Añadir</button><div id="addMenu" hidden></div></div></div>
+          <div class="collection-layout"><div class="collection-grid" id="collectionGrid"></div><aside class="detail-panel"><div class="section-kicker">Elemento seleccionado</div><h2 id="collectionTitle">Veta de alabastro y oro</h2><p id="collectionType">Referencia · Cosmos</p><div class="detail-preview"><img id="collectionImage" src="Assets/Preview/References/alabaster-gold-flow.jpeg" alt="Detalle de pliegues translúcidos marfil con vetas doradas y acentos verde oscuro"></div><p class="detail-note" id="collectionNote">Capas translúcidas y delicadas vetas doradas sobre verde profundo: una referencia de material, fluidez y detalle.</p><div class="detail-tags" id="collectionTags"><span>pliegues orgánicos</span><span>textura macro</span><span>verde salvia</span></div><div class="detail-list"><div class="detail-row"><span>Fuente</span><strong id="collectionSource">Cosmos</strong></div><div class="detail-row"><span>Proyectos</span><strong>Personal</strong></div><div class="detail-row"><span>Experimentos</span><strong>Fotografía natural de producto</strong></div></div><button class="button" style="width:100%;margin-top:16px" data-action="use-reference">Usar en LAB</button></aside></div>
+        </section>
+
+        <section class="screen" id="screen-learn">
+          <div class="learn-toolbar"><div><div class="section-kicker">Conocimiento</div><div class="section-title">Ten a mano lo que funciona</div></div><div class="segmented" role="tablist" aria-label="Tipo de conocimiento"><button class="segment active" data-filter="all">Todo</button><button class="segment" data-filter="learning">Aprendizajes</button><button class="segment" data-filter="recipe">Recetas</button><button class="segment" data-filter="block">Bloques</button></div></div>
+          <div class="learn-layout"><div class="learn-list" id="learnList">
+            <article class="learn-item" data-kind="learning"><div class="learn-icon"><svg class="icon small"><use href="#icon-learn"/></svg></div><div><h3>Menos contraste conserva el detalle del material</h3><p>De Fotografía natural de producto · Guardado hoy</p></div><span class="kind">Aprendizaje</span></article>
+            <article class="learn-item" data-kind="recipe"><div class="learn-icon"><svg class="icon small"><use href="#icon-lab"/></svg></div><div><h3>Estudio de objeto editorial suave</h3><p>Krea · Flux 1.1 Pro · 4 pasos</p></div><span class="kind">Receta</span></article>
+            <article class="learn-item" data-kind="block"><div class="learn-icon"><svg class="icon small"><use href="#icon-spark"/></svg></div><div><h3>campo ambiental pálido, borde sereno, superficie táctil</h3><p>Bloque de lenguaje reutilizable · Usado 6 veces</p></div><span class="kind">Bloque de prompt</span></article>
+            <article class="learn-item" data-kind="learning"><div class="learn-icon"><svg class="icon small"><use href="#icon-learn"/></svg></div><div><h3>Deja que la sombra esté presente, no que reclame atención</h3><p>Del Estudio de luz editorial · Guardado el lunes</p></div><span class="kind">Aprendizaje</span></article>
+          </div><aside class="suggestions"><h2>Sugerencias de IA</h2><p>Pequeñas conexiones que FIELD está encontrando para ti.</p><div class="suggestion"><strong>Convierte una conclusión en receta</strong><span>“Fotografía natural de producto” ya tiene suficiente evidencia para reutilizarse.</span><button class="button" data-action="toast" data-message="Borrador de receta creado en Aprendizajes.">Crear receta</button></div><div class="suggestion"><strong>Conecta dos referencias</strong><span>Estudio de objeto sereno y Textura azul nocturna comparten una pista material.</span><button class="button" data-action="toast" data-message="Conexión guardada para revisar.">Revisar enlace</button></div><button class="button primary" style="width:100%;margin-top:16px" data-action="build-prompt"><svg class="icon small"><use href="#icon-spark"/></svg>Build prompt in LAB</button></aside></div>
+        </section>
+
+        <section class="screen" id="screen-settings">
+          <div class="screen-toolbar"><div><div class="section-kicker">Espacio de trabajo</div><div class="section-title">Conexiones, herramientas y contexto operativo</div></div></div>
+          <div class="settings-grid">
+            <article class="settings-card"><h2>Conexiones de IA</h2><p>Servicios disponibles para tus experimentos.</p><div class="settings-row"><div><strong>OpenAI</strong><span>Responses API · predeterminada</span></div><span class="connection-state">Conectado</span></div><div class="settings-row"><div><strong>Anthropic</strong><span>Messages API</span></div><button class="button">Conectar</button></div></article>
+            <article class="settings-card"><h2>Servidor MCP</h2><p>Comparte el contexto de FIELD con otras herramientas.</p><div class="settings-row"><div><strong>Servidor local</strong><span>localhost:6274 · lectura/escritura</span></div><span class="connection-state">Activo</span></div><div class="settings-row"><div><strong>Contexto compartido</strong><span>Proyectos, herramientas y aprendizajes</span></div><button class="button">Gestionar</button></div></article>
+            <article class="settings-card"><h2>Proyectos</h2><p>Espacios de contexto para experimentos y memoria.</p><div class="settings-row"><div><strong>Personal</strong><span>18 referencias · 6 aprendizajes</span></div><button class="button">Abrir</button></div><div class="settings-row"><div><strong>Trabajo de cliente</strong><span>6 referencias · 2 experimentos</span></div><button class="button">Abrir</button></div></article>
+            <article class="settings-card"><h2>Herramientas</h2><p>Servicios y modelos disponibles en Lab.</p><div class="settings-row"><div><strong>Krea</strong><span>Generación de imágenes · activa</span></div><span class="connection-state">Lista</span></div><div class="settings-row"><div><strong>Runway</strong><span>Generación de vídeo · activa</span></div><span class="connection-state">Lista</span></div></article>
+            <article class="settings-card wide"><h2>Actividad</h2><p>Un rastro tranquilo de lo que FIELD ha hecho.</p><div class="settings-row"><div><strong>Conclusión guardada en Aprendizajes</strong><span>Fotografía natural de producto · 11:42</span></div><span class="faint">Hoy</span></div><div class="settings-row"><div><strong>Referencia añadida</strong><span>Estudio de objeto sereno · 09:18</span></div><span class="faint">Hoy</span></div></article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden><form class="modal" id="modalForm"><div class="modal-head"><div><h2 id="modalTitle">Nuevo experimento</h2><p id="modalDescription">Empieza por una pregunta que quieras poner a prueba.</p></div><button class="icon-button" type="button" data-action="close-modal" aria-label="Cerrar"><svg class="icon small"><use href="#icon-close"/></svg></button></div><div class="form-grid"><div class="field"><label for="modalName">Nombre</label><input id="modalName" required placeholder="p. ej. Un lenguaje de retrato más sereno"></div><div class="field"><label for="modalGoal">Objetivo</label><textarea id="modalGoal" placeholder="¿Qué quieres averiguar?"></textarea></div><div class="field" id="modalContextField"><label for="modalContext">Proyecto</label><select id="modalContext"><option>Personal</option><option>Trabajo de cliente</option><option>Editorial</option></select></div></div><div class="modal-footer"><button class="button" type="button" data-action="close-modal">Cancelar</button><button class="button primary" type="submit">Crear</button></div></form></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <script>
+    const screenMeta = {
+      collect: { eyebrow: "Biblioteca visual", title: "Recopilar", description: "Mantén cerca referencias, notas y fragmentos útiles." },
+      lab: { eyebrow: "Creative workbench", title: "LAB", description: "Test, compare and document what works." },
+      learn: { eyebrow: "Conocimiento", title: "Aprender", description: "Convierte los resultados útiles en memoria creativa reutilizable." },
+      settings: { eyebrow: "Espacio de trabajo", title: "Ajustes", description: "Conexiones, herramientas y contexto operativo." }
+    };
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+    const collectionReferences = [
+      { id: 9, title: "Veta de alabastro y oro", source: "Cosmos", image: "Assets/Preview/References/alabaster-gold-flow.jpeg", alt: "Pliegues translúcidos marfil con vetas doradas y acentos verde oscuro", note: "Capas translúcidas y delicadas vetas doradas sobre verde profundo: una referencia de material, fluidez y detalle.", tags: ["pliegues orgánicos", "textura macro", "verde salvia", "acentos dorados"] },
+      { id: 10, title: "Flor plisada esmeralda", source: "Cosmos", image: "Assets/Preview/References/emerald-pleated-bloom.jpeg", alt: "Flor verde radial con pétalos plisados y centro oscuro", note: "Una forma floral radial combina pliegues verdes finos con un centro casi negro y mucho contraste.", tags: ["botánica", "composición radial", "paleta esmeralda", "macro"] },
+      { id: 11, title: "Topiaria escultórica", source: "Cosmos", image: "Assets/Preview/References/sculpted-topiary.jpeg", alt: "Arbustos topiarios redondeados proyectan sombras suaves sobre césped verde", note: "Las formas vegetales recortadas convierten el jardín en una composición escultórica y serena.", tags: ["topiaria", "paisajismo", "formas escultóricas", "luz suave"] },
+      { id: 12, title: "Free at heart — Hermès", source: "Cosmos", image: "Assets/Preview/References/free-at-heart-hermes.jpeg", alt: "Campaña Hermès con un retrato de perfil y un caballo en un campo abierto", note: "El retrato de perfil y el caballo en el campo construyen una imagen de campaña en capas sobre movimiento y libertad.", tags: ["campaña de moda", "ecuestre", "retrato editorial", "encuadre cinematográfico"] },
+      { id: 13, title: "Encuentro en movimiento", source: "Cosmos", image: "Assets/Preview/References/motion-blurred-encounter.jpeg", alt: "Retrato de moda movido en tonos claros y oscuros", note: "El barrido de cámara difumina las figuras y convierte el retrato de moda en un gesto fugaz.", tags: ["desenfoque de movimiento", "moda editorial", "retrato espontáneo", "luz baja"] },
+      { id: 14, title: "Dosel velado", source: "Cosmos", image: "Assets/Preview/References/veiled-canopy.jpeg", alt: "Retrato de moda bajo una estructura translúcida y escultórica sobre fondo negro", note: "Una estructura translúcida, parecida a un paraguas, se transforma en un velo dramático. La imagen acredita a Sybile de Saint Louvent.", tags: ["moda experimental", "accesorio escultórico", "material translúcido", "campaña con IA"] }
+    ];
+    const labReferenceIds = [9, 10, 11];
+    let toastTimer;
+    let runNumber = 3;
+    let selectedCollectionReference = collectionReferences[0];
+    function renderCollection() {
+      const grid = $("#collectionGrid");
+      grid.innerHTML = collectionReferences.map((reference, index) => `<button class="collection-item ${index === 0 ? 'selected' : ''}" data-collection-index="${index}" aria-label="Abrir referencia: ${reference.title}"><div class="collection-art"><img src="${reference.image}" alt="${reference.alt}" loading="lazy"></div><div class="collection-copy"><strong>${reference.title}</strong><span>Referencia · ${reference.source}</span><div class="collection-tags">${reference.tags.slice(0, 2).map(tag => `<span>${tag}</span>`).join('')}</div></div></button>`).join('');
+      $$(".collection-item", grid).forEach(item => item.addEventListener("click", () => {
+        const reference = collectionReferences[Number(item.dataset.collectionIndex)];
+        selectedCollectionReference = reference;
+        $$(".collection-item", grid).forEach(card => card.classList.toggle("selected", card === item));
+        $("#collectionTitle").textContent = reference.title;
+        $("#collectionType").textContent = `Referencia · ${reference.source}`;
+        $("#collectionSource").textContent = reference.source;
+        $("#collectionImage").src = reference.image;
+        $("#collectionImage").alt = reference.alt;
+        $("#collectionNote").textContent = reference.note;
+        $("#collectionTags").innerHTML = reference.tags.map(tag => `<span>${tag}</span>`).join('');
+      }));
+    }
+    function renderLabReferences() {
+      const references = collectionReferences.filter(reference => labReferenceIds.includes(reference.id));
+      $("#referenceCount").textContent = references.length;
+      $("#referencesRow").innerHTML = references.map(reference => `<div class="reference-chip" title="${reference.title}"><div class="thumb has-image"><img src="${reference.image}" alt="${reference.alt}" loading="lazy"></div><div><strong>${reference.title}</strong><span>${reference.tags[0]} · ${reference.source}</span></div></div>`).join('');
+    }
+    function showToast(message) {
+      const toast = $("#toast");
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 2800);
+    }
+    function switchScreen(name) {
+      $$(".screen").forEach(screen => screen.classList.toggle("active", screen.id === "screen-" + name));
+      $$(".nav-item[data-screen]").forEach(item => item.classList.toggle("active", item.dataset.screen === name));
+      const meta = screenMeta[name];
+      $("#screenEyebrow").textContent = meta.eyebrow;
+      $("#screenTitle").textContent = meta.title;
+      $("#screenDescription").textContent = meta.description;
+      $("#globalSearchWrap").hidden = name === "settings";
+      $("#globalSearch").placeholder = name === "collect" ? "Buscar recopilación" : name === "learn" ? "Buscar conocimiento" : "Buscar experimentos";
+      $("#topAction").hidden = name === "settings";
+      $("#topAction span").textContent = name === "learn" ? "Crear prompt" : name === "collect" ? "Añadir referencia" : "Nuevo experimento";
+      $("#topAction").dataset.action = name === "learn" ? "build-prompt" : name === "collect" ? "open-modal" : "new-experiment";
+      if (name === "collect") $("#topAction").dataset.kind = "reference";
+    }
+    function openModal(kind = "experiment") {
+      const copy = {
+        experiment: { title: "Nuevo experimento", description: "Empieza por una pregunta que quieras poner a prueba.", name: "p. ej. Un lenguaje de retrato más sereno", goal: "¿Qué quieres averiguar?", context: "Proyecto" },
+        reference: { title: "Añadir referencia", description: "Trae un fragmento visual útil a Recopilar.", name: "p. ej. Piedra pálida con luz de tarde", goal: "¿Qué quieres recordar de ella?", context: "Proyecto" },
+        note: { title: "Añadir nota", description: "Captura una idea antes de que desaparezca.", name: "p. ej. Mantener el borde sereno", goal: "Escribe aquí la observación útil.", context: "Proyecto" }
+      }[kind] || {};
+      $("#modalTitle").textContent = copy.title || "Nuevo experimento";
+      $("#modalDescription").textContent = copy.description || "Empieza por una pregunta que quieras poner a prueba.";
+      $("#modalName").placeholder = copy.name || "Nombre";
+      $("#modalGoal").placeholder = copy.goal || "Añade un poco de contexto";
+      $("#modalContextField label").textContent = copy.context || "Proyecto";
+      $("#modalBackdrop").hidden = false;
+      $("#modalName").focus();
+    }
+    function closeModal() { $("#modalBackdrop").hidden = true; $("#modalForm").reset(); }
+    function selectExperiment(item, notify = true) {
+      $$(".experiment-item").forEach(other => other.classList.toggle("active", other === item));
+      $("#workspaceTitle").textContent = item.dataset.experimentTitle;
+      $("#workspaceGoal").textContent = item.dataset.experimentGoal;
+      if (notify) showToast("Experiment selected.");
+    }
+    function selectRun(card) {
+      if (!card) return;
+      $$(".run-card", $("#runGrid")).forEach(other => other.classList.toggle("selected", other === card));
+      $("#inspectorRunId").textContent = "Run " + card.dataset.run;
+      $("#inspectorRunName").textContent = card.dataset.runTitle;
+      $("#inspectorTool").textContent = card.dataset.runTool;
+      $("#inspectorModel").textContent = card.dataset.runModel;
+      $("#inspectorNote").textContent = card.dataset.runNote;
+      $("#inspectorImage").className = "inspector-image " + (card.dataset.runVisual || "");
+    }
+    function updateRunCount() {
+      const count = $$(".run-card", $("#runGrid")).length;
+      $("#runCount").textContent = `${count} runs · select one to inspect`;
+    }
+    function refreshComparison() {
+      const rows = $("#compareRows");
+      rows.replaceChildren();
+      $$(".run-card", $("#runGrid")).forEach(card => {
+        const row = document.createElement("tr");
+        ["Run " + card.dataset.run, `${card.dataset.runTool} · ${card.dataset.runModel}`, card.dataset.runTitle, card.classList.contains("best") ? "Best result" : "In progress"].forEach(value => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.append(cell);
+        });
+        rows.append(row);
+      });
+    }
+    function addKnowledgeEntry(kind, title, description) {
+      const item = document.createElement("article");
+      item.className = "learn-item";
+      item.dataset.kind = kind;
+      const icon = document.createElement("div");
+      icon.className = "learn-icon";
+      icon.innerHTML = kind === "recipe" ? '<svg class="icon small"><use href="#icon-lab"/></svg>' : '<svg class="icon small"><use href="#icon-learn"/></svg>';
+      const copy = document.createElement("div");
+      const heading = document.createElement("h3"); heading.textContent = title;
+      const detail = document.createElement("p"); detail.textContent = description;
+      copy.append(heading, detail);
+      const label = document.createElement("span"); label.className = "kind"; label.textContent = kind === "recipe" ? "Recipe" : "Learning";
+      item.append(icon, copy, label);
+      $("#learnList").prepend(item);
+    }
+    function addRunFromCurrentSetup() {
+      runNumber += 1;
+      const id = String(runNumber).padStart(2, "0");
+      const card = document.createElement("article");
+      card.className = "run-card";
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Inspect Run ${id}`);
+      card.dataset.run = id;
+      card.dataset.runTitle = `Variation ${id}`;
+      card.dataset.runTool = $("#toolSelect").value;
+      card.dataset.runModel = $("#modelInput").value.trim() || "Unspecified model";
+      card.dataset.runNote = "Setup snapshot saved. Add a result from your tool to evaluate this run.";
+      card.dataset.runVisual = "coral";
+      card.dataset.runPrompt = $("#promptInput").value;
+      card.dataset.runNegative = $("#negativePrompt").value;
+      card.dataset.runSettings = JSON.stringify($$(".setting-row", $("#settingsList")).map(row => ({ name: $("input:first-child", row).value, value: $("input:nth-child(2)", row).value })));
+      card.innerHTML = `<div class="run-visual coral"><span class="run-label">Run ${id} · no result</span></div><div class="run-details"><h4>Variation ${id}</h4><p>Setup captured · awaiting result.</p><div class="run-footer"><span>Ready to evaluate</span><span>Just now</span></div></div>`;
+      $("#runGrid").append(card);
+      updateRunCount();
+      refreshComparison();
+      selectRun(card);
+      showToast(`Run ${id} created. Setup snapshot saved; attach a result to evaluate it.`);
+    }
+    async function copyText(value, successMessage) {
+      try {
+        await navigator.clipboard.writeText(value);
+        showToast(successMessage);
+      } catch {
+        showToast("Clipboard access is unavailable here. Select and copy the prompt manually.");
+      }
+    }
+    function bindActions(root = document) {
+      $$("[data-action]", root).forEach(button => {
+        if (button.dataset.bound) return;
+        button.dataset.bound = "true";
+        button.addEventListener("click", () => {
+          const action = button.dataset.action;
+          if (action === "new-experiment") openModal("experiment");
+          if (action === "open-modal") openModal(button.dataset.kind || "experiment");
+          if (action === "close-modal") closeModal();
+          if (action === "toast") showToast(button.dataset.message || "Guardado.");
+          if (action === "save-learning") {
+            const card = $(".run-card.selected", $("#runGrid"));
+            const learning = $("#conclusionInput").value.trim();
+            addKnowledgeEntry("learning", learning.slice(0, 88) || "Experiment conclusion", `From ${$("#workspaceTitle").textContent} · Run ${card?.dataset.run || "—"} · just now`);
+            showToast("Conclusion saved to Learn with its run provenance.");
+          }
+          if (action === "save-recipe") {
+            const card = $(".run-card.selected", $("#runGrid"));
+            addKnowledgeEntry("recipe", $("#workspaceTitle").textContent, `${card?.dataset.runTool || $("#toolSelect").value} · ${card?.dataset.runModel || $("#modelInput").value} · setup and selected run captured`);
+            showToast("Recipe draft saved with the current setup and selected run.");
+          }
+          if (action === "save-preset") showToast("Current tool and settings saved as a reusable preset.");
+          if (action === "add-run") addRunFromCurrentSetup();
+          if (action === "copy-prompt") copyText($("#promptInput").value, "Prompt copied.");
+          if (action === "copy-run-prompt") copyText(($(".run-card.selected", $("#runGrid")) || {}).dataset?.runPrompt || $("#promptInput").value, "Selected run prompt copied.");
+          if (action === "browse-references") { switchScreen("collect"); showToast("Choose a reference, then use it in LAB."); }
+          if (action === "use-reference") {
+            const reference = selectedCollectionReference;
+            const alreadyAdded = labReferenceIds.includes(reference.id);
+            if (!alreadyAdded) {
+              labReferenceIds.push(reference.id);
+              renderLabReferences();
+            }
+            switchScreen("lab");
+            showToast(alreadyAdded ? "Reference already in the experiment ingredients." : "Reference added to the experiment ingredients.");
+          }
+          if (action === "add-setting") {
+            const row = document.createElement("div");
+            row.className = "setting-row";
+            row.innerHTML = '<input aria-label="Setting name" placeholder="Name"><input aria-label="Setting value" placeholder="Value"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button>';
+            $("#settingsList").append(row);
+            bindActions(row);
+            $("input:first-child", row).focus();
+          }
+          if (action === "remove-setting") button.closest(".setting-row")?.remove();
+          if (action === "duplicate-run") {
+            const card = $(".run-card.selected", $("#runGrid"));
+            if (card) {
+              $("#toolSelect").value = card.dataset.runTool;
+              $("#modelInput").value = card.dataset.runModel;
+              $("#promptInput").value = card.dataset.runPrompt || "";
+              $("#negativePrompt").value = card.dataset.runNegative || "";
+              $("#settingsList").replaceChildren();
+              JSON.parse(card.dataset.runSettings || "[]").forEach(setting => {
+                const row = document.createElement("div");
+                row.className = "setting-row";
+                const name = document.createElement("input"); name.setAttribute("aria-label", "Setting name"); name.value = setting.name;
+                const value = document.createElement("input"); value.setAttribute("aria-label", "Setting value"); value.value = setting.value;
+                const remove = document.createElement("button"); remove.className = "remove-setting"; remove.setAttribute("aria-label", "Remove setting"); remove.dataset.action = "remove-setting"; remove.textContent = "×";
+                row.append(name, value, remove); $("#settingsList").append(row); bindActions(row);
+              });
+              showToast(`Run ${card.dataset.run} setup copied into Ingredients.`);
+            }
+          }
+          if (action === "build-prompt") {
+            $("#promptInput").value = "Editorial still life, tactile natural material, a quiet pale ambient field, restrained contrast, soft edge shadow. Keep the composition deliberate and let the material detail lead.";
+            switchScreen("lab");
+            $("#promptInput").focus();
+            showToast("Learning cues added to the LAB prompt. Refine the ingredients before creating a run.");
+          }
+          if (action === "open-add-menu") {
+            const menu = $("#addMenu");
+            if (!menu.innerHTML) {
+              menu.innerHTML = '<div style="position:absolute;right:0;top:42px;z-index:5;min-width:150px;padding:5px;border:1px solid var(--line);border-radius:8px;background:var(--panel-3);box-shadow:0 14px 32px rgba(0,0,0,.35)"><button class="button quiet" style="width:100%;justify-content:flex-start" data-action="open-modal" data-kind="reference">Referencia</button><button class="button quiet" style="width:100%;justify-content:flex-start" data-action="open-modal" data-kind="note">Nota</button></div>';
+              bindActions(menu);
+            }
+            menu.hidden = !menu.hidden;
+          }
+        });
+      });
+    }
+    $$(".nav-item[data-screen]").forEach(item => item.addEventListener("click", () => switchScreen(item.dataset.screen)));
+    $$(".experiment-item").forEach(item => item.addEventListener("click", () => selectExperiment(item)));
+    $("#runGrid").addEventListener("click", event => {
+      const card = event.target.closest(".run-card");
+      if (card) selectRun(card);
+    });
+    $("#runGrid").addEventListener("keydown", event => {
+      if ((event.key === "Enter" || event.key === " ") && event.target.matches(".run-card")) {
+        event.preventDefault();
+        selectRun(event.target);
+      }
+    });
+    $$("[data-lab-view]").forEach(tab => tab.addEventListener("click", () => {
+      const compare = tab.dataset.labView === "compare";
+      $$("[data-lab-view]").forEach(other => {
+        const active = other === tab;
+        other.classList.toggle("active", active);
+        other.setAttribute("aria-selected", String(active));
+      });
+      $("#comparePanel").hidden = !compare;
+      $(".workspace").classList.toggle("compare-mode", compare);
+      if (compare) refreshComparison();
+    }));
+    renderCollection();
+    renderLabReferences();
+    $$(".learn-toolbar .segment").forEach(segment => segment.addEventListener("click", () => {
+      $$(".learn-toolbar .segment").forEach(other => other.classList.remove("active"));
+      segment.classList.add("active");
+      const filter = segment.dataset.filter;
+      $$(".learn-item").forEach(item => { item.hidden = filter !== "all" && item.dataset.kind !== filter; });
+    }));
+    $("#globalSearch").addEventListener("input", event => {
+      const query = event.target.value.toLowerCase().trim();
+      const activeScreen = $(".screen.active").id;
+      if (activeScreen === "screen-lab") $$(".experiment-item").forEach(item => { item.hidden = query && !item.textContent.toLowerCase().includes(query); });
+      if (activeScreen === "screen-collect") $$(".collection-item").forEach(item => { item.hidden = query && !item.textContent.toLowerCase().includes(query); });
+      if (activeScreen === "screen-learn") $$(".learn-item").forEach(item => { item.hidden = query && !item.textContent.toLowerCase().includes(query); });
+    });
+    $("#modalForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const name = $("#modalName").value.trim() || "Experimento sin título";
+      const goal = $("#modalGoal").value.trim() || "Una nueva pregunta que explorar.";
+      const item = document.createElement("button");
+      item.className = "experiment-item";
+      item.dataset.experimentTitle = name;
+      item.dataset.experimentGoal = goal;
+      const heading = document.createElement("h3"); heading.textContent = name;
+      const description = document.createElement("p"); description.textContent = goal;
+      const meta = document.createElement("div"); meta.className = "experiment-meta"; meta.innerHTML = '<span class="dot warn"></span><span>In progress</span><span>0 runs</span>';
+      item.append(heading, description, meta);
+      item.addEventListener("click", () => selectExperiment(item));
+      $(".experiment-list").append(item);
+      $("#experimentCount").textContent = $$(".experiment-item").length + " activos";
+      closeModal();
+      switchScreen("lab");
+      selectExperiment(item, false);
+      showToast("Experimento creado.");
+    });
+    $("#modalBackdrop").addEventListener("click", event => { if (event.target === $("#modalBackdrop")) closeModal(); });
+    document.addEventListener("keydown", event => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); $("#globalSearch").focus(); }
+      if (event.key === "Escape" && !$("#modalBackdrop").hidden) closeModal();
+    });
+    refreshComparison();
+    selectRun($(".run-card.selected", $("#runGrid")));
+    bindActions();
+  </script>
+</body>
+</html>
