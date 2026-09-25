@@ -1,66 +1,60 @@
-# Local worktrees for Codex
+# Codex-managed worktrees
 
-Each task gets its own Codex task and Git worktree. The manager assigns a unique MCP port and SwiftData store to each worktree, so parallel copies of FIELD do not share those development resources.
+Use Codex's default managed worktree for each task. Codex creates and tracks the checkout for its chat; `scripts/worktree.py` only assigns local FIELD development resources. It never creates or deletes a Codex worktree.
 
-## Required start-of-task reminder
+## Start a task
 
-At the beginning of every Codex conversation in this repository, recommend opening the task in a dedicated worktree and give a short task slug. For example:
+At the start of every Codex conversation in this repository, recommend opening the task in a Codex-managed worktree based on local `main`. If the conversation is already in its task worktree, identify it and recommend continuing there.
 
-> Create and open `~/Desktop/FIELD-worktrees/reference-search` in Codex for this task.
-
-If the conversation is already in a managed worktree, say it is ready and activate it. Mark a worktree inactive only after no Codex conversation is using it and its FIELD app is stopped. This instruction applies to Codex conversations working in FIELD; it does not configure other repositories.
-
-## Create and open a task worktree
-
-Once the initial local commit exists on `main`, create a task worktree with:
+In Codex, select **Worktree** when starting a task and choose local `main` as the base. Codex normally starts the checkout on a detached `HEAD`. Before editing, use **Create branch here** in the task header and name the branch `task/<task-slug>` (for example, `task/reference-search`). Then, from that worktree, reserve its FIELD resources:
 
 ```sh
-cd ~/Desktop/FIELD
-python3 scripts/worktree.py create reference-search
+python3 scripts/worktree.py register
 ```
 
-The manager creates branch `task/reference-search` under `~/Desktop/FIELD-worktrees/reference-search`. Open that folder as the task workspace in Codex. When resuming an existing worktree, run `python3 scripts/worktree.py activate` from inside it (or pass its slug from the main checkout).
+The manager records an ignored `.field-worktree.json` and writes an ignored `.field-worktree.env` in that checkout. It does not modify shared `.git` state or create a Git branch. Register again after returning to a worktree if its local metadata is missing. Each Codex worktree has its own copy of these ignored files.
 
-## Ports and environment
+## Local ports and data
 
-FIELD currently has one local development service: the optional HTTP MCP listener inside the macOS app. There is no Docker, Node, or separate web server stack in this Swift package.
+FIELD currently has one optional local service: the HTTP MCP listener inside the macOS app. The Swift package does not use a Docker, Node, or separate web-server stack.
 
 | Variable | Purpose | Worktree behavior |
 | --- | --- | --- |
-| `FIELD_MCP_PORT` | Preferred loopback port for the MCP listener | Manager reserves a distinct port from `8765`–`8800` for each worktree. If that port becomes occupied, the app tries the rest of the range. |
-| `FIELD_DATA_DIR` | On-disk SwiftData store directory | Manager assigns `~/Library/Application Support/Field LAB/worktrees/<slug>` so each worktree has an isolated database. |
-| `FIELD_MCP_TOKEN` | Fallback bearer token for MCP clients that cannot use the Keychain helper | Secret only; never put it in the generated environment file or commit it. |
-
-The manager stores each assignment in a shared local registry and writes `FIELD_MCP_PORT` and `FIELD_DATA_DIR` to `.field-worktree.env`, which is ignored by Git. `scripts/worktree.py start` launches `swift run FIELD` with the registered settings. If launching from Xcode instead, add the two values from that env file to the Run scheme's environment. The default app launch without `FIELD_DATA_DIR` continues using its normal local store.
+| `FIELD_MCP_PORT` | Preferred loopback port for the MCP listener | The manager assigns a distinct port from `8765`–`8800` to each registered worktree. The app can try the rest of this range if its preferred port is occupied. |
+| `FIELD_DATA_DIR` | On-disk SwiftData store directory | The manager uses `~/Library/Application Support/Field LAB/worktrees/<task-slug>` to isolate each task's database. |
+| `FIELD_MCP_TOKEN` | Fallback bearer token for MCP clients that cannot use the Keychain helper | Treat as a secret. Never put it in the generated env file or commit it. |
 
 Useful commands:
 
 ```sh
 python3 scripts/worktree.py list
-python3 scripts/worktree.py start             # from inside a managed worktree
-python3 scripts/worktree.py start reference-search  # from any FIELD checkout
+python3 scripts/worktree.py activate       # resume this registered worktree
+python3 scripts/worktree.py start          # launch FIELD with its assigned port and store
+python3 scripts/worktree.py start reference-search  # target a registered task from another checkout
 ```
 
-## Merge and reclaim worktrees
+`start` runs `swift run FIELD`. To launch from Xcode, add `FIELD_MCP_PORT` and `FIELD_DATA_DIR` from `.field-worktree.env` to the Run scheme. If the app is already running, stop and restart it after registering so it reads the assigned values.
 
-Finish and commit the task in its worktree. Then merge it locally into `main`:
+`list` shows registered and unregistered Codex worktrees, their resource assignments, activity markers, whether each assigned port is bound, and how many unassigned ports remain. Use `deactivate <task-slug>` after stopping the app and when its task is complete or paused. An inactive marker is informational: it does not release that worktree's port while Codex still keeps the checkout.
+
+## Merge and reclaim capacity
+
+Complete and review the task in its Codex worktree, commit its `task/<task-slug>` branch, then merge that branch into the local integration checkout:
 
 ```sh
 cd ~/Desktop/FIELD
-git -C ~/Desktop/FIELD switch main
-git -C ~/Desktop/FIELD merge --no-ff task/reference-search
-python3 scripts/worktree.py deactivate reference-search
+git switch main
+git merge --no-ff task/reference-search
 ```
 
-The task's port reservation becomes reclaimable after its MCP listener is stopped, the worktree is clean, and it is marked inactive. When the port pool fills—or whenever you want to remove old checkouts—run:
+The task branch can be merged while its Codex worktree still has it checked out. Keep the branch unless you explicitly want to delete it. Mark the worktree inactive from inside that task checkout after stopping FIELD:
 
 ```sh
-cd ~/Desktop/FIELD
-python3 scripts/worktree.py prune
+python3 scripts/worktree.py deactivate
 ```
 
-The cleanup asks before removing each candidate. It skips active worktrees, dirty checkouts, the current shell's worktree, and any worktree whose assigned port is still in use. It removes only the checkout and releases its port reservation; the task branch and isolated database are kept. Remove a branch manually after confirming it has merged, and delete its database directory only when that local data is no longer needed.
+When the port pool is exhausted, `list` identifies inactive tasks and remaining capacity. Stop their FIELD processes, merge any completed work, then archive the corresponding completed task in Codex. Codex owns the managed worktree's cleanup and saves a snapshot before deleting it; the manager never runs `git worktree remove` or deletes Codex-managed directories. Archiving a task reclaims its checkout, and its ignored port metadata disappears with it. Codex keeps up to 15 recent managed worktrees by default; the limit and automatic cleanup behavior are configurable in Codex Settings > Worktrees. Permanent worktrees are not cleaned up by archiving their chats, so use the Codex UI to remove those if one was deliberately created.
 
-`scripts/worktree.py start` uses `swift run FIELD`, so it needs an Xcode toolchain that can build the SwiftData models. If the active Command Line Tools cannot build `SwiftDataMacros`, set the full Xcode toolchain with `xcode-select` or launch from Xcode using the worktree's two environment values.
+Keep the repository and all merges local. Do not add a remote or push unless explicitly requested.
 
-All operations stay local. Do not add a remote or push unless explicitly requested.
+`swift run FIELD` needs an Xcode toolchain that can build the SwiftData models. If the active Command Line Tools cannot build `SwiftDataMacros`, select the full Xcode toolchain or launch from Xcode using the worktree environment values.

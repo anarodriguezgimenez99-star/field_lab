@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manage local FIELD worktrees, their ports, and isolated development stores."""
+"""Assign local FIELD ports and data stores to Codex-created Git worktrees."""
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ import argparse
 import contextlib
 import datetime as dt
 import fcntl
+import hashlib
 import json
 import os
 import re
 import shlex
-import socket
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,6 +23,8 @@ from typing import Iterator
 FIRST_PORT = 8765
 LAST_PORT = 8800
 BRANCH_PREFIX = "task/"
+METADATA_NAME = ".field-worktree.json"
+ENV_NAME = ".field-worktree.env"
 
 
 def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -32,8 +35,7 @@ def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
         stderr=subprocess.PIPE,
     )
     if check and result.returncode != 0:
-        message = result.stderr.strip() or result.stdout.strip() or "Git command failed."
-        raise RuntimeError(message)
+        raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "Git command failed.")
     return result
 
 
@@ -52,276 +54,258 @@ def worktree_records(repo: Path) -> list[dict[str, str]]:
     return records
 
 
-def project_roots() -> tuple[Path, Path]:
-    this_checkout = Path(__file__).resolve().parent.parent
-    records = worktree_records(this_checkout)
-    main_root = next(
+def repo_context() -> tuple[Path, Path, Path]:
+    current = Path(git(Path.cwd(), "rev-parse", "--show-toplevel").stdout.strip()).resolve()
+    records = worktree_records(current)
+    main = next(
         (Path(record["worktree"]).resolve() for record in records if record.get("branch") == "refs/heads/main"),
         None,
     )
-    if main_root is None:
-        branch = git(this_checkout, "branch", "--show-current").stdout.strip()
-        if branch != "main":
-            raise RuntimeError("Could not find the local main worktree.")
-        main_root = this_checkout
-    worktree_home = main_root.parent / "FIELD-worktrees"
-    return main_root, worktree_home
+    if main is None:
+        if git(current, "branch", "--show-current").stdout.strip() != "main":
+            raise RuntimeError("Could not find FIELD's local main worktree.")
+        main = current
+    common_dir = Path(git(current, "rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()).resolve()
+    return current, main, common_dir
 
 
-def registry_paths(worktree_home: Path) -> tuple[Path, Path]:
-    return worktree_home / ".field-worktrees.json", worktree_home / ".field-worktrees.lock"
+def metadata_path(worktree: Path) -> Path:
+    return worktree / METADATA_NAME
 
 
-def read_registry(path: Path) -> dict[str, dict[str, object]]:
-    if not path.exists():
+def read_metadata(worktree: Path) -> dict[str, object]:
+    path = metadata_path(worktree)
+    if not path.is_file():
         return {}
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
         return value if isinstance(value, dict) else {}
     except (OSError, json.JSONDecodeError) as error:
-        raise RuntimeError(f"Cannot read worktree registry {path}: {error}") from error
+        raise RuntimeError(f"Cannot read {path}: {error}") from error
 
 
-def write_registry(path: Path, registry: dict[str, dict[str, object]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
-        json.dump(registry, handle, indent=2, sort_keys=True)
-        handle.write("\n")
-        temp_path = Path(handle.name)
-    os.replace(temp_path, path)
-
-
-@contextlib.contextmanager
-def locked_registry(worktree_home: Path) -> Iterator[tuple[Path, dict[str, dict[str, object]]]]:
-    worktree_home.mkdir(parents=True, exist_ok=True)
-    registry_path, lock_path = registry_paths(worktree_home)
-    with lock_path.open("a+") as lock_file:
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-        registry = read_registry(registry_path)
-        yield registry_path, registry
-
-
-def port_is_busy(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as candidate:
-        try:
-            candidate.bind(("127.0.0.1", port))
-        except OSError:
-            return True
-    return False
-
-
-def worktree_is_clean(path: Path) -> bool:
-    return not git(path, "status", "--porcelain").stdout.strip()
-
-
-def path_is_current(path: Path) -> bool:
+def write_local_file(path: Path, contents: str) -> None:
+    temp_path: Path | None = None
     try:
-        Path.cwd().resolve().relative_to(path.resolve())
-        return True
-    except ValueError:
-        return False
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+            handle.write(contents)
+            temp_path = Path(handle.name)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path is not None and temp_path.exists():
+            temp_path.unlink()
 
 
-def resolve_slug(registry: dict[str, dict[str, object]], requested: str | None) -> str:
-    if requested:
-        if requested not in registry:
-            raise RuntimeError(f"No managed worktree named '{requested}'.")
-        return requested
-    current = Path(git(Path.cwd(), "rev-parse", "--show-toplevel").stdout.strip()).resolve()
-    for slug, entry in registry.items():
-        if Path(str(entry.get("path", ""))).resolve() == current:
-            return slug
-    raise RuntimeError("This checkout is not registered. Pass a managed worktree slug explicitly.")
+def write_metadata(worktree: Path, value: dict[str, object]) -> None:
+    write_local_file(metadata_path(worktree), json.dumps(value, indent=2, sort_keys=True) + "\n")
 
 
-def write_env_file(path: Path, port: int, data_directory: Path) -> None:
-    env_path = path / ".field-worktree.env"
+def write_env_file(worktree: Path, port: int, data_directory: Path) -> None:
     contents = (
         "# Generated by scripts/worktree.py. Do not commit this file.\n"
         f"FIELD_MCP_PORT={port}\n"
         f"FIELD_DATA_DIR={shlex.quote(str(data_directory))}\n"
     )
-    env_path.write_text(contents, encoding="utf-8")
+    write_local_file(worktree / ENV_NAME, contents)
 
 
-def cmd_create(slug: str) -> None:
+@contextlib.contextmanager
+def port_pool_lock(common_dir: Path) -> Iterator[None]:
+    repo_key = hashlib.sha256(str(common_dir).encode("utf-8")).hexdigest()[:16]
+    lock_path = Path(tempfile.gettempdir()) / f"field-worktree-ports-{repo_key}.lock"
+    with lock_path.open("a+") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        yield
+
+
+def port_is_busy(port: int) -> bool:
+    lsof = shutil.which("lsof")
+    if not lsof:
+        raise RuntimeError("Cannot inspect local ports because 'lsof' is unavailable.")
+    result = subprocess.run(
+        [lsof, "-nP", "-t", f"-iTCP:{port}", "-sTCP:LISTEN"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode == 0:
+        return bool(result.stdout.strip())
+    if result.returncode == 1 and not result.stderr.strip():
+        return False
+    raise RuntimeError(result.stderr.strip() or f"Could not inspect TCP port {port} with lsof.")
+
+
+def slug_from_branch(branch: str) -> str | None:
+    return branch.removeprefix(BRANCH_PREFIX) if branch.startswith(BRANCH_PREFIX) else None
+
+
+def cmd_register(requested_slug: str | None) -> None:
+    current, main, common_dir = repo_context()
+    if current == main:
+        raise RuntimeError("Open this task in a Codex-created worktree first; do not register the main checkout.")
+
+    branch = git(current, "branch", "--show-current").stdout.strip()
+    slug = slug_from_branch(branch)
+    if slug is None:
+        raise RuntimeError(
+            "This Codex worktree has no task/<slug> branch. In the task header, use 'Create branch here' "
+            "with a name such as task/reference-search, then run register."
+        )
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
-        raise RuntimeError("Use a lowercase, hyphenated task slug, for example 'reference-search'.")
+        raise RuntimeError(f"Invalid task branch slug: {slug!r}.")
+    if requested_slug and requested_slug != slug:
+        raise RuntimeError(f"Current branch is {branch}; register it with slug '{slug}'.")
 
-    main_root, worktree_home = project_roots()
-    if git(main_root, "rev-parse", "--verify", "refs/heads/main", check=False).returncode != 0:
-        raise RuntimeError("Create the initial local commit on main before creating task worktrees.")
-    if git(main_root, "status", "--porcelain").stdout.strip():
-        raise RuntimeError("Commit or clear changes in main before creating a task worktree.")
+    data_directory = Path.home() / "Library" / "Application Support" / "Field LAB" / "worktrees" / slug
+    now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
-    branch = f"{BRANCH_PREFIX}{slug}"
-    path = worktree_home / slug
-    if path.exists():
-        raise RuntimeError(f"Worktree path already exists: {path}")
-    if git(main_root, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}", check=False).returncode == 0:
-        raise RuntimeError(f"Branch already exists: {branch}")
+    with port_pool_lock(common_dir):
+        # Read under the same lock as assignment. Otherwise two simultaneous
+        # registrations can both see a stale worktree list and claim one port.
+        records = worktree_records(main)
+        old_metadata = read_metadata(current)
+        used_ports: set[int] = set()
+        for record in records:
+            other_path = Path(record["worktree"]).resolve()
+            if other_path == current:
+                continue
+            metadata = read_metadata(other_path)
+            if "port" in metadata:
+                used_ports.add(int(metadata["port"]))
 
-    with locked_registry(worktree_home) as (registry_path, registry):
-        git(main_root, "worktree", "prune")
-        registry = {key: value for key, value in registry.items() if Path(str(value.get("path", ""))).exists()}
-        used_ports = {int(value["port"]) for value in registry.values() if "port" in value}
-        port = next((p for p in range(FIRST_PORT, LAST_PORT + 1) if p not in used_ports and not port_is_busy(p)), None)
+        old_port = int(old_metadata.get("port", 0))
+        if FIRST_PORT <= old_port <= LAST_PORT and old_port not in used_ports:
+            port = old_port
+        else:
+            port = next((p for p in range(FIRST_PORT, LAST_PORT + 1) if p not in used_ports and not port_is_busy(p)), None)
         if port is None:
             raise RuntimeError(
-                f"No free MCP port remains in {FIRST_PORT}-{LAST_PORT}. Stop unused FIELD instances, then run 'python3 scripts/worktree.py prune'."
+                f"No free MCP port remains in {FIRST_PORT}-{LAST_PORT}. Stop unrelated listeners. "
+                "To release a reservation, archive its completed Codex task; this manager does not delete worktrees."
             )
 
-        result = git(main_root, "worktree", "add", "-b", branch, str(path), "main", check=False)
-        if result.returncode != 0:
-            raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "Could not create the Git worktree.")
+        write_env_file(current, port, data_directory)
+        write_metadata(current, {
+            "version": 1,
+            "slug": slug,
+            "branch": branch,
+            "path": str(current),
+            "port": port,
+            "data_directory": str(data_directory),
+            "active": True,
+            "created_at": str(old_metadata.get("created_at", now)),
+            "last_seen_at": now,
+        })
 
-        data_directory = Path.home() / "Library" / "Application Support" / "Field LAB" / "worktrees" / slug
-        now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-        try:
-            write_env_file(path, port, data_directory)
-            registry[slug] = {
-                "branch": branch,
-                "path": str(path),
-                "port": port,
-                "data_directory": str(data_directory),
-                "active": True,
-                "created_at": now,
-                "last_seen_at": now,
-            }
-            write_registry(registry_path, registry)
-        except OSError:
-            git(main_root, "worktree", "remove", str(path), check=False)
-            git(main_root, "branch", "-D", branch, check=False)
-            raise
-
-    print(f"Created {branch}")
-    print(f"Worktree: {path}")
+    print(f"Registered Codex worktree: {current}")
+    print(f"Branch: {branch}")
     print(f"MCP port: {port}")
-    print(f"Isolated data: {data_directory}")
-    print("Open that worktree in Codex to start the task.")
+    print(f"Isolated SwiftData store: {data_directory}")
+
+
+def find_worktree(main: Path, registry_slug: str, current: Path) -> tuple[str, Path, dict[str, object]]:
+    for record in worktree_records(main):
+        path = Path(record["worktree"]).resolve()
+        branch = record.get("branch", "detached").removeprefix("refs/heads/")
+        metadata = read_metadata(path)
+        slug = str(metadata.get("slug") or slug_from_branch(branch) or "")
+        if slug == registry_slug:
+            if not metadata:
+                raise RuntimeError(f"Codex worktree '{branch}' is not registered. Run register from inside that worktree.")
+            return branch, path, metadata
+        if path == current.resolve() and slug:
+            return branch, path, metadata
+    raise RuntimeError(f"No Codex worktree found for slug '{registry_slug}'.")
+
+
+def resolve_target(requested_slug: str | None, current: Path, main: Path) -> tuple[str, Path, dict[str, object]]:
+    if requested_slug:
+        return find_worktree(main, requested_slug, current)
+    if current == main:
+        raise RuntimeError("Pass a task slug when running this command from main.")
+    branch = git(current, "branch", "--show-current").stdout.strip()
+    metadata = read_metadata(current)
+    slug = str(metadata.get("slug") or slug_from_branch(branch) or "")
+    if not slug or not metadata:
+        raise RuntimeError("This Codex worktree is not registered. Run 'python3 scripts/worktree.py register' first.")
+    return branch, current, metadata
 
 
 def cmd_list() -> None:
-    _, worktree_home = project_roots()
-    with locked_registry(worktree_home) as (_, registry):
-        if not registry:
-            print("No managed FIELD worktrees.")
-            return
-        for slug, entry in sorted(registry.items()):
-            path = Path(str(entry.get("path", "")))
-            branch = str(entry.get("branch", f"{BRANCH_PREFIX}{slug}"))
-            active = "active" if entry.get("active", True) else "inactive"
-            port = int(entry.get("port", 0))
-            listener = "port busy" if port and port_is_busy(port) else "port free"
-            checkout = "present" if path.is_dir() else "missing"
-            print(f"{slug:24} {branch:32} {port:5} {active:8} {listener:10} {checkout:8} {path}")
+    _, main, _ = repo_context()
+    assigned_ports: set[int] = set()
+    available_ports = 0
+    for record in worktree_records(main):
+        path = Path(record["worktree"]).resolve()
+        if path == main:
+            continue
+        branch = record.get("branch", "detached").removeprefix("refs/heads/")
+        metadata = read_metadata(path)
+        if metadata:
+            port = int(metadata.get("port", 0))
+            assigned_ports.add(port)
+            activity = "active" if metadata.get("active", True) else "inactive"
+            listener = "busy" if port and port_is_busy(port) else "free"
+            print(f"{branch:36} {port:5} {activity:8} port-{listener:4} registered  {path}")
+        else:
+            print(f"{branch:36} {'-':5} {'-':8} {'-':9} unregistered {path}")
+    for port in range(FIRST_PORT, LAST_PORT + 1):
+        if port not in assigned_ports and not port_is_busy(port):
+            available_ports += 1
+    print(f"Available unassigned MCP ports: {available_ports} of {LAST_PORT - FIRST_PORT + 1}.")
+    if available_ports == 0:
+        print("Stop unrelated listeners. To release a reservation, archive its completed task in Codex; Codex owns worktree cleanup.")
 
 
-def cmd_mark_active(requested: str | None, active: bool) -> None:
-    main_root, worktree_home = project_roots()
-    with locked_registry(worktree_home) as (registry_path, registry):
-        slug = resolve_slug(registry, requested)
-        registry[slug]["active"] = active
-        registry[slug]["last_seen_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-        write_registry(registry_path, registry)
-    print(f"Marked {slug} {'active' if active else 'inactive'}.")
+def cmd_mark_active(requested_slug: str | None, active: bool) -> None:
+    current, main, _ = repo_context()
+    branch, path, metadata = resolve_target(requested_slug, current, main)
+    metadata["active"] = active
+    metadata["last_seen_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    write_metadata(path, metadata)
+    print(f"Marked {branch} {'active' if active else 'inactive'}.")
 
 
-def cmd_start(requested: str | None) -> int:
-    main_root, worktree_home = project_roots()
-    with locked_registry(worktree_home) as (registry_path, registry):
-        slug = resolve_slug(registry, requested)
-        entry = registry[slug]
-        path = Path(str(entry["path"]))
-        if not path.is_dir():
-            raise RuntimeError(f"Worktree is missing: {path}")
-        entry["active"] = True
-        entry["last_seen_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-        write_registry(registry_path, registry)
+def cmd_start(requested_slug: str | None) -> int:
+    current, main, _ = repo_context()
+    branch, path, metadata = resolve_target(requested_slug, current, main)
+    metadata["active"] = True
+    metadata["last_seen_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    write_metadata(path, metadata)
 
     environment = os.environ.copy()
-    environment["FIELD_MCP_PORT"] = str(entry["port"])
-    environment["FIELD_DATA_DIR"] = str(entry["data_directory"])
-    print(f"Starting {slug} on http://127.0.0.1:{entry['port']}/mcp (Ctrl-C to stop)", flush=True)
+    environment["FIELD_MCP_PORT"] = str(metadata["port"])
+    environment["FIELD_DATA_DIR"] = str(metadata["data_directory"])
+    print(f"Starting {branch} on http://127.0.0.1:{metadata['port']}/mcp (Ctrl-C to stop)", flush=True)
     return subprocess.call(["swift", "run", "FIELD"], cwd=path, env=environment)
 
 
-def prune_one(slug: str, main_root: Path, worktree_home: Path) -> bool:
-    with locked_registry(worktree_home) as (registry_path, registry):
-        entry = registry.get(slug)
-        if entry is None:
-            return False
-        path = Path(str(entry.get("path", ""))).resolve()
-        if entry.get("active", True):
-            print(f"Skip {slug}: marked active.")
-            return False
-        if not path.is_dir():
-            registry.pop(slug)
-            write_registry(registry_path, registry)
-            return True
-        if path_is_current(path):
-            print(f"Skip {slug}: current shell is inside this worktree.")
-            return False
-        if not worktree_is_clean(path):
-            print(f"Skip {slug}: worktree has uncommitted or untracked files.")
-            return False
-        port = int(entry.get("port", 0))
-        if port and port_is_busy(port):
-            print(f"Skip {slug}: its assigned port {port} is still in use.")
-            return False
-        result = git(main_root, "worktree", "remove", str(path), check=False)
-        if result.returncode != 0:
-            print(f"Skip {slug}: {result.stderr.strip() or 'Git could not remove the worktree.'}")
-            return False
-        registry.pop(slug)
-        write_registry(registry_path, registry)
-        print(f"Removed {path}; branch {entry.get('branch')} and data at {entry.get('data_directory')} were kept.")
-        return True
-
-
-def cmd_prune() -> None:
-    main_root, worktree_home = project_roots()
-    git(main_root, "worktree", "prune")
-    with locked_registry(worktree_home) as (_, registry):
-        candidates = [slug for slug, entry in sorted(registry.items()) if not entry.get("active", True)]
-    if not candidates:
-        print("No inactive worktrees are available to prune.")
-        return
-
-    for slug in candidates:
-        answer = input(f"Remove inactive worktree '{slug}' if clean and stopped? [y/N] ").strip().lower()
-        if answer == "y":
-            prune_one(slug, main_root, worktree_home)
-    print("Branches and isolated data directories are retained; only worktree folders and port reservations are removed.")
-
-
 def parser() -> argparse.ArgumentParser:
-    result = argparse.ArgumentParser(description="Manage FIELD task worktrees and their local development resources.")
+    result = argparse.ArgumentParser(description="Assign ports and isolated stores to Codex-created FIELD worktrees.")
     commands = result.add_subparsers(dest="command", required=True)
 
-    create = commands.add_parser("create", help="create a task branch/worktree and reserve its port and data store")
-    create.add_argument("slug")
+    register = commands.add_parser("register", help="assign a port and isolated store to the current Codex worktree")
+    register.add_argument("slug", nargs="?", help="optional check that the current task branch has this slug")
 
-    commands.add_parser("list", help="show ports and activity for managed worktrees")
+    commands.add_parser("list", help="show Codex Git worktrees, port assignments, and activity markers")
 
-    start = commands.add_parser("start", help="run the FIELD app with this worktree's port and data directory")
+    start = commands.add_parser("start", help="run FIELD with this worktree's port and data directory")
     start.add_argument("slug", nargs="?")
 
-    activate = commands.add_parser("activate", help="mark this worktree active so prune will skip it")
+    activate = commands.add_parser("activate", help="mark this worktree active while its Codex task is in use")
     activate.add_argument("slug", nargs="?")
 
-    deactivate = commands.add_parser("deactivate", help="mark a completed or paused worktree inactive")
+    deactivate = commands.add_parser("deactivate", help="mark a closed or paused worktree inactive")
     deactivate.add_argument("slug", nargs="?")
 
-    commands.add_parser("prune", help="interactively remove inactive, clean, stopped worktree folders")
     return result
 
 
 def main() -> int:
     args = parser().parse_args()
     try:
-        if args.command == "create":
-            cmd_create(args.slug)
+        if args.command == "register":
+            cmd_register(args.slug)
             return 0
         if args.command == "list":
             cmd_list()
@@ -333,9 +317,6 @@ def main() -> int:
             return 0
         if args.command == "deactivate":
             cmd_mark_active(args.slug, False)
-            return 0
-        if args.command == "prune":
-            cmd_prune()
             return 0
     except (EOFError, OSError, RuntimeError, ValueError) as error:
         print(f"worktree: {error}", file=sys.stderr)

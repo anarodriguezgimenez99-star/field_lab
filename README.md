@@ -25,4 +25,4 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/MCP.md](docs/MCP.md) and
 
 ## Working with Codex
 
-Keep each Codex task in its own local Git worktree. At the start of a FIELD conversation, Codex should recommend opening the task in that worktree. The local worktree manager assigns a separate MCP port and SwiftData store to each checkout, starts the app with those settings, and can reclaim inactive worktrees when the pool fills. Worktrees are created from `main` under `~/Desktop/FIELD-worktrees/`, then merged back into local `main` after the task is complete. See [docs/WORKTREES.md](docs/WORKTREES.md).
+Keep each Codex task in its own local Git worktree. At the start of a FIELD conversation, Codex should recommend opening the task in a Codex-managed worktree. The local resource manager assigns a separate MCP port and SwiftData store to each checkout. Codex creates and tracks the worktrees from `main`, and completed task branches are merged into local `main`. When more capacity is needed, archive a completed task in Codex so Codex can reclaim its worktree. See [docs/WORKTREES.md](docs/WORKTREES.md).
