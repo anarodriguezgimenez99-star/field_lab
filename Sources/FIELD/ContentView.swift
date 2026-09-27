@@ -41,6 +41,7 @@ struct ContentView: View {
         ZStack {
             NavigationSplitView {
                 FieldSidebar(appModel: appModel)
+                    .navigationSplitViewColumnWidth(min: 145, ideal: 160, max: 200)
             } detail: {
                 FieldRouteView(appModel: appModel)
                     .id(appModel.refreshToken)
@@ -113,13 +114,8 @@ struct FieldSidebar: View {
                 }
                 .frame(width: 34, height: 34)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.text("FIELD LAB"))
-                        .font(.system(.headline, design: .rounded).weight(.semibold))
-                    Text(L10n.text("Memoria creativa"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text(L10n.text("FIELD LAB"))
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
 
                 Spacer(minLength: 0)
             }
