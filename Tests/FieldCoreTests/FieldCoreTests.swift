@@ -267,7 +267,7 @@ final class FieldCoreTests: XCTestCase {
 
     func testReferenceFilterCombinesAttributesSourceProjectAndTags() throws {
         let repository = try repository()
-        let project = try repository.createProject(title: "Spring campaign")
+        let project = try repository.createProject(title: "Demo campaign")
         _ = try repository.createReference(
             title: "Warm bottle",
             urlString: "https://cosmos.so/example",
