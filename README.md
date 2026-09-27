@@ -22,3 +22,7 @@ swift test
 The core and MCP tests use in-memory stores and transports. Run them with a full Xcode toolchain selected through `xcode-select`; Command Line Tools alone may not include the SwiftData macros needed by the models.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/MCP.md](docs/MCP.md), [PRIVACY.md](PRIVACY.md) and [docs/PUBLICATION.md](docs/PUBLICATION.md) for product, security and release notes.
+
+## License
+
+The original FIELD LAB code and documentation are licensed under [MIT](LICENSE). The license does not cover third-party works; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). No reference photographs are included in this public snapshot.
