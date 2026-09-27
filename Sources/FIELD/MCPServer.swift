@@ -27,8 +27,9 @@ final class MCPServerManager: ObservableObject {
         self.repository = repository
         preferredPort = Self.configuredPort()
         port = preferredPort
-        token = KeychainTokenStore.load() ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        KeychainTokenStore.save(token)
+        let savedToken = KeychainTokenStore.load() ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        token = savedToken
+        KeychainTokenStore.save(savedToken)
         authHeaderHelperPath = MCPKeychainHeaderHelper.install()
     }
 
@@ -292,7 +293,9 @@ private final class LocalHTTPServer: @unchecked Sendable {
         self.requestHandler = requestHandler
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = false
-        listener = try NWListener(using: parameters, on: NWEndpoint.hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!))
+        let localPort = NWEndpoint.Port(rawValue: port)!
+        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: localPort)
+        listener = try NWListener(using: parameters, on: localPort)
     }
 
     func start() async throws {

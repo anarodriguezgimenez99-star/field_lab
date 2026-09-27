@@ -3,3 +3,6 @@
 DerivedData/
 .DS_Store
 .field-worktree.env
+*.xcuserstate
+xcuserdata/
+Apps/Config/FieldICloud.local.xcconfig

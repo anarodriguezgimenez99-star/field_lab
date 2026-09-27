@@ -54,12 +54,13 @@ remove the record and staged asset. Queue IDs make the operation inspectable and
 idempotent. The current macOS surface also supports file import, drag and drop,
 URL entry and manual notes.
 
-The intended iPhone Share Extension flow is:
+The iPhone Share Extension flow is:
 
 `Share → Save to Field LAB → App Group staging → Field LAB import → local SwiftData → iCloud/CloudKit`
 
-The save action never waits for analysis or CloudKit. A reference is visible as
-soon as its canonical local record is saved.
+The extension stages the share to the App Group without opening SwiftData or
+waiting for CloudKit. The main app imports it on launch or when returning to
+the foreground, then the reference is available in the library.
 
 ## Classification, filters and search
 

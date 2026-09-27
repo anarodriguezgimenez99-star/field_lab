@@ -10,8 +10,8 @@ struct FIELDApp: App {
             ContentView(appModel: appModel)
                 .environment(\.modelContext, appModel.container.mainContext)
                 .tint(FieldPalette.accent)
+                .preferredColorScheme(.dark)
         }
-        .preferredColorScheme(.dark)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("Quick Capture") {

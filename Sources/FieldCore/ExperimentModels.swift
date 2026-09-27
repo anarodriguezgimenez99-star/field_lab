@@ -187,22 +187,22 @@ private enum ExperimentJSON {
 
 @Model
 public final class FieldExperiment {
-    public var id: UUID
-    public var title: String
-    public var goal: String
-    public var statusRaw: String
-    public var toolID: UUID?
-    public var projectID: UUID?
-    public var conclusion: String
-    public var referenceIDsJSON: String
-    public var prompt: String
-    public var model: String
-    public var settingsJSON: String
-    public var promptBlockIDsJSON: String
-    public var executionModeRaw: String
-    public var bestRunID: UUID?
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var goal: String = ""
+    public var statusRaw: String = ""
+    public var toolID: UUID? = nil
+    public var projectID: UUID? = nil
+    public var conclusion: String = ""
+    public var referenceIDsJSON: String = ""
+    public var prompt: String = ""
+    public var model: String = ""
+    public var settingsJSON: String = ""
+    public var promptBlockIDsJSON: String = ""
+    public var executionModeRaw: String = ""
+    public var bestRunID: UUID? = nil
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public var status: ExperimentStatus {
         get { ExperimentStatus(rawValue: statusRaw) ?? .testing }
@@ -244,8 +244,8 @@ public final class FieldExperiment {
         promptBlockIDs: [UUID] = [],
         executionMode: ExperimentExecutionMode = .external,
         bestRunID: UUID? = nil,
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now
     ) {
         self.id = id
         self.title = title
@@ -268,29 +268,29 @@ public final class FieldExperiment {
 
 @Model
 public final class FieldExperimentRun {
-    public var id: UUID
-    public var experimentID: UUID
-    public var order: Int
-    public var title: String
-    public var prompt: String
+    public var id: UUID = UUID()
+    public var experimentID: UUID = UUID()
+    public var order: Int = 0
+    public var title: String = ""
+    public var prompt: String = ""
     /// Kept as a string for backwards compatibility; new Runs store the
     /// serialized `[SettingEntry]` value here.
-    public var settings: String
-    public var observation: String
-    public var resultStatusRaw: String
-    public var evaluationRaw: String
-    public var executionModeRaw: String
-    public var toolID: UUID?
-    public var snapshotToolName: String
-    public var snapshotToolWebsiteURL: String
-    public var model: String
-    public var inputReferenceIDsJSON: String
-    public var snapshotPromptBlockIDsJSON: String
-    public var parentRunID: UUID?
+    public var settings: String = ""
+    public var observation: String = ""
+    public var resultStatusRaw: String = ""
+    public var evaluationRaw: String = ""
+    public var executionModeRaw: String = ""
+    public var toolID: UUID? = nil
+    public var snapshotToolName: String = ""
+    public var snapshotToolWebsiteURL: String = ""
+    public var model: String = ""
+    public var inputReferenceIDsJSON: String = ""
+    public var snapshotPromptBlockIDsJSON: String = ""
+    public var parentRunID: UUID? = nil
     @Attribute(.externalStorage)
-    public var outputData: Data?
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var outputData: Data? = nil
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public var resultStatus: ExperimentRunStatus {
         get { ExperimentRunStatus(rawValue: resultStatusRaw) ?? .prepared }
@@ -351,8 +351,8 @@ public final class FieldExperimentRun {
         snapshotPromptBlockIDs: [UUID] = [],
         parentRunID: UUID? = nil,
         outputData: Data? = nil,
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now
     ) {
         self.id = id
         self.experimentID = experimentID
@@ -379,20 +379,20 @@ public final class FieldExperimentRun {
 
 @Model
 public final class ToolPreset {
-    public var id: UUID
-    public var toolID: UUID?
-    public var name: String
-    public var model: String
-    public var settingsJSON: String
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var toolID: UUID? = nil
+    public var name: String = ""
+    public var model: String = ""
+    public var settingsJSON: String = ""
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public var settings: [SettingEntry] {
         get { ExperimentJSON.decode([SettingEntry].self, from: settingsJSON, fallback: []) }
         set { settingsJSON = ExperimentJSON.encode(newValue) }
     }
 
-    public init(id: UUID = UUID(), toolID: UUID? = nil, name: String, model: String = "", settings: [SettingEntry] = [], createdAt: Date = .now, updatedAt: Date = .now) {
+    public init(id: UUID = UUID(), toolID: UUID? = nil, name: String, model: String = "", settings: [SettingEntry] = [], createdAt: Date = Date.now, updatedAt: Date = Date.now) {
         self.id = id
         self.toolID = toolID
         self.name = name

@@ -133,7 +133,7 @@ struct FieldSidebar: View {
                     sidebarLink(.lab)
                     NavigationLink(value: FieldRoute.learn) {
                         Label("Aprender", systemImage: FieldRoute.learn.systemImage)
-                            .badge(proposalCount == 0 ? nil : proposalCount)
+                            .badge(proposalCount == 0 ? nil : String(proposalCount))
                     }
                 }
 
@@ -632,7 +632,7 @@ struct KnowledgeEditorView: View {
     @State private var kind: KnowledgeKind
     @State private var status: KnowledgeStatus
     @State private var title: String
-    @State private var body: String
+    @State private var bodyText: String
     @State private var tags: String
     @State private var selectedProjectID: UUID?
     @State private var selectedToolID: UUID?
@@ -647,7 +647,7 @@ struct KnowledgeEditorView: View {
         _kind = State(initialValue: item?.kind ?? defaultKind)
         _status = State(initialValue: item?.status ?? .new)
         _title = State(initialValue: item?.title ?? "")
-        _body = State(initialValue: item?.body ?? "")
+        _bodyText = State(initialValue: item?.body ?? "")
         _tags = State(initialValue: item?.tagNames ?? "")
         _selectedProjectID = State(initialValue: item?.projectID)
         _selectedToolID = State(initialValue: item?.toolID)
@@ -697,7 +697,7 @@ struct KnowledgeEditorView: View {
                         Text(tool.name).tag(Optional(tool.id))
                     }
                 }
-                TextEditor(text: $body)
+                TextEditor(text: $bodyText)
                     .frame(minHeight: 150)
             }
 
@@ -720,7 +720,7 @@ struct KnowledgeEditorView: View {
             if let item {
                 item.kind = kind
                 item.title = title
-                item.body = body
+                item.body = bodyText
                 item.status = status
                 item.tags = tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 item.scope = selectedProjectID == nil ? .global : .project
@@ -733,7 +733,7 @@ struct KnowledgeEditorView: View {
                 _ = try appModel.repository.createKnowledge(
                     kind: kind,
                     title: title,
-                    body: body,
+                    body: bodyText,
                     status: status,
                     scope: selectedProjectID == nil ? .global : .project,
                     projectID: selectedProjectID,
@@ -757,7 +757,7 @@ struct QuickCaptureView: View {
 
     @State private var kind: KnowledgeKind
     @State private var title = ""
-    @State private var body = ""
+    @State private var bodyText = ""
     @State private var tags = ""
     @State private var projectID: UUID?
     @State private var toolID: UUID?
@@ -822,13 +822,13 @@ struct QuickCaptureView: View {
             Divider()
 
             ZStack(alignment: .topLeading) {
-                TextEditor(text: $body)
+                TextEditor(text: $bodyText)
                     .textEditorStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .focused($focusedField, equals: .body)
                     .frame(minHeight: 88)
 
-                if body.isEmpty {
+                if bodyText.isEmpty {
                     Text("Añadir descripción")
                         .foregroundStyle(.secondary)
                         .padding(.top, 7)
@@ -869,7 +869,7 @@ struct QuickCaptureView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(FieldPalette.accent)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding(.top, 18)
         }
@@ -881,7 +881,7 @@ struct QuickCaptureView: View {
 
     private func save() {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanBody = bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalTitle = cleanTitle.isEmpty ? String(cleanBody.prefix(72)) : cleanTitle
         let parsedTags = tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         if kind == .reference {
@@ -907,7 +907,7 @@ struct QuickCaptureView: View {
         appModel.refresh()
         if createMore {
             title = ""
-            body = ""
+            bodyText = ""
             tags = ""
             projectID = nil
             toolID = nil
@@ -951,7 +951,7 @@ struct PromptDeckView: View {
                             } label: {
                                 HStack {
                                     Image(systemName: selectedIDs.contains(block.id) ? "checkmark.circle.fill" : "circle")
-                                        .foregroundStyle(selectedIDs.contains(block.id) ? .tint : .secondary)
+                                        .foregroundStyle(selectedIDs.contains(block.id) ? Color.accentColor : Color.secondary)
                                     VStack(alignment: .leading) {
                                         Text(block.title)
                                         Text(block.body).font(.caption).foregroundStyle(.secondary).lineLimit(1)

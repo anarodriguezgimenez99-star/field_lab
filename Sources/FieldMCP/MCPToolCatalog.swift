@@ -252,7 +252,7 @@ public enum MCPToolCatalog {
                 tags: strings(params.arguments?["tags"]),
                 includeArchived: params.arguments?["include_archived"]?.boolValue ?? false
             )
-            let results: [[String: Any]] = await MainActor.run {
+            let results: Data = await MainActor.run {
                 let projects = repository.projects(includeArchived: true)
                 let baseFilter: ReferenceFilter
                 if let collectionID, let collection = repository.referenceCollections().first(where: { $0.id == collectionID }), collection.kind == .smart, let collectionFilter = collection.filter {
@@ -276,37 +276,38 @@ public enum MCPToolCatalog {
                     let ids = Set(collection.referenceIDs)
                     let queried = repository.queryReferences(ReferenceQuery(text: params.arguments?["query"]?.stringValue ?? "", filter: filter, limit: limit)).filter { ids.contains($0.id) }
                     repository.logActivity(agent: agent, action: "searched_references", projectID: projectID, detail: params.arguments?["query"]?.stringValue ?? "")
-                    return queried.map { referenceSearchPayload($0, projects: projects) }
+                    return jsonData(queried.map { referenceSearchPayload($0, projects: projects) })
                 } else {
                     baseFilter = filter
                 }
                 let queried = repository.queryReferences(ReferenceQuery(text: params.arguments?["query"]?.stringValue ?? "", filter: baseFilter, limit: limit))
                 repository.logActivity(agent: agent, action: "searched_references", projectID: projectID, detail: params.arguments?["query"]?.stringValue ?? "")
-                return queried.map { referenceSearchPayload($0, projects: projects) }
+                return jsonData(queried.map { referenceSearchPayload($0, projects: projects) })
             }
-            return textResult(results)
+            return jsonTextResult(results)
 
         case "get_reference":
             guard let referenceID = uuid(params.arguments?["reference_id"]) else { return errorResult("reference_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload: [String: Any]? = await MainActor.run {
+            let payload: Data? = await MainActor.run {
                 guard let reference = repository.references(filter: ReferenceFilter(includeArchived: true)).first(where: { $0.id == referenceID }) else { return nil }
                 repository.logActivity(agent: agent, action: "read_reference", detail: reference.title)
-                return referenceDetailPayload(reference, projects: repository.projects(includeArchived: true))
+                return jsonData(referenceDetailPayload(reference, projects: repository.projects(includeArchived: true)))
             }
             guard let payload else { return errorResult("Reference not found") }
-            return textResult(payload)
+            return jsonTextResult(payload)
 
         case "add_reference_note":
             guard let referenceID = uuid(params.arguments?["reference_id"]) else { return errorResult("reference_id is required") }
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let item = try? await MainActor.run {
+            let payload = try? await MainActor.run {
                 guard let reference = repository.references(filter: ReferenceFilter(includeArchived: true)).first(where: { $0.id == referenceID }) else { throw ReferenceRepositoryError.referenceNotFound }
-                return try repository.addWorkingNote(agent: agent, content: "Reference \(reference.title): \(content)")
+                let item = try repository.addWorkingNote(agent: agent, content: "Reference \(reference.title): \(content)")
+                return jsonData(["id": item.id.uuidString, "kind": item.kind.rawValue, "reference_id": referenceID.uuidString])
             }
-            guard let item else { return errorResult("Reference not found") }
-            return textResult(["id": item.id.uuidString, "kind": item.kind.rawValue, "reference_id": referenceID.uuidString])
+            guard let payload else { return errorResult("Reference not found") }
+            return jsonTextResult(payload)
 
         case "propose_reference_tags":
             guard let referenceID = uuid(params.arguments?["reference_id"]) else { return errorResult("reference_id is required") }
@@ -319,9 +320,12 @@ public enum MCPToolCatalog {
             }
             guard !attributes.isEmpty else { return errorResult("attributes must contain category and name") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let proposal = try? await MainActor.run { try repository.proposeReferenceTags(agent: agent, referenceID: referenceID, attributes: attributes) }
-            guard let proposal else { return errorResult("Could not create reference tag proposal") }
-            return textResult(["id": proposal.id.uuidString, "status": proposal.status.rawValue, "reference_id": referenceID.uuidString])
+            let payload = try? await MainActor.run {
+                let proposal = try repository.proposeReferenceTags(agent: agent, referenceID: referenceID, attributes: attributes)
+                return jsonData(["id": proposal.id.uuidString, "status": proposal.status.rawValue, "reference_id": referenceID.uuidString])
+            }
+            guard let payload else { return errorResult("Could not create reference tag proposal") }
+            return jsonTextResult(payload)
 
         case "get_project_context":
             guard let projectID = uuid(params.arguments?["project_id"]) else { return errorResult("project_id is required") }
@@ -389,11 +393,11 @@ public enum MCPToolCatalog {
         case "get_experiment":
             guard let experimentID = uuid(params.arguments?["experiment_id"]) else { return errorResult("experiment_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload: [String: Any]? = await MainActor.run {
+            let payload: Data? = await MainActor.run {
                 guard let experiment = repository.experiments().first(where: { $0.id == experimentID }) else { return nil }
                 let setup = repository.experimentSetup(experiment)
                 repository.logActivity(agent: agent, action: "read_experiment", detail: experiment.title)
-                return [
+                return jsonData([
                     "id": experiment.id.uuidString,
                     "title": experiment.title,
                     "goal": experiment.goal,
@@ -411,19 +415,19 @@ public enum MCPToolCatalog {
                         "prompt_block_ids": setup.promptBlockIDs.map(\.uuidString),
                         "execution_mode": setup.executionMode.rawValue
                     ]
-                ]
+                ])
             }
             guard let payload else { return errorResult("Experiment not found") }
-            return textResult(payload)
+            return jsonTextResult(payload)
 
         case "list_experiment_runs":
             guard let experimentID = uuid(params.arguments?["experiment_id"]) else { return errorResult("experiment_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload: [[String: Any]]? = await MainActor.run {
+            let payload: Data? = await MainActor.run {
                 guard repository.experiments().contains(where: { $0.id == experimentID }) else { return nil }
                 let runs = repository.experimentRuns(experimentID: experimentID)
                 repository.logActivity(agent: agent, action: "list_experiment_runs", detail: "\(runs.count) runs")
-                return runs.map { run in
+                return jsonData(runs.map { run in
                     [
                         "id": run.id.uuidString,
                         "order": run.order,
@@ -439,28 +443,28 @@ public enum MCPToolCatalog {
                         "has_result": run.outputData != nil,
                         "created_at": run.createdAt.ISO8601Format()
                     ]
-                }
+                })
             }
             guard let payload else { return errorResult("Experiment not found") }
-            return textResult(payload)
+            return jsonTextResult(payload)
 
         case "compare_runs_metadata":
             guard let firstID = uuid(params.arguments?["run_a_id"]), let secondID = uuid(params.arguments?["run_b_id"]) else { return errorResult("run_a_id and run_b_id are required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload: [String: Any]? = await MainActor.run {
+            let payload: Data? = await MainActor.run {
                 let allRuns = (try? repository.context.fetch(FetchDescriptor<FieldExperimentRun>())) ?? []
                 guard let first = allRuns.first(where: { $0.id == firstID }), let second = allRuns.first(where: { $0.id == secondID }) else { return nil }
                 repository.logActivity(agent: agent, action: "compare_runs_metadata", detail: "\(first.title) · \(second.title)")
-                return [
+                return jsonData([
                     "run_a_id": first.id.uuidString,
                     "run_b_id": second.id.uuidString,
                     "run_a": ["title": first.title, "tool": first.snapshotToolName, "model": first.model, "evaluation": first.evaluation.rawValue],
                     "run_b": ["title": second.title, "tool": second.snapshotToolName, "model": second.model, "evaluation": second.evaluation.rawValue],
                     "changes": repository.runDelta(from: first, to: second).map { ["label": $0.label, "detail": $0.detail] }
-                ]
+                ])
             }
             guard let payload else { return errorResult("Run not found") }
-            return textResult(payload)
+            return jsonTextResult(payload)
 
         case "search_experiments":
             let query = params.arguments?["query"]?.stringValue ?? ""
@@ -480,25 +484,26 @@ public enum MCPToolCatalog {
         case "get_best_run":
             guard let experimentID = uuid(params.arguments?["experiment_id"]) else { return errorResult("experiment_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload: [String: Any]? = await MainActor.run {
+            let payload: Data? = await MainActor.run {
                 guard let experiment = repository.experiments().first(where: { $0.id == experimentID }), let bestRunID = experiment.bestRunID,
                       let run = repository.experimentRuns(experimentID: experiment.id).first(where: { $0.id == bestRunID }) else { return nil }
                 repository.logActivity(agent: agent, action: "read_best_run", detail: run.title)
-                return ["id": run.id.uuidString, "title": run.title, "tool": run.snapshotToolName, "model": run.model, "evaluation": run.evaluation.rawValue, "has_result": run.outputData != nil]
+                return jsonData(["id": run.id.uuidString, "title": run.title, "tool": run.snapshotToolName, "model": run.model, "evaluation": run.evaluation.rawValue, "has_result": run.outputData != nil])
             }
             guard let payload else { return errorResult("Best Run not found") }
-            return textResult(payload)
+            return jsonTextResult(payload)
 
         case "get_recipe":
             guard let recipeID = uuid(params.arguments?["recipe_id"]) else { return errorResult("recipe_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let recipe = await MainActor.run {
+            let payload: Data? = await MainActor.run {
                 let recipe = repository.knowledge(kind: .recipe).first { $0.id == recipeID }
                 if let recipe { repository.logActivity(agent: agent, action: "read_recipe", detail: recipe.title) }
-                return recipe
+                guard let recipe else { return nil }
+                return jsonData(["id": recipe.id.uuidString, "title": recipe.title, "body": recipe.body, "status": recipe.status.rawValue])
             }
-            guard let recipe else { return errorResult("Recipe not found") }
-            return textResult(["id": recipe.id.uuidString, "title": recipe.title, "body": recipe.body, "status": recipe.status.rawValue])
+            guard let payload else { return errorResult("Recipe not found") }
+            return jsonTextResult(payload)
 
         case "get_workflow":
             guard let flowID = uuid(params.arguments?["flow_id"]) else { return errorResult("flow_id is required") }
@@ -526,31 +531,34 @@ public enum MCPToolCatalog {
         case "add_working_note":
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let item = try? await MainActor.run {
-                try repository.addWorkingNote(agent: agent, content: content, projectID: uuid(params.arguments?["project_id"]), toolID: uuid(params.arguments?["tool_id"]))
+            let payload = try? await MainActor.run {
+                let item = try repository.addWorkingNote(agent: agent, content: content, projectID: uuid(params.arguments?["project_id"]), toolID: uuid(params.arguments?["tool_id"]))
+                return jsonData(["id": item.id.uuidString, "title": item.title, "kind": item.kind.rawValue])
             }
-            guard let item else { return errorResult("Could not save working note") }
-            return textResult(["id": item.id.uuidString, "title": item.title, "kind": item.kind.rawValue])
+            guard let payload else { return errorResult("Could not save working note") }
+            return jsonTextResult(payload)
 
         case "propose_learning", "propose_decision":
             guard let title = params.arguments?["title"]?.stringValue, !title.isEmpty else { return errorResult("title is required") }
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
             let kind: KnowledgeKind = params.name == "propose_decision" ? .decision : .learning
-            let proposal = try? await MainActor.run {
-                try repository.propose(agent: agent, type: kind, title: title, content: content, projectID: uuid(params.arguments?["project_id"]), toolID: uuid(params.arguments?["tool_id"]))
+            let payload = try? await MainActor.run {
+                let proposal = try repository.propose(agent: agent, type: kind, title: title, content: content, projectID: uuid(params.arguments?["project_id"]), toolID: uuid(params.arguments?["tool_id"]))
+                return jsonData(["id": proposal.id.uuidString, "status": proposal.status.rawValue, "title": proposal.title])
             }
-            guard let proposal else { return errorResult("Could not create proposal") }
-            return textResult(["id": proposal.id.uuidString, "status": proposal.status.rawValue, "title": proposal.title])
+            guard let payload else { return errorResult("Could not create proposal") }
+            return jsonTextResult(payload)
 
         case "save_session_summary":
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let item = try? await MainActor.run {
-                try repository.saveSessionSummary(agent: agent, projectID: uuid(params.arguments?["project_id"]), content: content)
+            let payload = try? await MainActor.run {
+                let item = try repository.saveSessionSummary(agent: agent, projectID: uuid(params.arguments?["project_id"]), content: content)
+                return jsonData(["id": item.id.uuidString, "title": item.title, "deduplicated": "true"])
             }
-            guard let item else { return errorResult("Could not save session summary") }
-            return textResult(["id": item.id.uuidString, "title": item.title, "deduplicated": "true"])
+            guard let payload else { return errorResult("Could not save session summary") }
+            return jsonTextResult(payload)
 
         default:
             return errorResult("Unknown tool: \(params.name)")
@@ -623,7 +631,14 @@ public enum MCPToolCatalog {
     }
 
     private static func textResult(_ value: Any) -> CallTool.Result {
-        let data = (try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) ?? Data("{}".utf8)
+        jsonTextResult(jsonData(value))
+    }
+
+    private static func jsonData(_ value: Any) -> Data {
+        (try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) ?? Data("{}".utf8)
+    }
+
+    private static func jsonTextResult(_ data: Data) -> CallTool.Result {
         return .init(content: [.text(String(decoding: data, as: UTF8.self))], isError: false)
     }
 

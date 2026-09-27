@@ -1025,7 +1025,7 @@ struct CompareRunColumn: View {
             Text([run.snapshotToolName, run.model].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
             if !run.settingsEntries.isEmpty { Text(run.settingsEntries.map { "\($0.key): \($0.value)" }.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
             if !run.observation.isEmpty { Text(run.observation).font(.caption).foregroundStyle(.secondary).lineLimit(4) }
-            Text(run.evaluation.displayName).font(.caption.weight(.medium)).foregroundStyle(isBest ? .tint : .secondary)
+            Text(run.evaluation.displayName).font(.caption.weight(.medium)).foregroundStyle(isBest ? Color.accentColor : Color.secondary)
             Button(isBest ? "Best Result" : "Select Best Result", action: selectBest).buttonStyle(.bordered)
         }
         .frame(width: 250, alignment: .leading)

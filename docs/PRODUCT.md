@@ -2,7 +2,7 @@
 
 Field LAB is a local-first creative memory for a designer working with AI tools. It stores reusable experience—prompt blocks, learnings, references, recipes, tools, workflows and project context—and makes it available to the designer and compatible agents.
 
-The first deliverable is macOS. The Mac is the desk for organizing and reusing knowledge; iPhone/iCloud remain part of the product model and follow after the macOS vertical slice is stable. Field LAB does not generate content, host a chatbot, call third-party AI APIs or manage projects as tasks.
+The Mac is the desk for organizing and reusing knowledge; iPhone is the capture-and-consult companion. Both apps share the same private library through optional iCloud sync and remain usable offline. Field LAB does not generate content, host a chatbot, call third-party AI APIs or manage projects as tasks.
 
 Collect is the first-level area of Field LAB for what the user finds. Images,
 URLs, notes and ideas arrive from any source, preserve provenance, become
@@ -14,8 +14,9 @@ Core loop: **COLLECT → LAB → LEARN**. Connect and reuse remain outcomes of t
 
 First usable slice:
 
-- SwiftUI macOS app with NavigationSplitView.
+- SwiftUI macOS app with NavigationSplitView and a native iPhone app with Collect, Lab and Learn tabs.
 - SwiftData local store and a repository shared by UI and MCP.
+- Optional CloudKit sync shared by the signed macOS and iPhone app targets.
 - CRUD for projects, tools, learnings, notes and prompt blocks.
 - Deterministic local search.
 - Prompt Deck with Copy Stack.
