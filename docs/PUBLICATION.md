@@ -20,3 +20,16 @@ Before publishing:
   stores out of Git. The repository `.gitignore` covers common local files.
 - Share a repository link from the post; do not package the entire worktree
   directory, which contains local Git metadata.
+
+## macOS builds
+
+The `macOS CI` workflow runs the Swift tests and creates an Apple silicon DMG
+on pushes to `main` and pull requests. Intel Macs are not supported. Pushes to
+`main` produce a downloadable CI artifact. Pushing a version tag such as `v0.1.0`
+also creates a GitHub Release with the DMG and its SHA-256 checksum.
+
+These builds are unsigned and not notarized because the project does not yet
+have an Apple Developer ID. macOS can require a manual **Open Anyway** approval
+for downloaded builds. Do not describe them as signed or as a frictionless
+installer. The iPhone app and iCloud sync are not available yet; see
+[`docs/INSTALLATION.md`](INSTALLATION.md).

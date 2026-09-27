@@ -66,11 +66,12 @@ The schema stores enum values as raw strings to keep migrations explicit and avo
 
 ## UI direction
 
-The app is Operate-mode native macOS UI: NavigationSplitView, a three-item
-sidebar (Collect, Lab, Learn) plus Settings, system controls, keyboard commands
-and content-first detail panes. iPhone uses the same three conceptual areas as
-tabs. The visual language is restrained, editorial and calm; hierarchy comes
-from typography, spacing and the data itself rather than dashboard cards.
+The available UI is Operate-mode native macOS UI: NavigationSplitView, a
+three-item sidebar (Collect, Lab, Learn) plus Settings, system controls,
+keyboard commands and content-first detail panes. A future iPhone app is
+planned around the same three conceptual areas as tabs. The visual language is
+restrained, editorial and calm; hierarchy comes from typography, spacing and
+the data itself rather than dashboard cards.
 
 Experiments and Experiment Runs are persisted in FieldCore and accessed through
 FieldRepository, alongside the existing knowledge and reference models. The UI

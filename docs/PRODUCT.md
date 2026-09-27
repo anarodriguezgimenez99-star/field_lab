@@ -2,7 +2,7 @@
 
 Field LAB is a local-first creative memory for a designer working with AI tools. It stores reusable experience—prompt blocks, learnings, references, recipes, tools, workflows and project context—and makes it available to the designer and compatible agents.
 
-The first deliverable is macOS. The Mac is the desk for organizing and reusing knowledge; iPhone/iCloud remain part of the product model and follow after the macOS vertical slice is stable. Field LAB does not generate content, host a chatbot, call third-party AI APIs or manage projects as tasks.
+The available app is macOS only. The Mac is the desk for organizing and reusing knowledge. An iPhone app and iCloud sync are not available yet; the app currently stores data locally on the Mac. Field LAB does not generate content, host a chatbot, call third-party AI APIs or manage projects as tasks.
 
 Collect is the first-level area of Field LAB for what the user finds. Images,
 URLs, notes and ideas arrive from any source, preserve provenance, become
