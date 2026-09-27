@@ -33,7 +33,7 @@ default.
 
 Every future user-facing capability that is useful to an agent should be exposed through MCP when privacy and approval rules allow it. Add each MCP feature as one capability declaration containing its input schema, write effect and handler; the registry publishes and routes it automatically. See [docs/MCP.md](docs/MCP.md) for the feature contract and security boundary.
 
-## Test
+## Verification
 
 ```sh
 swift test
@@ -45,8 +45,8 @@ selection may not include the `SwiftDataMacros` plugin. Select the installed
 Xcode developer directory with `xcode-select` before building or running the
 suite.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/MCP.md](docs/MCP.md) and [PRIVACY.md](PRIVACY.md) for the product and security decisions.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/MCP.md](docs/MCP.md), [PRIVACY.md](PRIVACY.md) and [docs/PUBLICATION.md](docs/PUBLICATION.md) for product, security and release notes.
 
-## Working with Codex
+## License
 
-Keep each Codex task in its own local Git worktree. At the start of a FIELD conversation, Codex should recommend opening the task in that worktree. The local worktree manager assigns a separate MCP port and SwiftData store to each checkout, starts the app with those settings, and can reclaim inactive worktrees when the pool fills. Worktrees are created from `main` under `~/Desktop/FIELD-worktrees/`, then merged back into local `main` after the task is complete. See [docs/WORKTREES.md](docs/WORKTREES.md).
+The original FIELD LAB code and documentation are licensed under [MIT](LICENSE). The license does not cover third-party works; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). No reference photographs are included in this public snapshot.

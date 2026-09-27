@@ -4,8 +4,11 @@ import SwiftData
 
 @MainActor
 final class FieldCoreTests: XCTestCase {
+    private var modelContainer: ModelContainer?
+
     private func repository() throws -> FieldRepository {
         let container = try FieldModelContainer.make(inMemory: true)
+        modelContainer = container
         return FieldRepository(context: container.mainContext)
     }
 
@@ -51,7 +54,7 @@ final class FieldCoreTests: XCTestCase {
         let results = repository.search(query: "hard light")
 
         XCTAssertEqual(results.first?.title, "Hard Light")
-        XCTAssertTrue(results.contains { $0.kind == "Prompt Block" })
+        XCTAssertTrue(results.contains { $0.kind == KnowledgeKind.promptBlock.displayName })
     }
 
     func testContextPackHonorsDepth() throws {
@@ -80,6 +83,18 @@ final class FieldCoreTests: XCTestCase {
         XCTAssertEqual(standard.recipes.count, 1)
     }
 
+    func testProjectContextIncludesToolsLinkedThroughExperimentsAndReferences() throws {
+        let repository = try repository()
+        let project = try repository.createProject(title: "Material study")
+        let tool = try repository.createTool(name: "Krea")
+        _ = try repository.createExperiment(title: "Ceramic light", toolID: tool.id, projectID: project.id)
+        _ = try repository.createReference(title: "Glaze study", projectIDs: [project.id], toolIDs: [tool.id])
+
+        let context = try XCTUnwrap(repository.projectContext(projectID: project.id))
+
+        XCTAssertEqual(context.tools, ["Krea"])
+    }
+
     func testApprovalFlowPromotesProposalToApprovedKnowledge() throws {
         let repository = try repository()
         let project = try repository.createProject(title: "Project X")
@@ -99,6 +114,53 @@ final class FieldCoreTests: XCTestCase {
         XCTAssertEqual(item.sourceType, .claude)
         XCTAssertEqual(repository.knowledge(kind: .learning).count, 1)
         XCTAssertTrue(repository.activities().contains { $0.action == "approved_learning" })
+    }
+
+    func testProposalCannotBeApprovedOrRejectedMoreThanOnce() throws {
+        let repository = try repository()
+        let approved = try repository.propose(
+            agent: "Codex",
+            type: .learning,
+            title: "Preserve material texture",
+            content: "Keep the original surface texture."
+        )
+        _ = try repository.approve(approved)
+
+        XCTAssertThrowsError(try repository.approve(approved)) {
+            XCTAssertEqual($0 as? ProposalRepositoryError, .proposalNotPending)
+        }
+        XCTAssertThrowsError(try repository.reject(approved)) {
+            XCTAssertEqual($0 as? ProposalRepositoryError, .proposalNotPending)
+        }
+        XCTAssertEqual(repository.knowledge(kind: .learning).count, 1)
+        XCTAssertEqual(approved.status, .approved)
+
+        let rejected = try repository.propose(
+            agent: "Codex",
+            type: .decision,
+            title: "Use square master",
+            content: "Choose a square master format."
+        )
+        try repository.reject(rejected)
+        XCTAssertThrowsError(try repository.approve(rejected)) {
+            XCTAssertEqual($0 as? ProposalRepositoryError, .proposalNotPending)
+        }
+        XCTAssertTrue(repository.knowledge(kind: .decision).isEmpty)
+        XCTAssertEqual(rejected.status, .rejected)
+
+        let reference = try repository.createReference(title: "Tag proposal target")
+        let tagProposal = try repository.proposeReferenceTags(
+            agent: "Codex",
+            referenceID: reference.id,
+            attributes: [VisualAttribute(category: .mood, name: "Quiet")]
+        )
+        XCTAssertThrowsError(try repository.approve(tagProposal)) {
+            XCTAssertEqual($0 as? ProposalRepositoryError, .invalidProposalType)
+        }
+        _ = try repository.approveReferenceTags(tagProposal)
+        XCTAssertThrowsError(try repository.approveReferenceTags(tagProposal)) {
+            XCTAssertEqual($0 as? ProposalRepositoryError, .proposalNotPending)
+        }
     }
 
     func testPromptStackConcatenatesReusableBlocksCleanly() throws {
@@ -128,6 +190,18 @@ final class FieldCoreTests: XCTestCase {
         XCTAssertNotEqual(first.id, projectSummary.id)
     }
 
+    func testFutureDatedSummaryDoesNotDeduplicateANewCall() throws {
+        let repository = try repository()
+        let first = try repository.saveSessionSummary(agent: "Codex", projectID: nil, content: "Same summary.")
+        first.createdAt = .now.addingTimeInterval(3600)
+        try repository.save()
+
+        let second = try repository.saveSessionSummary(agent: "Codex", projectID: nil, content: "Same summary.")
+
+        XCTAssertNotEqual(first.id, second.id)
+        XCTAssertEqual(repository.knowledge(kind: .sessionSummary).count, 2)
+    }
+
     func testFlowStepEditingAndCascadeDelete() throws {
         let repository = try repository()
         let flow = try repository.createFlow(title: "Campaign flow", summary: "Repeatable method")
@@ -153,16 +227,26 @@ final class FieldCoreTests: XCTestCase {
         let repository = try repository()
         let project = try repository.createProject(title: "Campaign")
         let tool = try repository.createTool(name: "Krea")
-        let item = try repository.createKnowledge(kind: .learning, title: "Learning", projectID: project.id, toolID: tool.id, scope: .project)
+        let preset = try repository.createToolPreset(name: "Product light", toolID: tool.id, model: "Flux")
+        let item = try repository.createKnowledge(kind: .learning, title: "Learning", scope: .project, projectID: project.id, toolID: tool.id)
+        let experiment = try repository.createExperiment(title: "Recipe source", toolID: tool.id, projectID: project.id)
+        let run = try repository.createRunFromSetup(experiment: experiment)
+        try repository.setBestRun(run, for: experiment)
+        let recipe = try repository.saveBestRunAsRecipe(experiment)
 
         try repository.deleteTool(tool)
-        XCTAssertEqual(repository.knowledge().first?.id, item.id)
-        XCTAssertNil(repository.knowledge().first?.toolID)
+        XCTAssertNil(item.toolID)
+        XCTAssertNil(run.toolID)
+        XCTAssertEqual(run.snapshotToolName, tool.name)
+        XCTAssertNil(recipe.toolID)
+        XCTAssertNil(repository.recipePayload(recipe)?.toolID)
+        XCTAssertEqual(repository.toolPresets().first?.id, preset.id)
+        XCTAssertNil(repository.toolPresets().first?.toolID)
 
         try repository.deleteProject(project)
-        XCTAssertEqual(repository.knowledge().first?.id, item.id)
-        XCTAssertNil(repository.knowledge().first?.projectID)
-        XCTAssertEqual(repository.knowledge().first?.scope, .global)
+        XCTAssertEqual(repository.knowledge().first(where: { $0.id == item.id })?.id, item.id)
+        XCTAssertNil(item.projectID)
+        XCTAssertEqual(item.scope, .global)
     }
 
     func testReferenceCreationResolvesSourceAndPreservesManualClassification() throws {
@@ -183,7 +267,7 @@ final class FieldCoreTests: XCTestCase {
 
     func testReferenceFilterCombinesAttributesSourceProjectAndTags() throws {
         let repository = try repository()
-        let project = try repository.createProject(title: "Spring campaign")
+        let project = try repository.createProject(title: "Demo campaign")
         _ = try repository.createReference(
             title: "Warm bottle",
             urlString: "https://cosmos.so/example",
@@ -222,6 +306,29 @@ final class FieldCoreTests: XCTestCase {
         XCTAssertTrue(results.contains { $0.entityType == "reference" && $0.id == reference.id })
     }
 
+    func testKnowledgeSearchRespectsToolFilterForReferences() throws {
+        let repository = try repository()
+        let selectedTool = try repository.createTool(name: "Krea")
+        let otherTool = try repository.createTool(name: "Firefly")
+        let selected = try repository.createReference(title: "Ceramic material study", toolIDs: [selectedTool.id])
+        _ = try repository.createReference(title: "Ceramic material variant", toolIDs: [otherTool.id])
+
+        let results = repository.search(
+            query: "ceramic",
+            filter: SearchFilter(kind: .reference, toolID: selectedTool.id)
+        )
+
+        XCTAssertEqual(results.map(\.id), [selected.id])
+        XCTAssertTrue(repository.search(
+            query: "ceramic",
+            filter: SearchFilter(kind: .reference, status: .works)
+        ).isEmpty)
+        XCTAssertTrue(repository.search(
+            query: "ceramic",
+            filter: SearchFilter(kind: .reference, scope: .project)
+        ).isEmpty)
+    }
+
     func testReferenceTagApprovalPreservesManualPriority() throws {
         let repository = try repository()
         let reference = try repository.createReference(
@@ -241,6 +348,71 @@ final class FieldCoreTests: XCTestCase {
         XCTAssertEqual(reference.visualAttributes.filter { $0.category == .style }.count, 1)
         XCTAssertEqual(reference.visualAttributes.first { $0.category == .style }?.origin, .manual)
         XCTAssertTrue(reference.visualAttributes.contains { $0.category == .mood && $0.origin == .manual })
+    }
+
+    func testDeletingReferenceCleansLiveLinksButKeepsRunSnapshot() throws {
+        let repository = try repository()
+        let reference = try repository.createReference(title: "Material reference")
+        let experiment = try repository.createExperiment(title: "Material test")
+        experiment.referenceIDs = [reference.id]
+        try repository.updateExperiment(experiment)
+        let run = try repository.createRunFromSetup(experiment: experiment)
+        let collection = try repository.createReferenceCollection(title: "Material shortlist", kind: .manual, referenceIDs: [reference.id])
+        let proposal = try repository.proposeReferenceTags(
+            agent: "Claude",
+            referenceID: reference.id,
+            attributes: [VisualAttribute(category: .mood, name: "Quiet")]
+        )
+
+        try repository.deleteReference(reference)
+
+        XCTAssertTrue(experiment.referenceIDs.isEmpty)
+        XCTAssertTrue(collection.referenceIDs.isEmpty)
+        XCTAssertEqual(run.inputReferenceIDs, [reference.id])
+        XCTAssertEqual(proposal.status, .rejected)
+        XCTAssertTrue(repository.references(filter: ReferenceFilter(includeArchived: true)).isEmpty)
+    }
+
+    func testDeletingPromptBlocksReferencesAndRecipesDetachesReusableLinksButPreservesRunSnapshots() throws {
+        let repository = try repository()
+        let block = try repository.createKnowledge(kind: .promptBlock, title: "Light", body: "Soft side light")
+        let reference = try repository.createReference(title: "Clay reference")
+        let experiment = try repository.createExperiment(title: "Ceramic test")
+        experiment.promptBlockIDs = [block.id]
+        experiment.referenceIDs = [reference.id]
+        try repository.updateExperiment(experiment)
+        let run = try repository.createRunFromSetup(experiment: experiment)
+        try repository.setBestRun(run, for: experiment)
+        let recipe = try repository.saveBestRunAsRecipe(experiment)
+        let flow = try repository.createFlow(title: "Ceramic process")
+        let step = try repository.createFlowStep(flowID: flow.id, title: "Apply recipe", recipeID: recipe.id)
+
+        try repository.delete(block)
+        try repository.deleteReference(reference)
+
+        XCTAssertTrue(experiment.promptBlockIDs.isEmpty)
+        XCTAssertTrue(experiment.referenceIDs.isEmpty)
+        XCTAssertEqual(run.snapshotPromptBlockIDs, [block.id])
+        XCTAssertEqual(run.inputReferenceIDs, [reference.id])
+        XCTAssertTrue(try XCTUnwrap(repository.recipePayload(recipe)).promptBlockIDs.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(repository.recipePayload(recipe)).references.isEmpty)
+
+        try repository.delete(recipe)
+
+        XCTAssertNil(step.recipeID)
+    }
+
+    func testProposingReferenceTagsForMissingReferenceFailsWithoutCreatingProposal() throws {
+        let repository = try repository()
+
+        XCTAssertThrowsError(try repository.proposeReferenceTags(
+            agent: "Codex",
+            referenceID: UUID(),
+            attributes: [VisualAttribute(category: .mood, name: "Quiet")]
+        )) {
+            XCTAssertEqual($0 as? ReferenceRepositoryError, .referenceNotFound)
+        }
+        XCTAssertTrue(repository.proposals(status: .pending).isEmpty)
     }
 
     func testSmartCollectionEvaluatesItsSerializableFilterWithoutCopyingReferences() throws {
@@ -344,13 +516,108 @@ final class FieldCoreTests: XCTestCase {
         experiment.prompt = "product photo"
         experiment.settingsEntries = [SettingEntry(key: "Strength", value: "0.45")]
         let first = try repository.createRunFromSetup(experiment: experiment)
-        try repository.duplicateRunSetup(first)
+        _ = try repository.duplicateRunSetup(first)
         experiment.settingsEntries = [SettingEntry(key: "Strength", value: "0.30")]
         let second = try repository.createRunFromSetup(experiment: experiment, parentRunID: first.id)
 
         XCTAssertEqual(second.parentRunID, first.id)
         XCTAssertEqual(repository.runDelta(from: first, to: second).first?.label, "Strength")
         XCTAssertEqual(repository.experimentSetup(experiment).settings.first?.value, "0.30")
+    }
+
+    func testRunDeltaHandlesRepeatedSettingKeysWithoutTrapping() throws {
+        let repository = try repository()
+        let experiment = try repository.createExperiment(title: "Repeated settings")
+        let parent = try repository.createExperimentRun(
+            experimentID: experiment.id,
+            title: "Parent",
+            settingsEntries: [
+                SettingEntry(key: "Control", value: "A"),
+                SettingEntry(key: "Control", value: "B")
+            ]
+        )
+        let child = try repository.createExperimentRun(
+            experimentID: experiment.id,
+            title: "Child",
+            settingsEntries: [
+                SettingEntry(key: "Control", value: "A"),
+                SettingEntry(key: "Control", value: "C")
+            ]
+        )
+
+        let delta = repository.runDelta(from: parent, to: child)
+        XCTAssertEqual(delta.map(\.label), ["Control"])
+        XCTAssertEqual(delta.first?.detail, "A, B → A, C")
+    }
+
+    func testRunDeltaIncludesSettingUnitChanges() throws {
+        let repository = try repository()
+        let experiment = try repository.createExperiment(title: "Setting units")
+        let parent = try repository.createExperimentRun(
+            experimentID: experiment.id,
+            title: "Parent",
+            settingsEntries: [SettingEntry(key: "Strength", value: "0.45")]
+        )
+        let child = try repository.createExperimentRun(
+            experimentID: experiment.id,
+            title: "Child",
+            settingsEntries: [SettingEntry(key: "Strength", value: "0.45", unit: "%")]
+        )
+
+        XCTAssertEqual(repository.runDelta(from: parent, to: child).first?.detail, "0.45 → 0.45 %")
+    }
+
+    func testSetBestRunRejectsRunFromAnotherExperiment() throws {
+        let repository = try repository()
+        let experiment = try repository.createExperiment(title: "Target")
+        let otherExperiment = try repository.createExperiment(title: "Other")
+        let foreignRun = try repository.createExperimentRun(experimentID: otherExperiment.id, title: "Foreign run")
+
+        XCTAssertThrowsError(try repository.setBestRun(foreignRun, for: experiment)) {
+            XCTAssertEqual($0 as? ExperimentRepositoryError, .runNotFound)
+        }
+        XCTAssertNil(experiment.bestRunID)
+        XCTAssertNotEqual(foreignRun.evaluation, .best)
+    }
+
+    func testDeletingBestRunClearsSelection() throws {
+        let repository = try repository()
+        let experiment = try repository.createExperiment(title: "Delete best")
+        let bestRun = try repository.createExperimentRun(experimentID: experiment.id, title: "Best")
+        _ = try repository.createExperimentRun(experimentID: experiment.id, title: "Other")
+        try repository.setBestRun(bestRun, for: experiment)
+
+        try repository.deleteExperimentRun(bestRun)
+
+        XCTAssertNil(experiment.bestRunID)
+        XCTAssertEqual(repository.experimentRuns(experimentID: experiment.id).map(\.order), [1])
+    }
+
+    func testDeletingParentRunClearsChildLineage() throws {
+        let repository = try repository()
+        let experiment = try repository.createExperiment(title: "Delete parent")
+        let parent = try repository.createExperimentRun(experimentID: experiment.id, title: "Parent")
+        let child = try repository.createExperimentRun(experimentID: experiment.id, title: "Child", parentRunID: parent.id)
+
+        try repository.deleteExperimentRun(parent)
+
+        XCTAssertNil(child.parentRunID)
+        XCTAssertEqual(child.order, 1)
+    }
+
+    func testCreatingRunRequiresAnExistingExperimentAndSameExperimentParent() throws {
+        let repository = try repository()
+        let experiment = try repository.createExperiment(title: "Target")
+        let otherExperiment = try repository.createExperiment(title: "Other")
+        let foreignRun = try repository.createExperimentRun(experimentID: otherExperiment.id, title: "Foreign run")
+
+        XCTAssertThrowsError(try repository.createExperimentRun(experimentID: UUID(), title: "Orphan")) {
+            XCTAssertEqual($0 as? ExperimentRepositoryError, .experimentNotFound)
+        }
+        XCTAssertThrowsError(try repository.createExperimentRun(experimentID: experiment.id, title: "Cross-linked", parentRunID: foreignRun.id)) {
+            XCTAssertEqual($0 as? ExperimentRepositoryError, .runNotFound)
+        }
+        XCTAssertTrue(repository.experimentRuns(experimentID: experiment.id).isEmpty)
     }
 
     func testBestRunAndRecipeKeepHumanSelectionAndProvenance() throws {

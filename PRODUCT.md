@@ -12,17 +12,17 @@ Swift 6, SwiftUI y SwiftData. La app macOS es el espacio principal de trabajo; i
 
 ## Users
 
-Una diseñadora gráfica / AI Designer que trabaja habitualmente con Claude, Codex, ChatGPT, Krea, Runway, Photoshop, Figma y herramientas similares. Necesita capturar rápidamente descubrimientos y después organizar, conectar y reutilizar su propio conocimiento creativo.
+Profesionales creativos que trabajan con herramientas de diseño e IA y necesitan capturar descubrimientos, organizarlos y reutilizar conocimiento de proyectos posteriores.
 
 ## Product Purpose
 
 Field LAB es una memoria creativa personal, local y estructurada. Guarda aprendizajes, referencias visuales, bloques de prompt, recetas, herramientas, workflows y memoria de proyectos para que vuelvan a ser útiles en trabajos posteriores y puedan ser consultados por agentes de IA.
 
-El éxito inicial consiste en demostrar que una diseñadora puede capturar conocimiento, encontrarlo en macOS, reutilizarlo en un prompt o workflow y compartir contexto fiable con Claude/Codex mediante un servidor MCP local.
+El éxito inicial consiste en demostrar que una persona creativa puede capturar conocimiento, encontrarlo en macOS, reutilizarlo en un prompt o workflow y compartir contexto fiable con agentes mediante un servidor MCP local.
 
 ## Positioning
 
-Field LAB no genera contenido ni sustituye las herramientas creativas. Su mecanismo diferencial es convertir la experiencia acumulada de una diseñadora en una memoria estructurada y compartida entre ella y sus agentes de IA, con escritura permanente bajo aprobación humana.
+Field LAB no genera contenido ni sustituye las herramientas creativas. Su mecanismo diferencial es convertir la experiencia acumulada de una persona creativa en una memoria estructurada y compartida con sus agentes de IA, con escritura permanente bajo aprobación humana.
 
 ## Operating Context
 
@@ -44,14 +44,17 @@ contexto y relaciones para poder encontrarse y reutilizarse más tarde.
 - La persistencia debe funcionar offline y sin cuenta Field LAB. iCloud/CloudKit será opcional y deberá estar documentado, no asumido durante el desarrollo local.
 - La UI debe ser nativa Apple, accesible y compatible con modo claro/oscuro; macOS debe favorecer teclado, sidebar, búsqueda, menú contextual y densidad editorial legible.
 - Los targets nativos viven en `Apps/FIELD.xcodeproj` y requieren el Xcode completo. La configuración CloudKit incluida usa identificadores de ejemplo y necesita los identificadores del equipo antes de sincronizar datos reales.
+- Para compilar el target macOS se requiere un toolchain completo de Xcode.
 
 ## Brand Commitments
 
 El nombre del producto es Field LAB. La frase de producto es “Your creative memory, shared with your AI tools.” / “Tu memoria creativa, compartida con las herramientas de IA con las que trabajas.” La experiencia debe sentirse personal, profesional, calmada, editorial y nativa de Apple, sin parecer un dashboard SaaS genérico.
 
-## Evidence on Hand
+## Sample Data
 
-Existe una definición funcional extensa proporcionada por la usuaria en los archivos adjuntos de la conversación. El repositorio contiene ahora la app de macOS y su complemento nativo de iPhone, incluido el flujo de referencias, experimentos y aprendizaje. Los identificadores Apple de CloudKit y App Group siguen siendo marcadores; no hay datos de muestra en producción.
+Existe una definición funcional extensa proporcionada por la usuaria en los archivos adjuntos de la conversación. El repositorio contiene la app de macOS y su complemento nativo de iPhone, incluido el flujo de referencias, experimentos y aprendizaje. Los identificadores Apple de CloudKit y App Group siguen siendo marcadores; no hay datos de muestra en producción.
+
+Las instalaciones nuevas empiezan vacías. Cualquier dato incluido para demostraciones o capturas debe ser sintético, estar identificado como ejemplo y mantenerse fuera de los datos de producción.
 
 ## Product Principles
 
@@ -59,7 +62,7 @@ Existe una definición funcional extensa proporcionada por la usuaria en los arc
 2. Todo lo guardado debe poder encontrarse, conectarse y reutilizarse.
 3. La memoria canónica requiere control humano.
 4. La misma capa de dominio sirve a la UI y a los agentes MCP.
-5. Field LAB conserva el conocimiento propio de la diseñadora, no conocimiento genérico de Internet.
+5. Field LAB conserva el conocimiento propio de cada profesional creativo, no conocimiento genérico de Internet.
 
 ## Accessibility & Inclusion
 

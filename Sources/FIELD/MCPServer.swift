@@ -27,9 +27,10 @@ final class MCPServerManager: ObservableObject {
         self.repository = repository
         preferredPort = Self.configuredPort()
         port = preferredPort
-        let savedToken = KeychainTokenStore.load() ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        token = savedToken
-        KeychainTokenStore.save(savedToken)
+        let storedToken = KeychainTokenStore.load().flatMap { $0.isEmpty ? nil : $0 }
+        let resolvedToken = storedToken ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        token = resolvedToken
+        KeychainTokenStore.save(resolvedToken)
         authHeaderHelperPath = MCPKeychainHeaderHelper.install()
     }
 
@@ -71,7 +72,29 @@ final class MCPServerManager: ObservableObject {
     }
 
     var setupPrompt: String {
-        """
+        if FieldLocalization.currentLanguage == .english {
+            return """
+            Connect Field LAB to this client as a local HTTP MCP server.
+
+            Endpoint: \(endpoint)
+            Authentication: Authorization: Bearer, using a credential stored in the macOS Keychain.
+            Scope: this Mac only, bound to 127.0.0.1.
+
+            Detect whether you are using Codex or Claude Code, then configure the server for the user scope. For Codex, use this TOML entry:
+            \(codexSetup)
+
+            For Claude Code, use this command:
+            \(claudeCodeSetup)
+
+            \(authHeaderHelperPath == nil ? "The Keychain helper is unavailable. Use FIELD_MCP_TOKEN in the client environment and ask me to configure it locally if it is missing." : "The snippets use a local helper that reads the Keychain token when connecting.")
+            Do not include the token in this chat, command history, or project files. Then verify the connection and tell me how it is configured.
+
+            If you use another MCP client, configure it with Streamable HTTP transport and the same authentication. If it cannot run a local header helper, use FIELD_MCP_TOKEN as an environment variable and ask me to configure it outside the chat.
+
+            Field LAB can read and search knowledge, save working notes, and propose permanent changes for human approval. Do not claim that a proposal was saved as canonical knowledge.
+            """
+        }
+        return """
         Conecta Field LAB a este cliente como servidor MCP HTTP local.
 
         Endpoint: \(endpoint)
@@ -293,9 +316,11 @@ private final class LocalHTTPServer: @unchecked Sendable {
         self.requestHandler = requestHandler
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = false
-        let localPort = NWEndpoint.Port(rawValue: port)!
-        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: localPort)
-        listener = try NWListener(using: parameters, on: localPort)
+        let nwPort = NWEndpoint.Port(rawValue: port)!
+        parameters.requiredLocalEndpoint = .hostPort(host: NWEndpoint.Host("127.0.0.1"), port: nwPort)
+        // The required endpoint already includes the port. Passing `on:` as
+        // well creates an incompatible listener configuration on macOS.
+        listener = try NWListener(using: parameters)
     }
 
     func start() async throws {
@@ -326,7 +351,17 @@ private final class LocalHTTPServer: @unchecked Sendable {
         connection.start(queue: queue)
         Task { [weak self] in
             guard let self else { return }
-            let data = await self.readRequest(connection)
+            let data: Data
+            switch await self.readRequest(connection) {
+            case .data(let requestData):
+                data = requestData
+            case .malformed:
+                self.send(status: 400, headers: [:], body: Data("Bad Request".utf8), on: connection)
+                return
+            case .payloadTooLarge:
+                self.send(status: 413, headers: [:], body: Data("Payload Too Large".utf8), on: connection)
+                return
+            }
             guard let request = self.parse(data), request.path == "/mcp" else {
                 self.send(status: 404, headers: [:], body: Data("Not Found".utf8), on: connection)
                 return
@@ -349,35 +384,53 @@ private final class LocalHTTPServer: @unchecked Sendable {
         }
     }
 
-    private func readRequest(_ connection: NWConnection) async -> Data {
+    private func readRequest(_ connection: NWConnection) async -> HTTPRequestReadResult {
         var buffer = Data()
-        while buffer.range(of: Data("\r\n\r\n".utf8)) == nil && buffer.count < 2_000_000 {
+        let headerTerminator = Data("\r\n\r\n".utf8)
+        let maximumHeaderBytes = 64 * 1024
+        while buffer.range(of: headerTerminator) == nil {
+            guard buffer.count < maximumHeaderBytes else { return .malformed }
+            let remainingHeaderBytes = maximumHeaderBytes - buffer.count
             let chunk = await withCheckedContinuation { (continuation: CheckedContinuation<Data, Never>) in
-                connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { data, _, isComplete, _ in
+                connection.receive(minimumIncompleteLength: 1, maximumLength: min(64 * 1024, remainingHeaderBytes)) { data, _, isComplete, _ in
                     continuation.resume(returning: data ?? (isComplete ? Data() : Data()))
                 }
             }
             buffer.append(chunk)
-            if chunk.isEmpty { break }
+            if chunk.isEmpty { return .malformed }
         }
-        guard let separator = buffer.range(of: Data("\r\n\r\n".utf8)) else { return buffer }
+        guard let separator = buffer.range(of: headerTerminator) else { return .malformed }
         let headerText = String(decoding: buffer[..<separator.lowerBound], as: UTF8.self)
-        let contentLength = headerText.split(separator: "\n").first(where: { $0.lowercased().contains("content-length") }).flatMap { Int($0.split(separator: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "0") } ?? 0
+        var contentLength: Int?
+        for line in MCPHTTPRequestHeaderParser.lines(headerText).dropFirst() {
+            let components = line.split(separator: ":", maxSplits: 1).map(String.init)
+            guard components.count == 2 else { continue }
+            let name = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+            if name.caseInsensitiveCompare("transfer-encoding") == .orderedSame { return .malformed }
+            guard name.caseInsensitiveCompare("content-length") == .orderedSame else { continue }
+            guard contentLength == nil, let parsedLength = Int(value), parsedLength >= 0 else { return .malformed }
+            contentLength = parsedLength
+        }
+        let bodyLength = contentLength ?? 0
+        guard bodyLength <= 2_000_000 else { return .payloadTooLarge }
         let bodyStart = separator.upperBound
-        while buffer.count - bodyStart < contentLength {
+        guard buffer.count - bodyStart <= bodyLength else { return .malformed }
+        while buffer.count - bodyStart < bodyLength {
+            let remainingBodyBytes = bodyLength - (buffer.count - bodyStart)
             let chunk = await withCheckedContinuation { (continuation: CheckedContinuation<Data, Never>) in
-                connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { data, _, _, _ in continuation.resume(returning: data ?? Data()) }
+                connection.receive(minimumIncompleteLength: 1, maximumLength: min(64 * 1024, remainingBodyBytes)) { data, _, _, _ in continuation.resume(returning: data ?? Data()) }
             }
             buffer.append(chunk)
-            if chunk.isEmpty { break }
+            if chunk.isEmpty { return .malformed }
         }
-        return buffer
+        return .data(buffer)
     }
 
     private func parse(_ data: Data) -> HTTPRequest? {
         guard let separator = data.range(of: Data("\r\n\r\n".utf8)) else { return nil }
         let headerText = String(decoding: data[..<separator.lowerBound], as: UTF8.self)
-        let lines = headerText.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let lines = MCPHTTPRequestHeaderParser.lines(headerText).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         guard let requestLine = lines.first else { return nil }
         let parts = requestLine.split(separator: " ")
         guard parts.count >= 2 else { return nil }
@@ -390,7 +443,7 @@ private final class LocalHTTPServer: @unchecked Sendable {
     }
 
     private func send(status: Int, headers: [String: String], body: Data, on connection: NWConnection) {
-        let reason: String = [200: "OK", 202: "Accepted", 400: "Bad Request", 401: "Unauthorized", 404: "Not Found", 405: "Method Not Allowed", 500: "Internal Server Error", 501: "Not Implemented"][status] ?? "Response"
+        let reason: String = [200: "OK", 202: "Accepted", 400: "Bad Request", 401: "Unauthorized", 404: "Not Found", 405: "Method Not Allowed", 413: "Payload Too Large", 500: "Internal Server Error", 501: "Not Implemented"][status] ?? "Response"
         var allHeaders = headers
         allHeaders["Content-Length"] = String(body.count)
         allHeaders["Connection"] = "close"
@@ -402,6 +455,12 @@ private final class LocalHTTPServer: @unchecked Sendable {
         output.append(body)
         connection.send(content: output, completion: .contentProcessed { _ in connection.cancel() })
     }
+}
+
+private enum HTTPRequestReadResult {
+    case data(Data)
+    case malformed
+    case payloadTooLarge
 }
 
 private final class ContinuationGate: @unchecked Sendable {

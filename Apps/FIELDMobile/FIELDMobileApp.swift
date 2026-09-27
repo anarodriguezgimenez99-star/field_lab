@@ -6,6 +6,7 @@ import SwiftUI
 @main
 struct FIELDMobileApp: App {
     @StateObject private var appModel = MobileAppModel()
+    @AppStorage(FieldLanguage.preferenceKey) private var languageCode = FieldLanguage.spanish.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -13,17 +14,29 @@ struct FIELDMobileApp: App {
             MobileTabsView()
                 .environmentObject(appModel)
                 .modelContainer(appModel.container)
+                .environment(\.locale, (FieldLanguage(rawValue: languageCode) ?? .spanish).locale)
                 .tint(.fieldAccent)
                 .onOpenURL { url in
                     appModel.open(url: url)
                 }
                 .task {
+                    syncLanguageWithShareExtension()
                     appModel.processPendingImports()
                 }
+                .onChange(of: languageCode) { _, _ in syncLanguageWithShareExtension() }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { appModel.processPendingImports() }
                 }
         }
+    }
+
+    private func syncLanguageWithShareExtension() {
+        guard
+            let groupID = Bundle.main.object(forInfoDictionaryKey: "FIELD_APP_GROUP_ID") as? String,
+            !groupID.isEmpty,
+            groupID != "group.com.example.field"
+        else { return }
+        UserDefaults(suiteName: groupID)?.set(languageCode, forKey: FieldLanguage.preferenceKey)
     }
 }
 
@@ -70,7 +83,7 @@ final class MobileAppModel: ObservableObject {
         repository = FieldRepository(context: container.mainContext)
         if let cloudKitStartupError {
             cloudAccountState = .unavailable
-            cloudAccountDetail = "FIELD ha abierto la biblioteca local. iCloud no se pudo iniciar: \(cloudKitStartupError)"
+            cloudAccountDetail = L10n.format("FIELD ha abierto la biblioteca local. iCloud no se pudo iniciar: %@", cloudKitStartupError)
         } else {
             refreshCloudAccountState()
         }
@@ -102,7 +115,7 @@ final class MobileAppModel: ObservableObject {
             importedReferenceCount += report.imported.count
             importError = report.failures.isEmpty ? nil : report.failures.joined(separator: "\n")
         } catch {
-            importError = "No se pudieron importar las referencias compartidas: \(error.localizedDescription)"
+            importError = L10n.format("No se pudieron importar las referencias compartidas: %@", error.localizedDescription)
         }
     }
 
@@ -132,12 +145,12 @@ final class MobileAppModel: ObservableObject {
     func refreshCloudAccountState() {
         if let cloudKitStartupError {
             cloudAccountState = .unavailable
-            cloudAccountDetail = "FIELD ha abierto la biblioteca local. iCloud no se pudo iniciar: \(cloudKitStartupError)"
+            cloudAccountDetail = L10n.format("FIELD ha abierto la biblioteca local. iCloud no se pudo iniciar: %@", cloudKitStartupError)
             return
         }
         guard let cloudKitContainerIdentifier else {
             cloudAccountState = .notConfigured
-            cloudAccountDetail = "Añade el contenedor iCloud de tu equipo en la configuración del proyecto."
+            cloudAccountDetail = L10n.text("Añade el contenedor iCloud de tu equipo en la configuración del proyecto.")
             return
         }
 
@@ -154,16 +167,16 @@ final class MobileAppModel: ObservableObject {
                 switch status {
                 case .available:
                     self.cloudAccountState = .available
-                    self.cloudAccountDetail = "La cuenta iCloud está disponible. FIELD conserva los cambios en el iPhone sin conexión y los envía a CloudKit en segundo plano cuando puede."
+                    self.cloudAccountDetail = L10n.text("La cuenta iCloud está disponible. FIELD conserva los cambios en el iPhone sin conexión y los envía a CloudKit en segundo plano cuando puede.")
                 case .noAccount:
                     self.cloudAccountState = .noAccount
-                    self.cloudAccountDetail = "Inicia sesión en iCloud desde Ajustes del iPhone para sincronizar FIELD."
+                    self.cloudAccountDetail = L10n.text("Inicia sesión en iCloud desde Ajustes del iPhone para sincronizar FIELD.")
                 case .restricted:
                     self.cloudAccountState = .restricted
-                    self.cloudAccountDetail = "Este dispositivo tiene restringido el acceso a iCloud."
+                    self.cloudAccountDetail = L10n.text("Este dispositivo tiene restringido el acceso a iCloud.")
                 default:
                     self.cloudAccountState = .unavailable
-                    self.cloudAccountDetail = "No se pudo comprobar el estado de iCloud."
+                    self.cloudAccountDetail = L10n.text("No se pudo comprobar el estado de iCloud.")
                 }
             }
         }
@@ -199,12 +212,12 @@ enum CloudAccountState: Equatable {
 
     var title: String {
         switch self {
-        case .checking: "Comprobando iCloud"
-        case .available: "Cuenta iCloud disponible"
-        case .noAccount: "Inicia sesión en iCloud"
-        case .restricted: "iCloud restringido"
-        case .unavailable: "iCloud no disponible"
-        case .notConfigured: "Falta configurar iCloud"
+        case .checking: L10n.text("Comprobando iCloud")
+        case .available: L10n.text("Cuenta iCloud disponible")
+        case .noAccount: L10n.text("Inicia sesión en iCloud")
+        case .restricted: L10n.text("iCloud restringido")
+        case .unavailable: L10n.text("iCloud no disponible")
+        case .notConfigured: L10n.text("Falta configurar iCloud")
         }
     }
 

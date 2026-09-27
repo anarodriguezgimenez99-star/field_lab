@@ -14,9 +14,15 @@ final class AppModel: ObservableObject {
     @Published var isPresentingCapture = false
     @Published var isRequestingMCPSettings = false
     @Published var captureKind: KnowledgeKind = .learning
+    @Published var language: FieldLanguage {
+        didSet { UserDefaults.standard.set(language.rawValue, forKey: FieldLanguage.preferenceKey) }
+    }
     @Published private(set) var refreshToken = UUID()
 
     init() {
+        language = FieldLanguage(
+            rawValue: UserDefaults.standard.string(forKey: FieldLanguage.preferenceKey) ?? FieldLanguage.spanish.rawValue
+        ) ?? .spanish
         let configuredCloudKitIdentifier = Bundle.main.object(forInfoDictionaryKey: "FIELD_ICLOUD_CONTAINER_ID") as? String
         let cloudKitContainerIdentifier = configuredCloudKitIdentifier.flatMap {
             !$0.isEmpty && $0 != "iCloud.com.example.field" ? $0 : nil
@@ -82,7 +88,7 @@ enum FieldRoute: String, CaseIterable, Identifiable, Hashable {
     var id: String { rawValue }
 
     var title: String {
-        switch self {
+        let spanishTitle: String = switch self {
         case .collect: "Recopilar"
         case .lab, .all: "Laboratorio"
         case .learn: "Aprender"
@@ -100,6 +106,7 @@ enum FieldRoute: String, CaseIterable, Identifiable, Hashable {
         case .activity: "Actividad"
         case .mcp: "Servidor MCP"
         }
+        return FieldLocalization.text(spanishTitle)
     }
 
     var systemImage: String {

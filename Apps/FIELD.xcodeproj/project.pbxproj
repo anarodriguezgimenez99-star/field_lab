@@ -25,6 +25,10 @@
 		A10000000000000000000025 /* FieldCore in Share Extension Frameworks */ = {isa = PBXBuildFile; productRef = A60000000000000000000005 /* FieldCore */; };
 		A10000000000000000000026 /* FIELDShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* FIELDShare.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* Assets.xcassets */; };
+		A10000000000000000000013 /* FieldLanguage.swift in Mobile Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* FieldLanguage.swift */; };
+		A10000000000000000000014 /* FieldLanguage.swift in Desktop Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* FieldLanguage.swift */; };
+		A10000000000000000000015 /* FieldLanguage.swift in Share Extension Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* FieldLanguage.swift */; };
+		A10000000000000000000028 /* FIELDLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* FIELDLogo.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +51,8 @@
 		A20000000000000000000022 /* Share Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000023 /* FIELDShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FIELDShare.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000024 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000025 /* FieldLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Sources/FIELD/FieldLanguage.swift; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000026 /* FIELDLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ../Sources/FIELD/Resources/FIELDLogo.png; sourceTree = SOURCE_ROOT; };
 		A20000000000000000000031 /* FIELDMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FIELDMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000032 /* FIELD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FIELD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000033 /* FIELDShare.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = FIELDShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,7 +76,7 @@
 		};
 		A40000000000000000000002 /* FIELDMobile */ = {isa = PBXGroup; path = FIELDMobile; sourceTree = "<group>"; children = (A20000000000000000000001 /* FIELDMobileApp.swift */, A20000000000000000000002 /* MobileTabsView.swift */, A20000000000000000000003 /* CaptureComposer.swift */, A20000000000000000000004 /* CloudSyncSettingsView.swift */, A20000000000000000000005 /* Info.plist */, A20000000000000000000006 /* FIELDMobile.entitlements */, A20000000000000000000024 /* Assets.xcassets */, ); };
 		A40000000000000000000003 /* FIELDDesktop */ = {isa = PBXGroup; path = FIELDDesktop; sourceTree = "<group>"; children = (A20000000000000000000018 /* FIELDDesktop.entitlements */, ); };
-		A40000000000000000000004 /* Desktop Sources */ = {isa = PBXGroup; path = ../Sources/FIELD; sourceTree = "<group>"; children = (A20000000000000000000011 /* FIELDApp.swift */, A20000000000000000000012 /* ContentView.swift */, A20000000000000000000013 /* ReferenceViews.swift */, A20000000000000000000014 /* LabViews.swift */, A20000000000000000000015 /* BorderGlow.swift */, A20000000000000000000016 /* AppModel.swift */, A20000000000000000000017 /* MCPServer.swift */, ); };
+		A40000000000000000000004 /* Desktop Sources */ = {isa = PBXGroup; path = ../Sources/FIELD; sourceTree = "<group>"; children = (A20000000000000000000011 /* FIELDApp.swift */, A20000000000000000000012 /* ContentView.swift */, A20000000000000000000013 /* ReferenceViews.swift */, A20000000000000000000014 /* LabViews.swift */, A20000000000000000000015 /* BorderGlow.swift */, A20000000000000000000016 /* AppModel.swift */, A20000000000000000000017 /* MCPServer.swift */, A20000000000000000000025 /* FieldLanguage.swift */, A20000000000000000000026 /* FIELDLogo.png */, ); };
 		A40000000000000000000005 /* Config */ = {isa = PBXGroup; path = Config; sourceTree = "<group>"; children = (A20000000000000000000019 /* FieldICloud.xcconfig */, ); };
 		A40000000000000000000006 /* Products */ = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (A20000000000000000000031 /* FIELDMobile.app */, A20000000000000000000032 /* FIELD.app */, A20000000000000000000033 /* FIELDShare.appex */, ); };
 		A40000000000000000000007 /* FIELDMobileShare */ = {isa = PBXGroup; path = FIELDMobileShare; sourceTree = "<group>"; children = (A20000000000000000000021 /* ShareViewController.swift */, A20000000000000000000022 /* Share Info.plist */, A20000000000000000000023 /* FIELDShare.entitlements */, ); };
@@ -92,7 +98,7 @@
 		A50000000000000000000002 /* FIELD */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A80000000000000000000003 /* Build configuration list for PBXNativeTarget "FIELD" */;
-			buildPhases = (A30000000000000000000002 /* Frameworks */, A70000000000000000000002 /* Sources */, );
+			buildPhases = (A30000000000000000000002 /* Frameworks */, A70000000000000000000002 /* Sources */, A70000000000000000000012 /* Resources */, );
 			buildRules = ();
 			dependencies = ();
 			name = FIELD;
@@ -152,12 +158,13 @@
 /* Begin PBXResourcesBuildPhase section */
 		A70000000000000000000010 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000027 /* Assets.xcassets in Resources */, ); runOnlyForDeploymentPostprocessing = 0; };
 		A70000000000000000000011 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000012 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000028 /* FIELDLogo.png in Resources */, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A70000000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* FIELDMobileApp.swift in Sources */, A10000000000000000000002 /* MobileTabsView.swift in Sources */, A10000000000000000000003 /* CaptureComposer.swift in Sources */, A10000000000000000000004 /* CloudSyncSettingsView.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
-		A70000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000005 /* FIELDApp.swift in Sources */, A10000000000000000000006 /* ContentView.swift in Sources */, A10000000000000000000007 /* ReferenceViews.swift in Sources */, A10000000000000000000008 /* LabViews.swift in Sources */, A10000000000000000000009 /* BorderGlow.swift in Sources */, A10000000000000000000010 /* AppModel.swift in Sources */, A10000000000000000000011 /* MCPServer.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
-		A70000000000000000000003 /* Share Extension Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000012 /* ShareViewController.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* FIELDMobileApp.swift in Sources */, A10000000000000000000002 /* MobileTabsView.swift in Sources */, A10000000000000000000003 /* CaptureComposer.swift in Sources */, A10000000000000000000004 /* CloudSyncSettingsView.swift in Sources */, A10000000000000000000013 /* FieldLanguage.swift in Mobile Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000005 /* FIELDApp.swift in Sources */, A10000000000000000000006 /* ContentView.swift in Sources */, A10000000000000000000007 /* ReferenceViews.swift in Sources */, A10000000000000000000008 /* LabViews.swift in Sources */, A10000000000000000000009 /* BorderGlow.swift in Sources */, A10000000000000000000010 /* AppModel.swift in Sources */, A10000000000000000000011 /* MCPServer.swift in Sources */, A10000000000000000000014 /* FieldLanguage.swift in Desktop Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000003 /* Share Extension Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000012 /* ShareViewController.swift in Sources */, A10000000000000000000015 /* FieldLanguage.swift in Share Extension Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */

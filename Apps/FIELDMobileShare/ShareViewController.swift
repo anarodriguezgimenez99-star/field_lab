@@ -16,7 +16,7 @@ final class ShareViewController: UIViewController {
         icon.contentMode = .scaleAspectFit
         icon.heightAnchor.constraint(equalToConstant: 36).isActive = true
 
-        statusLabel.text = "Guardando en FIELD…"
+        statusLabel.text = L10n.text("Guardando en FIELD…")
         statusLabel.textColor = .secondaryLabel
         statusLabel.font = .preferredFont(forTextStyle: .body)
         statusLabel.textAlignment = .center
@@ -93,7 +93,7 @@ final class ShareViewController: UIViewController {
         }
 
         guard foundSupportedContent else {
-            showFailure("Esta app no ha compartido una imagen, un enlace ni texto compatible.")
+            showFailure(L10n.text("Esta app no ha compartido una imagen, un enlace ni texto compatible."))
             return
         }
 
@@ -106,7 +106,7 @@ final class ShareViewController: UIViewController {
     private func enqueue(_ payload: SharedPayload) {
         let payload = payload.withURLExtractedFromText()
         guard payload.imageData != nil || !payload.urlString.isEmpty || !payload.text.isEmpty else {
-            showFailure("No se pudo leer el contenido compartido.")
+            showFailure(L10n.text("No se pudo leer el contenido compartido."))
             return
         }
         guard
@@ -114,7 +114,7 @@ final class ShareViewController: UIViewController {
             groupID != "group.com.example.field",
             let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
         else {
-            showFailure("Falta configurar el grupo compartido de FIELD en Xcode.")
+            showFailure(L10n.text("Falta configurar el grupo compartido de FIELD en Xcode."))
             return
         }
 
@@ -138,13 +138,13 @@ final class ShareViewController: UIViewController {
                 text: payload.text
             )
             activityIndicator.stopAnimating()
-            statusLabel.text = "Guardado. Abre FIELD para verlo en Recopilar."
+            statusLabel.text = L10n.text("Guardado. Abre FIELD para verlo en Recopilar.")
             statusLabel.textColor = .secondaryLabel
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
                 self?.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
             }
         } catch {
-            showFailure("No se pudo guardar la referencia: \(error.localizedDescription)")
+            showFailure(L10n.format("No se pudo guardar la referencia: %@", error.localizedDescription))
         }
     }
 
@@ -152,8 +152,8 @@ final class ShareViewController: UIViewController {
         activityIndicator.stopAnimating()
         statusLabel.text = message
         statusLabel.textColor = .systemRed
-        let alert = UIAlertController(title: "No se pudo guardar en FIELD", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cerrar", style: .default) { [weak self] _ in
+        let alert = UIAlertController(title: L10n.text("No se pudo guardar en FIELD"), message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.text("Cerrar"), style: .default) { [weak self] _ in
             self?.extensionContext?.cancelRequest(withError: NSError(domain: "FIELDShareExtension", code: 1))
         })
         present(alert, animated: true)

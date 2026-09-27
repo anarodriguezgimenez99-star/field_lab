@@ -2,7 +2,29 @@
 .swiftpm/
 DerivedData/
 .DS_Store
-.field-worktree.env
-*.xcuserstate
+
+# Xcode per-user state
 xcuserdata/
+*.xcuserstate
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.mobileprovision
+*.provisionprofile
+
+# Local application data
+*.db
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# FIELD worktree state
+.field-worktree.env
 Apps/Config/FieldICloud.local.xcconfig
+.field-worktree.json

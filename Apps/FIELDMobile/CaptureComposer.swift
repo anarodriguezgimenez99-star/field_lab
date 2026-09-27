@@ -26,16 +26,26 @@ enum CaptureRoute: Identifiable {
 
     var title: String {
         switch self {
-        case .reference: "Nueva referencia"
-        case .knowledge(.learning): "Nuevo aprendizaje"
-        case .knowledge(.promptBlock): "Nuevo bloque de prompt"
-        case .knowledge(let kind): "Nueva \(kind.displayName.lowercased())"
-        case .experiment: "Nuevo experimento"
-        case .experimentFromRecipe: "Experimento desde receta"
-        case .editReference: "Editar referencia"
-        case .editKnowledge: "Editar conocimiento"
-        case .editExperiment: "Editar experimento"
+        case .reference: L10n.text("Nueva referencia")
+        case .knowledge(.learning): L10n.text("Nuevo aprendizaje")
+        case .knowledge(.promptBlock): L10n.text("Nuevo bloque de prompt")
+        case .knowledge(.recipe): L10n.text("Nueva") + " " + L10n.text("Receta").lowercased()
+        case .knowledge(.note): L10n.text("Nueva") + " " + L10n.text("Nota").lowercased()
+        case .knowledge(.decision): L10n.text("Nueva") + " " + L10n.text("Decisión").lowercased()
+        case .knowledge(.style): L10n.text("Nuevo") + " " + L10n.text("Estilo").lowercased()
+        case .knowledge(let kind): newKnowledgeTitle(for: kind)
+        case .experiment: L10n.text("Nuevo") + " " + L10n.text("Experimento").lowercased()
+        case .experimentFromRecipe: L10n.text("Experimento desde receta")
+        case .editReference: L10n.text("Editar referencia")
+        case .editKnowledge: L10n.text("Editar conocimiento")
+        case .editExperiment: L10n.text("Editar experimento")
         }
+    }
+
+    private func newKnowledgeTitle(for kind: KnowledgeKind) -> String {
+        let masculineKinds: Set<KnowledgeKind> = [.learning, .promptBlock, .resource, .sessionSummary, .flow]
+        let prefix = L10n.text(masculineKinds.contains(kind) ? "Nuevo" : "Nueva")
+        return "\(prefix) \(L10n.text(kind.displayName).lowercased())"
     }
 
     var isReference: Bool {
@@ -114,13 +124,13 @@ struct CaptureComposer: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField(titlePlaceholder, text: $title, axis: .vertical)
+                    TextField(L10n.text(titlePlaceholder), text: $title, axis: .vertical)
                         .font(.title3.weight(.medium))
                         .lineLimit(1...3)
                         .focused($titleFocused)
 
                     if route.isReference {
-                        TextField("Pega un enlace", text: $urlText)
+                        TextField(L10n.text("Pega un enlace"), text: $urlText)
                             .keyboardType(.URL)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
@@ -133,7 +143,7 @@ struct CaptureComposer: View {
                                 autoSuggestedTitle = suggestion
                             }
                         PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                            Label(photoPickerTitle, systemImage: photoPickerSymbol)
+                            Label(L10n.text(photoPickerTitle), systemImage: photoPickerSymbol)
                         }
                         .disabled(isLoadingPhoto)
                         .onChange(of: selectedPhoto) { _, selection in
@@ -144,21 +154,21 @@ struct CaptureComposer: View {
                                 defer { isLoadingPhoto = false }
                                 do {
                                     guard let loadedImage = try await selection.loadTransferable(type: Data.self) else {
-                                        photoError = "No se pudo leer la imagen seleccionada."
+                                        photoError = L10n.text("No se pudo leer la imagen seleccionada.")
                                         return
                                     }
                                     imageData = loadedImage
                                     photoError = nil
                                 } catch {
-                                    photoError = "No se pudo cargar la imagen: \(error.localizedDescription)"
+                                    photoError = L10n.format("No se pudo cargar la imagen: %@", error.localizedDescription)
                                 }
                             }
                         }
                         if isLoadingPhoto {
-                            ProgressView("Preparando imagen")
+                            ProgressView(L10n.text("Preparando imagen"))
                         }
                         if imageData != nil {
-                            Label("Imagen preparada", systemImage: "checkmark.circle.fill")
+                            Label(L10n.text("Imagen preparada"), systemImage: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -169,7 +179,7 @@ struct CaptureComposer: View {
                         }
                         if case let .editReference(reference) = route,
                            imageData != nil || reference.thumbnailData != nil {
-                            Button("Quitar imagen", systemImage: "trash", role: .destructive) {
+                            Button(L10n.text("Quitar imagen"), systemImage: "trash", role: .destructive) {
                                 imageData = nil
                                 selectedPhoto = nil
                                 isRemovingImage = true
@@ -180,53 +190,53 @@ struct CaptureComposer: View {
                     }
 
                     if isKnowledgeRoute {
-                        TextField("Enlace (opcional)", text: $urlText)
+                        TextField(L10n.text("Enlace (opcional)"), text: $urlText)
                             .keyboardType(.URL)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                     }
 
-                    TextField(bodyPlaceholder, text: $bodyText, axis: .vertical)
+                    TextField(L10n.text(bodyPlaceholder), text: $bodyText, axis: .vertical)
                         .lineLimit(4...10)
 
                     if isRecipeRoute && bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Label("Una receta necesita un prompt para poder crear un experimento.", systemImage: "info.circle")
+                        Label(L10n.text("Una receta necesita un prompt para poder crear un experimento."), systemImage: "info.circle")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
 
                     if route.isReference || isKnowledgeRoute {
-                        TextField("Etiquetas, separadas por comas", text: $tagsText)
+                        TextField(L10n.text("Etiquetas, separadas por comas"), text: $tagsText)
                     }
 
                     if isExperimentRoute {
-                        TextField("Prompt (opcional)", text: $promptText, axis: .vertical)
+                        TextField(L10n.text("Prompt (opcional)"), text: $promptText, axis: .vertical)
                             .lineLimit(3...8)
                             .font(.body.monospaced())
                         if isEditingExperiment {
-                            TextField("Conclusión", text: $conclusionText, axis: .vertical)
+                            TextField(L10n.text("Conclusión"), text: $conclusionText, axis: .vertical)
                                 .lineLimit(3...8)
-                            Picker("Estado", selection: $experimentStatus) {
+                            Picker(L10n.text("Estado"), selection: $experimentStatus) {
                                 ForEach(ExperimentStatus.allCases, id: \.rawValue) { status in
-                                    Text(status.displayName).tag(status)
+                                    Text(L10n.text(status.displayName)).tag(status)
                                 }
                             }
                         }
                     }
 
                     if isEditingKnowledge {
-                        Picker("Estado", selection: $knowledgeStatus) {
+                        Picker(L10n.text("Estado"), selection: $knowledgeStatus) {
                             ForEach(KnowledgeStatus.allCases, id: \.rawValue) { status in
-                                Text(status.displayName).tag(status)
+                                Text(L10n.text(status.displayName)).tag(status)
                             }
                         }
                     }
                 } header: {
-                    Text(sectionTitle)
+                    Text(L10n.text(sectionTitle))
                 }
 
                 if showsContextFields {
-                    Section("Contexto") {
+                    Section(L10n.text("Contexto")) {
                         if route.isReference, !contextProjects.isEmpty {
                             Menu {
                                 ForEach(contextProjects) { project in
@@ -243,13 +253,13 @@ struct CaptureComposer: View {
                                 }
                             } label: {
                                 let selectedNames = selectedReferenceProjectNames
-                                LabeledContent("Proyectos", value: selectedNames.count == 1 ? selectedNames[0] : selectedNames.isEmpty ? "Sin proyecto" : "\(selectedNames.count) proyectos")
+                                LabeledContent(L10n.text("Proyectos"), value: selectedNames.count == 1 ? selectedNames[0] : selectedNames.isEmpty ? L10n.text("Sin proyecto") : "\(selectedNames.count) \(L10n.text("proyectos"))")
                             }
                         } else if !route.isReference, !contextProjects.isEmpty {
-                            Picker("Proyecto", selection: $selectedProjectID) {
-                                Text("Sin proyecto").tag(nil as UUID?)
+                            Picker(L10n.text("Proyecto"), selection: $selectedProjectID) {
+                                Text(L10n.text("Sin proyecto")).tag(nil as UUID?)
                                 ForEach(contextProjects) { project in
-                                    Text(project.archived ? "\(project.title) · Archivado" : project.title)
+                                    Text(project.archived ? "\(project.title) · \(L10n.text("Archivado"))" : project.title)
                                         .tag(Optional(project.id))
                                 }
                             }
@@ -257,8 +267,8 @@ struct CaptureComposer: View {
                         }
 
                         if !tools.isEmpty {
-                            Picker("Herramienta", selection: $selectedToolID) {
-                                Text("Sin herramienta").tag(nil as UUID?)
+                            Picker(L10n.text("Herramienta"), selection: $selectedToolID) {
+                                Text(L10n.text("Sin herramienta")).tag(nil as UUID?)
                                 ForEach(tools) { tool in
                                     Text(tool.name).tag(Optional(tool.id))
                                 }
@@ -267,7 +277,7 @@ struct CaptureComposer: View {
                         }
 
                         if needsModel {
-                            TextField("Modelo (opcional)", text: $modelText)
+                            TextField(L10n.text("Modelo (opcional)"), text: $modelText)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                         }
@@ -275,18 +285,18 @@ struct CaptureComposer: View {
                 }
 
                 if isExperimentRoute {
-                    Section("Configuración de cada run") {
-                        Text("Al añadir un bloque, su texto se suma al prompt. Quitar el vínculo conserva el texto insertado.")
+                    Section(L10n.text("Configuración de cada run")) {
+                        Text(L10n.text("Al añadir un bloque, su texto se suma al prompt. Quitar el vínculo conserva el texto insertado."))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
 
                         Menu {
                             if selectableExperimentReferences.isEmpty {
-                                Text("Guarda referencias desde Recopilar para vincularlas aquí.")
+                                Text(L10n.text("Guarda referencias desde Recopilar para vincularlas aquí."))
                             } else {
                                 ForEach(selectableExperimentReferences) { reference in
                                     let isSelected = selectedExperimentReferenceIDs.contains(reference.id)
-                                    let title = reference.archived ? "\(reference.title) · Archivada" : reference.title
+                                    let title = reference.archived ? "\(reference.title) · \(L10n.text("Archivada"))" : reference.title
                                     Button {
                                         if isSelected {
                                             selectedExperimentReferenceIDs.remove(reference.id)
@@ -300,7 +310,7 @@ struct CaptureComposer: View {
                             }
                         } label: {
                             LabeledContent(
-                                "Referencias",
+                                L10n.text("Referencias"),
                                 value: selectionCount(
                                     selectedExperimentReferenceIDs.count,
                                     empty: "Ninguna",
@@ -312,11 +322,11 @@ struct CaptureComposer: View {
 
                         Menu {
                             if selectablePromptBlocks.isEmpty {
-                                Text("Crea bloques de prompt desde Aprender para vincularlos aquí.")
+                                Text(L10n.text("Crea bloques de prompt desde Aprender para vincularlos aquí."))
                             } else {
                                 ForEach(selectablePromptBlocks) { block in
                                     let isSelected = selectedExperimentPromptBlockIDs.contains(block.id)
-                                    let title = block.status == .archived ? "\(block.title) · Archivado" : block.title
+                                    let title = block.status == .archived ? "\(block.title) · \(L10n.text("Archivado"))" : block.title
                                     Button {
                                         if isSelected {
                                             selectedExperimentPromptBlockIDs.remove(block.id)
@@ -331,7 +341,7 @@ struct CaptureComposer: View {
                             }
                         } label: {
                             LabeledContent(
-                                "Bloques de prompt",
+                                L10n.text("Bloques de prompt"),
                                 value: selectionCount(
                                     selectedExperimentPromptBlockIDs.count,
                                     empty: "Ninguno",
@@ -342,24 +352,25 @@ struct CaptureComposer: View {
                         }
 
                         if experimentSettings.isEmpty {
-                            Text("Añade parámetros que quieras conservar en cada resultado.")
+                            Text(L10n.text("Añade parámetros que quieras conservar en cada resultado."))
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         ForEach($experimentSettings) { $setting in
                             HStack(alignment: .top, spacing: 10) {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    TextField("Parámetro", text: $setting.key)
-                                    TextField("Valor", text: $setting.value)
+                                    TextField(L10n.text("Parámetro"), text: $setting.key)
+                                    TextField(L10n.text("Valor"), text: $setting.value)
+                                    TextField(L10n.text("Unidad"), text: Binding(get: { setting.unit ?? "" }, set: { setting.unit = $0.isEmpty ? nil : $0 }))
                                 }
-                                Button("Eliminar ajuste", systemImage: "trash", role: .destructive) {
+                                Button(L10n.text("Eliminar ajuste"), systemImage: "trash", role: .destructive) {
                                     let settingID = setting.id
                                     experimentSettings.removeAll { $0.id == settingID }
                                 }
                                 .labelStyle(.iconOnly)
                             }
                         }
-                        Button("Añadir ajuste", systemImage: "plus") {
+                        Button(L10n.text("Añadir ajuste"), systemImage: "plus") {
                             experimentSettings.append(SettingEntry(key: "", value: ""))
                         }
                     }
@@ -372,14 +383,14 @@ struct CaptureComposer: View {
                     }
                 }
             }
-            .navigationTitle(route.title)
+            .navigationTitle(L10n.text(route.title))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button(L10n.text("Cancelar")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") { save() }
+                    Button(L10n.text("Guardar")) { save() }
                         .disabled(
                             title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                                 || (isRecipeRoute && bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -427,7 +438,7 @@ struct CaptureComposer: View {
                     experimentExecutionMode = experiment.executionMode
                 case .experimentFromRecipe(let item):
                     title = item.title
-                    bodyText = "Prueba de la receta «\(item.title)»."
+                    bodyText = L10n.format("Prueba de la receta «%@».", item.title)
                     let payload = appModel.repository.recipePayload(item)
                     promptText = payload?.prompt ?? ""
                     selectedProjectID = item.projectID
@@ -516,7 +527,7 @@ struct CaptureComposer: View {
     private var selectedReferenceProjectNames: [String] {
         contextProjects
             .filter { selectedReferenceProjectIDs.contains($0.id) }
-            .map { $0.archived ? "\($0.title) · Archivado" : $0.title }
+            .map { $0.archived ? "\($0.title) · \(L10n.text("Archivado"))" : $0.title }
     }
 
     private var referenceProjectIDsForSave: [UUID] {
@@ -550,8 +561,8 @@ struct CaptureComposer: View {
     }
 
     private func selectionCount(_ count: Int, empty: String, one: String, many: String) -> String {
-        guard count > 0 else { return empty }
-        return "\(count) \(count == 1 ? one : many)"
+        guard count > 0 else { return L10n.text(empty) }
+        return "\(count) \(L10n.text(count == 1 ? one : many))"
     }
 
     private func appendPromptBlock(_ blockBody: String) {
@@ -702,7 +713,7 @@ struct CaptureComposer: View {
             dismiss()
         } catch {
             isSaving = false
-            saveError = "No se pudo guardar: \(error.localizedDescription)"
+            saveError = L10n.format("No se pudo guardar: %@", error.localizedDescription)
         }
     }
 

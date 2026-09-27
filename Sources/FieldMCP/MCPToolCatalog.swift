@@ -5,7 +5,12 @@ import MCP
 
 public enum MCPRequestAuthenticator {
     public static func isAuthorized(authorization: String?, token: String) -> Bool {
-        authorization == "Bearer \(token)"
+        guard !token.isEmpty,
+              let authorization,
+              let separator = authorization.firstIndex(where: { $0 == " " || $0 == "\t" }) else { return false }
+        let scheme = String(authorization[..<separator])
+        let credential = String(authorization[authorization.index(after: separator)...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        return scheme.caseInsensitiveCompare("Bearer") == .orderedSame && credential == token
     }
 }
 
@@ -107,7 +112,7 @@ public enum MCPToolCatalog {
             "project_id": .string("Project UUID"),
             "source_agent": .string("Optional agent name")
         ], required: ["project_id"]),
-        tool("get_recipe", "Return one recipe by id.", properties: [
+        tool("get_recipe", "Return one recipe and its reusable setup payload when available.", properties: [
             "recipe_id": .string("Recipe UUID"),
             "source_agent": .string("Optional agent name")
         ], required: ["recipe_id"]),
@@ -212,18 +217,28 @@ public enum MCPToolCatalog {
     private static func dispatchBuiltIn(_ params: CallTool.Parameters, repository: FieldRepository) async -> CallTool.Result {
         switch params.name {
         case "search_knowledge":
-            let query = params.arguments?["query"]?.stringValue ?? ""
+            guard optionalStringIsValid(params.arguments?["query"]),
+                  optionalUUIDIsValid(params.arguments?["project_id"]),
+                  optionalUUIDIsValid(params.arguments?["tool_id"]),
+                  optionalStringEnumIsValid(params.arguments?["kind"], as: KnowledgeKind.self),
+                  optionalStringEnumIsValid(params.arguments?["status"], as: KnowledgeStatus.self),
+                  optionalIntegerIsValid(params.arguments?["limit"]) else {
+                return errorResult("Search filters must use valid query, UUID, kind, status, and limit values")
+            }
+            guard let query = params.arguments?["query"]?.stringValue else { return errorResult("query is required") }
             let projectID = uuid(params.arguments?["project_id"])
             let toolID = uuid(params.arguments?["tool_id"])
             let kind = params.arguments?["kind"]?.stringValue.flatMap(KnowledgeKind.init(rawValue:))
             let status = params.arguments?["status"]?.stringValue.flatMap(KnowledgeStatus.init(rawValue:))
             let limit = params.arguments?["limit"]?.intValue ?? Int(params.arguments?["limit"]?.stringValue ?? "20") ?? 20
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let results: [SearchResult] = await MainActor.run {
+            let results: [SearchResult]? = await MainActor.run {
+                guard relatedEntitiesExist(projectID: projectID, toolID: toolID, repository: repository) else { return nil }
                 let results = repository.search(query: query, filter: SearchFilter(kind: kind, status: status, projectID: projectID, toolID: toolID), limit: min(max(limit, 1), 100))
                 repository.logActivity(agent: agent, action: "searched_knowledge", projectID: projectID, detail: query)
                 return results
             }
+            guard let results else { return errorResult("Referenced project or tool was not found") }
             return textResult(results.map { [
                 "id": $0.id.uuidString,
                 "kind": $0.kind,
@@ -235,10 +250,29 @@ public enum MCPToolCatalog {
             ] })
 
         case "search_references":
+            guard optionalStringIsValid(params.arguments?["query"]),
+                  optionalStringIsValid(params.arguments?["source"]),
+                  optionalUUIDIsValid(params.arguments?["project_id"]),
+                  optionalIntegerIsValid(params.arguments?["limit"]),
+                  optionalBooleanIsValid(params.arguments?["include_archived"]),
+                  ["style", "medium", "subject", "lighting", "composition", "mood", "color_character", "tags"]
+                    .allSatisfy({ optionalStringArrayIsValid(params.arguments?[$0]) }) else {
+                return errorResult("Reference search filters have invalid values")
+            }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
             let limit = params.arguments?["limit"]?.intValue ?? Int(params.arguments?["limit"]?.stringValue ?? "20") ?? 20
             let projectID = uuid(params.arguments?["project_id"])
-            let collectionID = uuid(params.arguments?["collection_id"])
+            let collectionID: UUID?
+            if let value = params.arguments?["collection_id"] {
+                guard let parsedID = uuid(value) else { return errorResult("collection_id must be a valid UUID") }
+                collectionID = parsedID
+            } else {
+                collectionID = nil
+            }
+            if let collectionID {
+                let exists = await MainActor.run { repository.referenceCollections().contains { $0.id == collectionID } }
+                guard exists else { return errorResult("Reference collection not found") }
+            }
             let filter = ReferenceFilter(
                 style: strings(params.arguments?["style"]),
                 medium: strings(params.arguments?["medium"]),
@@ -252,39 +286,32 @@ public enum MCPToolCatalog {
                 tags: strings(params.arguments?["tags"]),
                 includeArchived: params.arguments?["include_archived"]?.boolValue ?? false
             )
-            let results: Data = await MainActor.run {
+            let results: Data? = await MainActor.run {
+                if let projectID, !repository.projects(includeArchived: true).contains(where: { $0.id == projectID }) { return nil }
                 let projects = repository.projects(includeArchived: true)
-                let baseFilter: ReferenceFilter
-                if let collectionID, let collection = repository.referenceCollections().first(where: { $0.id == collectionID }), collection.kind == .smart, let collectionFilter = collection.filter {
-                    baseFilter = ReferenceFilter(
-                        style: filter.style.isEmpty ? collectionFilter.style : filter.style,
-                        medium: filter.medium.isEmpty ? collectionFilter.medium : filter.medium,
-                        subject: filter.subject.isEmpty ? collectionFilter.subject : filter.subject,
-                        lighting: filter.lighting.isEmpty ? collectionFilter.lighting : filter.lighting,
-                        composition: filter.composition.isEmpty ? collectionFilter.composition : filter.composition,
-                        mood: filter.mood.isEmpty ? collectionFilter.mood : filter.mood,
-                        colorCharacter: filter.colorCharacter.isEmpty ? collectionFilter.colorCharacter : filter.colorCharacter,
-                        sourceName: filter.sourceName ?? collectionFilter.sourceName,
-                        sourceKind: filter.sourceKind ?? collectionFilter.sourceKind,
-                        projectID: filter.projectID ?? collectionFilter.projectID,
-                        tags: filter.tags.isEmpty ? collectionFilter.tags : filter.tags,
-                        pinnedOnly: filter.pinnedOnly || collectionFilter.pinnedOnly,
-                        unclassifiedOnly: filter.unclassifiedOnly || collectionFilter.unclassifiedOnly,
-                        includeArchived: filter.includeArchived || collectionFilter.includeArchived
+                if let collectionID {
+                    guard let collection = repository.referenceCollections().first(where: { $0.id == collectionID }) else {
+                        return nil
+                    }
+                    let matchingIDs: Set<UUID>
+                    if collection.kind == .smart, let collectionFilter = collection.filter {
+                        matchingIDs = Set(repository.references(filter: collectionFilter).map(\.id))
+                    } else {
+                        matchingIDs = Set(collection.referenceIDs)
+                    }
+                    let queried = repository.queryReferences(
+                        ReferenceQuery(text: params.arguments?["query"]?.stringValue ?? "", filter: filter, limit: limit),
+                        matchingIDs: matchingIDs
                     )
-                } else if let collectionID, let collection = repository.referenceCollections().first(where: { $0.id == collectionID }) {
-                    let ids = Set(collection.referenceIDs)
-                    let queried = repository.queryReferences(ReferenceQuery(text: params.arguments?["query"]?.stringValue ?? "", filter: filter, limit: limit)).filter { ids.contains($0.id) }
                     repository.logActivity(agent: agent, action: "searched_references", projectID: projectID, detail: params.arguments?["query"]?.stringValue ?? "")
                     return jsonData(queried.map { referenceSearchPayload($0, projects: projects) })
-                } else {
-                    baseFilter = filter
                 }
-                let queried = repository.queryReferences(ReferenceQuery(text: params.arguments?["query"]?.stringValue ?? "", filter: baseFilter, limit: limit))
+                let queried = repository.queryReferences(ReferenceQuery(text: params.arguments?["query"]?.stringValue ?? "", filter: filter, limit: limit))
                 repository.logActivity(agent: agent, action: "searched_references", projectID: projectID, detail: params.arguments?["query"]?.stringValue ?? "")
                 return jsonData(queried.map { referenceSearchPayload($0, projects: projects) })
             }
-            return jsonTextResult(results)
+            guard let results else { return errorResult("Project or reference collection not found") }
+            return jsonResult(results)
 
         case "get_reference":
             guard let referenceID = uuid(params.arguments?["reference_id"]) else { return errorResult("reference_id is required") }
@@ -295,19 +322,19 @@ public enum MCPToolCatalog {
                 return jsonData(referenceDetailPayload(reference, projects: repository.projects(includeArchived: true)))
             }
             guard let payload else { return errorResult("Reference not found") }
-            return jsonTextResult(payload)
+            return jsonResult(payload)
 
         case "add_reference_note":
             guard let referenceID = uuid(params.arguments?["reference_id"]) else { return errorResult("reference_id is required") }
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload = try? await MainActor.run {
+            let item = try? await MainActor.run {
                 guard let reference = repository.references(filter: ReferenceFilter(includeArchived: true)).first(where: { $0.id == referenceID }) else { throw ReferenceRepositoryError.referenceNotFound }
                 let item = try repository.addWorkingNote(agent: agent, content: "Reference \(reference.title): \(content)")
-                return jsonData(["id": item.id.uuidString, "kind": item.kind.rawValue, "reference_id": referenceID.uuidString])
+                return (id: item.id.uuidString, kind: item.kind.rawValue)
             }
-            guard let payload else { return errorResult("Reference not found") }
-            return jsonTextResult(payload)
+            guard let item else { return errorResult("Reference not found") }
+            return textResult(["id": item.id, "kind": item.kind, "reference_id": referenceID.uuidString])
 
         case "propose_reference_tags":
             guard let referenceID = uuid(params.arguments?["reference_id"]) else { return errorResult("reference_id is required") }
@@ -320,19 +347,19 @@ public enum MCPToolCatalog {
             }
             guard !attributes.isEmpty else { return errorResult("attributes must contain category and name") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload = try? await MainActor.run {
+            let proposal = try? await MainActor.run {
                 let proposal = try repository.proposeReferenceTags(agent: agent, referenceID: referenceID, attributes: attributes)
-                return jsonData(["id": proposal.id.uuidString, "status": proposal.status.rawValue, "reference_id": referenceID.uuidString])
+                return (id: proposal.id.uuidString, status: proposal.status.rawValue)
             }
-            guard let payload else { return errorResult("Could not create reference tag proposal") }
-            return jsonTextResult(payload)
+            guard let proposal else { return errorResult("Could not create reference tag proposal") }
+            return textResult(["id": proposal.id, "status": proposal.status, "reference_id": referenceID.uuidString])
 
         case "get_project_context":
             guard let projectID = uuid(params.arguments?["project_id"]) else { return errorResult("project_id is required") }
             let depth = params.arguments?["depth"]?.stringValue.flatMap(ContextDepth.init(rawValue:)) ?? .essential
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let context = await MainActor.run {
-                let context = repository.projectContext(projectID: projectID, depth: depth)
+            let context: ProjectContextPack? = await MainActor.run {
+                guard let context = repository.projectContext(projectID: projectID, depth: depth) else { return nil }
                 repository.logActivity(agent: agent, action: "read_project_context", projectID: projectID, detail: depth.rawValue)
                 return context
             }
@@ -357,6 +384,9 @@ public enum MCPToolCatalog {
             return textResult(payload)
 
         case "get_tool_knowledge":
+            guard optionalUUIDIsValid(params.arguments?["tool_id"]) else {
+                return errorResult("tool_id must be a valid UUID")
+            }
             let toolID = uuid(params.arguments?["tool_id"])
             let toolName = params.arguments?["tool_name"]?.stringValue?.lowercased()
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
@@ -381,13 +411,15 @@ public enum MCPToolCatalog {
         case "get_decisions":
             guard let projectID = uuid(params.arguments?["project_id"]) else { return errorResult("project_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let decisions = await MainActor.run {
+            let decisions: [[String: String]]? = await MainActor.run {
+                guard repository.projects(includeArchived: true).contains(where: { $0.id == projectID }) else { return nil }
                 let decisions = repository.knowledge(kind: .decision, projectID: projectID)
                     .filter { $0.status != .archived }
                     .map { ["id": $0.id.uuidString, "title": $0.title, "body": $0.body, "status": $0.status.rawValue] }
                 repository.logActivity(agent: agent, action: "read_project_decisions", projectID: projectID, detail: "\(decisions.count) decisions")
                 return decisions
             }
+            guard let decisions else { return errorResult("Project not found") }
             return textResult(decisions)
 
         case "get_experiment":
@@ -418,7 +450,7 @@ public enum MCPToolCatalog {
                 ])
             }
             guard let payload else { return errorResult("Experiment not found") }
-            return jsonTextResult(payload)
+            return jsonResult(payload)
 
         case "list_experiment_runs":
             guard let experimentID = uuid(params.arguments?["experiment_id"]) else { return errorResult("experiment_id is required") }
@@ -437,7 +469,12 @@ public enum MCPToolCatalog {
                         "tool": run.snapshotToolName,
                         "model": run.model,
                         "prompt": run.prompt,
-                        "settings": run.settingsEntries.map { ["key": $0.key, "value": $0.value] },
+                        "settings": run.settingsEntries.map { [
+                            "key": $0.key,
+                            "value": $0.value,
+                            "unit": $0.unit ?? "",
+                            "type": $0.type.rawValue
+                        ] },
                         "reference_ids": run.inputReferenceIDs.map(\.uuidString),
                         "parent_run_id": run.parentRunID?.uuidString ?? "",
                         "has_result": run.outputData != nil,
@@ -446,7 +483,7 @@ public enum MCPToolCatalog {
                 })
             }
             guard let payload else { return errorResult("Experiment not found") }
-            return jsonTextResult(payload)
+            return jsonResult(payload)
 
         case "compare_runs_metadata":
             guard let firstID = uuid(params.arguments?["run_a_id"]), let secondID = uuid(params.arguments?["run_b_id"]) else { return errorResult("run_a_id and run_b_id are required") }
@@ -464,17 +501,19 @@ public enum MCPToolCatalog {
                 ])
             }
             guard let payload else { return errorResult("Run not found") }
-            return jsonTextResult(payload)
+            return jsonResult(payload)
 
         case "search_experiments":
-            let query = params.arguments?["query"]?.stringValue ?? ""
+            guard let rawQuery = params.arguments?["query"]?.stringValue else { return errorResult("query is required") }
+            let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
             let limit = params.arguments?["limit"]?.intValue ?? Int(params.arguments?["limit"]?.stringValue ?? "20") ?? 20
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
+            let terms = query.lowercased().split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
+            guard !terms.isEmpty else { return textResult([]) }
             let payload = await MainActor.run {
-                let terms = query.lowercased().split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
                 let matches = repository.experiments().filter { experiment in
                     let searchable = [experiment.title, experiment.goal, experiment.prompt, experiment.conclusion].joined(separator: " ").lowercased()
-                    return terms.isEmpty || terms.allSatisfy { searchable.contains($0) }
+                    return terms.allSatisfy { searchable.contains($0) }
                 }.prefix(max(1, min(limit, 100)))
                 repository.logActivity(agent: agent, action: "search_experiments", detail: query)
                 return matches.map { ["id": $0.id.uuidString, "title": $0.title, "goal": $0.goal, "status": $0.status.rawValue, "updated_at": $0.updatedAt.ISO8601Format()] }
@@ -491,19 +530,41 @@ public enum MCPToolCatalog {
                 return jsonData(["id": run.id.uuidString, "title": run.title, "tool": run.snapshotToolName, "model": run.model, "evaluation": run.evaluation.rawValue, "has_result": run.outputData != nil])
             }
             guard let payload else { return errorResult("Best Run not found") }
-            return jsonTextResult(payload)
+            return jsonResult(payload)
 
         case "get_recipe":
             guard let recipeID = uuid(params.arguments?["recipe_id"]) else { return errorResult("recipe_id is required") }
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
             let payload: Data? = await MainActor.run {
-                let recipe = repository.knowledge(kind: .recipe).first { $0.id == recipeID }
-                if let recipe { repository.logActivity(agent: agent, action: "read_recipe", detail: recipe.title) }
-                guard let recipe else { return nil }
-                return jsonData(["id": recipe.id.uuidString, "title": recipe.title, "body": recipe.body, "status": recipe.status.rawValue])
+                guard let recipe = repository.knowledge(kind: .recipe).first(where: { $0.id == recipeID }) else { return nil }
+                repository.logActivity(agent: agent, action: "read_recipe", detail: recipe.title)
+                var result: [String: Any] = [
+                    "id": recipe.id.uuidString,
+                    "title": recipe.title,
+                    "body": recipe.body,
+                    "status": recipe.status.rawValue,
+                    "project_id": recipe.projectID?.uuidString ?? "",
+                    "tool_id": recipe.toolID?.uuidString ?? ""
+                ]
+                if let setup = repository.recipePayload(recipe) {
+                    result["payload"] = [
+                        "tool_id": setup.toolID?.uuidString ?? "",
+                        "model": setup.model,
+                        "prompt": setup.prompt,
+                        "settings": setup.settings.map { [
+                            "key": $0.key,
+                            "value": $0.value,
+                            "unit": $0.unit ?? "",
+                            "type": $0.type.rawValue
+                        ] },
+                        "prompt_block_ids": setup.promptBlockIDs.map(\.uuidString),
+                        "reference_ids": setup.references.map(\.uuidString)
+                    ]
+                }
+                return jsonData(result)
             }
             guard let payload else { return errorResult("Recipe not found") }
-            return jsonTextResult(payload)
+            return jsonResult(payload)
 
         case "get_workflow":
             guard let flowID = uuid(params.arguments?["flow_id"]) else { return errorResult("flow_id is required") }
@@ -530,35 +591,52 @@ public enum MCPToolCatalog {
 
         case "add_working_note":
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
-            let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload = try? await MainActor.run {
-                let item = try repository.addWorkingNote(agent: agent, content: content, projectID: uuid(params.arguments?["project_id"]), toolID: uuid(params.arguments?["tool_id"]))
-                return jsonData(["id": item.id.uuidString, "title": item.title, "kind": item.kind.rawValue])
+            guard optionalUUIDIsValid(params.arguments?["project_id"]), optionalUUIDIsValid(params.arguments?["tool_id"]) else {
+                return errorResult("project_id and tool_id must be valid UUIDs")
             }
-            guard let payload else { return errorResult("Could not save working note") }
-            return jsonTextResult(payload)
+            let projectID = uuid(params.arguments?["project_id"])
+            let toolID = uuid(params.arguments?["tool_id"])
+            let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
+            let item = try? await MainActor.run {
+                try ensureRelatedEntitiesExist(projectID: projectID, toolID: toolID, repository: repository)
+                let item = try repository.addWorkingNote(agent: agent, content: content, projectID: projectID, toolID: toolID)
+                return (id: item.id.uuidString, title: item.title, kind: item.kind.rawValue)
+            }
+            guard let item else { return errorResult("Could not save working note: referenced project or tool was not found") }
+            return textResult(["id": item.id, "title": item.title, "kind": item.kind])
 
         case "propose_learning", "propose_decision":
             guard let title = params.arguments?["title"]?.stringValue, !title.isEmpty else { return errorResult("title is required") }
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
+            guard optionalUUIDIsValid(params.arguments?["project_id"]), optionalUUIDIsValid(params.arguments?["tool_id"]) else {
+                return errorResult("project_id and tool_id must be valid UUIDs")
+            }
+            let projectID = uuid(params.arguments?["project_id"])
+            let toolID = uuid(params.arguments?["tool_id"])
             let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
             let kind: KnowledgeKind = params.name == "propose_decision" ? .decision : .learning
-            let payload = try? await MainActor.run {
-                let proposal = try repository.propose(agent: agent, type: kind, title: title, content: content, projectID: uuid(params.arguments?["project_id"]), toolID: uuid(params.arguments?["tool_id"]))
-                return jsonData(["id": proposal.id.uuidString, "status": proposal.status.rawValue, "title": proposal.title])
+            let proposal = try? await MainActor.run {
+                try ensureRelatedEntitiesExist(projectID: projectID, toolID: toolID, repository: repository)
+                let proposal = try repository.propose(agent: agent, type: kind, title: title, content: content, projectID: projectID, toolID: toolID)
+                return (id: proposal.id.uuidString, status: proposal.status.rawValue, title: proposal.title)
             }
-            guard let payload else { return errorResult("Could not create proposal") }
-            return jsonTextResult(payload)
+            guard let proposal else { return errorResult("Could not create proposal: referenced project or tool was not found") }
+            return textResult(["id": proposal.id, "status": proposal.status, "title": proposal.title])
 
         case "save_session_summary":
             guard let content = params.arguments?["content"]?.stringValue, !content.isEmpty else { return errorResult("content is required") }
-            let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
-            let payload = try? await MainActor.run {
-                let item = try repository.saveSessionSummary(agent: agent, projectID: uuid(params.arguments?["project_id"]), content: content)
-                return jsonData(["id": item.id.uuidString, "title": item.title, "deduplicated": "true"])
+            guard optionalUUIDIsValid(params.arguments?["project_id"]) else {
+                return errorResult("project_id must be a valid UUID")
             }
-            guard let payload else { return errorResult("Could not save session summary") }
-            return jsonTextResult(payload)
+            let projectID = uuid(params.arguments?["project_id"])
+            let agent = params.arguments?["source_agent"]?.stringValue ?? "unknown-agent"
+            let saved = try? await MainActor.run {
+                try ensureRelatedEntitiesExist(projectID: projectID, toolID: nil, repository: repository)
+                let outcome = try repository.saveSessionSummaryWithStatus(agent: agent, projectID: projectID, content: content)
+                return (id: outcome.item.id.uuidString, title: outcome.item.title, deduplicated: outcome.deduplicated)
+            }
+            guard let saved else { return errorResult("Could not save session summary: referenced project was not found") }
+            return textResult(["id": saved.id, "title": saved.title, "deduplicated": saved.deduplicated])
 
         default:
             return errorResult("Unknown tool: \(params.name)")
@@ -576,6 +654,49 @@ public enum MCPToolCatalog {
     private static func uuid(_ value: Value?) -> UUID? {
         guard let string = value?.stringValue else { return nil }
         return UUID(uuidString: string)
+    }
+
+    private static func optionalUUIDIsValid(_ value: Value?) -> Bool {
+        value == nil || uuid(value) != nil
+    }
+
+    private static func optionalStringIsValid(_ value: Value?) -> Bool {
+        value == nil || value?.stringValue != nil
+    }
+
+    private static func optionalIntegerIsValid(_ value: Value?) -> Bool {
+        guard let value else { return true }
+        return value.intValue != nil || Int(value.stringValue ?? "") != nil
+    }
+
+    private static func optionalBooleanIsValid(_ value: Value?) -> Bool {
+        value == nil || value?.boolValue != nil
+    }
+
+    private static func optionalStringArrayIsValid(_ value: Value?) -> Bool {
+        guard let value else { return true }
+        if value.stringValue != nil { return true }
+        guard let values = value.arrayValue else { return false }
+        return values.allSatisfy { $0.stringValue != nil }
+    }
+
+    private static func optionalStringEnumIsValid<T: RawRepresentable>(_ value: Value?, as _: T.Type) -> Bool where T.RawValue == String {
+        guard let value else { return true }
+        guard let rawValue = value.stringValue else { return false }
+        return T(rawValue: rawValue) != nil
+    }
+
+    @MainActor
+    private static func ensureRelatedEntitiesExist(projectID: UUID?, toolID: UUID?, repository: FieldRepository) throws {
+        guard relatedEntitiesExist(projectID: projectID, toolID: toolID, repository: repository) else {
+            throw MCPToolInputError.relatedEntityNotFound
+        }
+    }
+
+    @MainActor
+    private static func relatedEntitiesExist(projectID: UUID?, toolID: UUID?, repository: FieldRepository) -> Bool {
+        (projectID == nil || repository.projects(includeArchived: true).contains(where: { $0.id == projectID }))
+            && (toolID == nil || repository.tools().contains(where: { $0.id == toolID }))
     }
 
     private static func strings(_ value: Value?) -> [String] {
@@ -630,16 +751,16 @@ public enum MCPToolCatalog {
         .init(content: [.text(message)], isError: true)
     }
 
+    private static func jsonData(_ value: Any) -> Data? {
+        try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
+    }
+
+    private static func jsonResult(_ data: Data) -> CallTool.Result {
+        .init(content: [.text(String(decoding: data, as: UTF8.self))], isError: false)
+    }
+
     private static func textResult(_ value: Any) -> CallTool.Result {
-        jsonTextResult(jsonData(value))
-    }
-
-    private static func jsonData(_ value: Any) -> Data {
-        (try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) ?? Data("{}".utf8)
-    }
-
-    private static func jsonTextResult(_ data: Data) -> CallTool.Result {
-        return .init(content: [.text(String(decoding: data, as: UTF8.self))], isError: false)
+        jsonResult(jsonData(value) ?? Data("{}".utf8))
     }
 
     private static func codableResult<T: Encodable>(_ value: T) -> CallTool.Result {
@@ -648,4 +769,8 @@ public enum MCPToolCatalog {
         let data = (try? encoder.encode(value)) ?? Data("{}".utf8)
         return .init(content: [.text(String(decoding: data, as: UTF8.self))], isError: false)
     }
+}
+
+private enum MCPToolInputError: Error, Sendable {
+    case relatedEntityNotFound
 }
