@@ -1,9 +1,22 @@
 import SwiftUI
 import SwiftData
 
+#if os(macOS)
+import AppKit
+#endif
+
 @main
 struct FIELDApp: App {
     @StateObject private var appModel = AppModel()
+
+    init() {
+        #if os(macOS)
+        if let logoURL = Bundle.module.url(forResource: "FIELDLogo", withExtension: "png"),
+           let appIcon = NSImage(contentsOf: logoURL) {
+            NSApplication.shared.applicationIconImage = appIcon
+        }
+        #endif
+    }
 
     var body: some Scene {
         WindowGroup("FIELD LAB") {
