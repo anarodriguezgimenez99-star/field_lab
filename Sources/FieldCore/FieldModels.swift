@@ -84,6 +84,11 @@ public enum ProposalStatus: String, CaseIterable, Codable, Sendable {
     case rejected
 }
 
+public enum ProposalRepositoryError: Error, Equatable, Sendable {
+    case proposalNotPending
+    case invalidProposalType
+}
+
 @Model
 public final class FieldProject {
     public var id: UUID

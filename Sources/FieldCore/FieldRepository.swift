@@ -122,6 +122,7 @@ public struct ProjectContextPack: Codable, Equatable, Sendable {
         self.brief = brief
         self.creativeDirection = creativeDirection
         self.constraints = constraints
+        self.deliverables = deliverables
         self.alwaysRemember = alwaysRemember
         self.decisions = decisions
         self.learnings = learnings
@@ -194,11 +195,12 @@ public final class FieldRepository {
             .sorted { $0.updatedAt > $1.updatedAt }
     }
 
-    public func queryReferences(_ query: ReferenceQuery) -> [FieldReference] {
+    public func queryReferences(_ query: ReferenceQuery, matchingIDs: Set<UUID>? = nil) -> [FieldReference] {
         let text = query.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let terms = text.split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
         return references(filter: query.filter)
             .filter { reference in
+                guard matchingIDs?.contains(reference.id) ?? true else { return false }
                 guard !terms.isEmpty else { return true }
                 let attributes = reference.visualAttributes.map { "\($0.category.rawValue) \($0.name)" }.joined(separator: " ")
                 let searchable = [reference.title, reference.userNote, reference.ocrText, reference.sourceName, reference.sourceDomain, reference.sourceURL, reference.manualTagsRaw, reference.automaticTagsRaw, attributes].joined(separator: " ").lowercased()
@@ -319,7 +321,14 @@ public final class FieldRepository {
         parentRunID: UUID? = nil,
         outputData: Data? = nil
     ) throws -> FieldExperimentRun {
-        let nextOrder = experimentRuns(experimentID: experimentID).last.map { $0.order + 1 } ?? 1
+        guard let experiment = experiments().first(where: { $0.id == experimentID }) else {
+            throw ExperimentRepositoryError.experimentNotFound
+        }
+        let existingRuns = experimentRuns(experimentID: experimentID)
+        if let parentRunID, !existingRuns.contains(where: { $0.id == parentRunID }) {
+            throw ExperimentRepositoryError.runNotFound
+        }
+        let nextOrder = existingRuns.last.map { $0.order + 1 } ?? 1
         let serializedSettings = settingsEntries.map { encodeJSON($0) } ?? settings
         let run = FieldExperimentRun(
             experimentID: experimentID,
@@ -341,7 +350,7 @@ public final class FieldRepository {
             outputData: outputData
         )
         context.insert(run)
-        if let experiment = experiments().first(where: { $0.id == experimentID }) { experiment.updatedAt = .now }
+        experiment.updatedAt = .now
         try save()
         return run
     }
@@ -360,7 +369,6 @@ public final class FieldRepository {
             experimentID: experiment.id,
             title: title ?? "Run \(experimentRuns(experimentID: experiment.id).count + 1)",
             prompt: setup.prompt,
-            settingsEntries: setup.settings,
             resultStatus: .prepared,
             evaluation: .unrated,
             executionMode: setup.executionMode,
@@ -369,6 +377,7 @@ public final class FieldRepository {
             snapshotToolWebsiteURL: setup.toolWebsiteURL,
             model: setup.model,
             inputReferenceIDs: setup.references,
+            settingsEntries: setup.settings,
             snapshotPromptBlockIDs: setup.promptBlockIDs,
             parentRunID: parentRunID,
             outputData: outputData
@@ -404,11 +413,27 @@ public final class FieldRepository {
             changes.append(.init(label: "Tool / model", detail: "\(before.isEmpty ? "Sin definir" : before) → \(after.isEmpty ? "Sin definir" : after)"))
         }
 
-        let parentSettings = Dictionary(uniqueKeysWithValues: parent.settingsEntries.map { ($0.key, $0.value) })
-        let childSettings = Dictionary(uniqueKeysWithValues: child.settingsEntries.map { ($0.key, $0.value) })
+        let settingValues: (FieldExperimentRun) -> [String: [String]] = { run in
+            Dictionary(grouping: run.settingsEntries, by: \.key).mapValues { entries in
+                entries.map { entry in
+                    var value = entry.value
+                    if let unit = entry.unit?.trimmingCharacters(in: .whitespacesAndNewlines), !unit.isEmpty {
+                        value += " \(unit)"
+                    }
+                    if entry.type != .text {
+                        value += " (\(entry.type.displayName))"
+                    }
+                    return value
+                }
+            }
+        }
+        let parentSettings = settingValues(parent)
+        let childSettings = settingValues(child)
         for key in Set(parentSettings.keys).union(childSettings.keys).sorted() {
-            let before = parentSettings[key] ?? "—"
-            let after = childSettings[key] ?? "—"
+            let beforeValues = parentSettings[key] ?? []
+            let afterValues = childSettings[key] ?? []
+            let before = beforeValues.isEmpty ? "—" : beforeValues.joined(separator: ", ")
+            let after = afterValues.isEmpty ? "—" : afterValues.joined(separator: ", ")
             if before != after { changes.append(.init(label: key, detail: "\(before) → \(after)")) }
         }
         if parent.prompt != child.prompt { changes.append(.init(label: "Prompt", detail: "Texto cambiado")) }
@@ -428,6 +453,9 @@ public final class FieldRepository {
     }
 
     public func setBestRun(_ run: FieldExperimentRun, for experiment: FieldExperiment) throws {
+        guard experimentRuns(experimentID: experiment.id).contains(where: { $0.id == run.id }) else {
+            throw ExperimentRepositoryError.runNotFound
+        }
         for candidate in experimentRuns(experimentID: experiment.id) where candidate.evaluation == .best && candidate.id != run.id {
             candidate.evaluation = .works
         }
@@ -463,8 +491,14 @@ public final class FieldRepository {
         let experimentID = run.experimentID
         context.delete(run)
         let remaining = experimentRuns(experimentID: experimentID).filter { $0.id != run.id }
-        for (index, item) in remaining.enumerated() { item.order = index + 1 }
-        if let experiment = experiments().first(where: { $0.id == experimentID }) { experiment.updatedAt = .now }
+        for (index, item) in remaining.enumerated() {
+            item.order = index + 1
+            if item.parentRunID == run.id { item.parentRunID = nil }
+        }
+        if let experiment = experiments().first(where: { $0.id == experimentID }) {
+            if experiment.bestRunID == run.id { experiment.bestRunID = nil }
+            experiment.updatedAt = .now
+        }
         try save()
     }
 
@@ -479,7 +513,7 @@ public final class FieldRepository {
             status: .works,
             scope: experiment.projectID == nil ? .global : .project,
             projectID: experiment.projectID,
-            toolID: bestRun?.toolID ?? experiment.toolID,
+            toolID: experiment.toolID,
             metadataJSON: metadata
         )
         learning.metadataJSON = encodeJSON([
@@ -530,6 +564,16 @@ public final class FieldRepository {
               let metadata = try? JSONSerialization.jsonObject(with: Data(recipe.metadataJSON.utf8)) as? [String: Any],
               let encoded = metadata["payload"] as? String else { return nil }
         return try? JSONDecoder().decode(RecipePayload.self, from: Data(encoded.utf8))
+    }
+
+    private func updateRecipePayload(_ recipe: KnowledgeItem, applying update: (inout RecipePayload) -> Void) {
+        guard var payload = recipePayload(recipe),
+              var metadata = try? JSONSerialization.jsonObject(with: Data(recipe.metadataJSON.utf8)) as? [String: Any] else { return }
+        update(&payload)
+        metadata["payload"] = encodeJSON(payload)
+        guard let data = try? JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys]) else { return }
+        recipe.metadataJSON = String(decoding: data, as: UTF8.self)
+        recipe.updatedAt = .now
     }
 
     public func applyRecipe(_ recipe: KnowledgeItem, to experiment: FieldExperiment) throws {
@@ -684,6 +728,21 @@ public final class FieldRepository {
     }
 
     public func deleteReference(_ reference: FieldReference) throws {
+        for experiment in experiments() where experiment.referenceIDs.contains(reference.id) {
+            experiment.referenceIDs.removeAll { $0 == reference.id }
+            experiment.updatedAt = .now
+        }
+        for recipe in knowledge(kind: .recipe) where recipePayload(recipe)?.references.contains(reference.id) == true {
+            updateRecipePayload(recipe) { $0.references.removeAll { $0 == reference.id } }
+        }
+        for collection in referenceCollections() where collection.kind == .manual && collection.referenceIDs.contains(reference.id) {
+            collection.referenceIDs.removeAll { $0 == reference.id }
+            collection.updatedAt = .now
+        }
+        for proposal in proposals() where proposal.referenceID == reference.id && proposal.status == .pending {
+            proposal.status = .rejected
+            proposal.reviewedAt = .now
+        }
         context.delete(reference)
         try save()
     }
@@ -734,6 +793,25 @@ public final class FieldRepository {
         try save()
     }
 
+    public func delete(_ item: KnowledgeItem) throws {
+        if item.kind == .promptBlock {
+            for experiment in experiments() where experiment.promptBlockIDs.contains(item.id) {
+                experiment.promptBlockIDs.removeAll { $0 == item.id }
+                experiment.updatedAt = .now
+            }
+            for recipe in knowledge(kind: .recipe) where recipePayload(recipe)?.promptBlockIDs.contains(item.id) == true {
+                updateRecipePayload(recipe) { $0.promptBlockIDs.removeAll { $0 == item.id } }
+            }
+        }
+        if item.kind == .recipe {
+            for step in (try? context.fetch(FetchDescriptor<FieldFlowStep>())) ?? [] where step.recipeID == item.id {
+                step.recipeID = nil
+            }
+        }
+        context.delete(item)
+        try save()
+    }
+
     public func deleteProject(_ project: FieldProject) throws {
         for item in knowledge(projectID: project.id) {
             item.projectID = nil
@@ -768,6 +846,13 @@ public final class FieldRepository {
         for run in (try? context.fetch(FetchDescriptor<FieldExperimentRun>())) ?? [] where run.toolID == tool.id {
             run.toolID = nil
         }
+        for preset in toolPresets(toolID: tool.id) {
+            preset.toolID = nil
+            preset.updatedAt = .now
+        }
+        for recipe in knowledge(kind: .recipe) where recipePayload(recipe)?.toolID == tool.id {
+            updateRecipePayload(recipe) { $0.toolID = nil }
+        }
         context.delete(tool)
         try save()
     }
@@ -779,8 +864,12 @@ public final class FieldRepository {
     public func projectContext(projectID: UUID, depth: ContextDepth = .standard) -> ProjectContextPack? {
         guard let project = projects(includeArchived: true).first(where: { $0.id == projectID }) else { return nil }
         let projectItems = knowledge(projectID: projectID)
-        let projectTools = Set(projectItems.compactMap(\.toolID)).compactMap { id in tools().first { $0.id == id }?.name }.sorted()
         let projectReferences = references().filter { $0.projectIDs.contains(projectID) }
+        var projectToolIDs = Set(projectItems.compactMap(\.toolID))
+        projectToolIDs.formUnion(projectReferences.flatMap(\.toolIDs))
+        projectToolIDs.formUnion(experiments().filter { $0.projectID == projectID }.compactMap(\.toolID))
+        let availableTools = tools()
+        let projectTools = projectToolIDs.compactMap { id in availableTools.first { $0.id == id }?.name }.sorted()
         return ContextPackBuilder.build(project: project, items: projectItems, references: projectReferences, toolNames: projectTools, depth: depth)
     }
 
@@ -802,8 +891,10 @@ public final class FieldRepository {
 
     @discardableResult
     public func proposeReferenceTags(agent: String, referenceID: UUID, attributes: [VisualAttribute]) throws -> AgentProposal {
-        let reference = references().first { $0.id == referenceID }
-        let title = "Suggested tags · \(reference?.title ?? referenceID.uuidString)"
+        guard let reference = references(filter: ReferenceFilter(includeArchived: true)).first(where: { $0.id == referenceID }) else {
+            throw ReferenceRepositoryError.referenceNotFound
+        }
+        let title = "Suggested tags · \(reference.title)"
         let payload = try JSONEncoder().encode(ReferenceTagProposal(referenceID: referenceID, attributes: attributes))
         let proposal = AgentProposal(agent: agent, proposalType: .reference, title: title, content: String(decoding: payload, as: UTF8.self), referenceID: referenceID)
         context.insert(proposal)
@@ -814,15 +905,26 @@ public final class FieldRepository {
 
     @discardableResult
     public func approveReferenceTags(_ proposal: AgentProposal) throws -> FieldReference {
+        guard proposal.status == .pending else { throw ProposalRepositoryError.proposalNotPending }
+        guard proposal.proposalTypeRaw == KnowledgeKind.reference.rawValue else { throw ProposalRepositoryError.invalidProposalType }
         guard let referenceID = proposal.referenceID,
               let reference = references(filter: .init(includeArchived: true)).first(where: { $0.id == referenceID }) else {
             throw ReferenceRepositoryError.referenceNotFound
         }
         let payload = try JSONDecoder().decode(ReferenceTagProposal.self, from: Data(proposal.content.utf8))
-        let automatic = reference.visualAttributes.filter { $0.origin != .manual }
-        let manualNames = Set(reference.visualAttributes.filter { $0.origin == .manual }.map { "\($0.category.rawValue):\($0.name.lowercased())" })
-        let accepted = payload.attributes.filter { !manualNames.contains("\($0.category.rawValue):\($0.name.lowercased())") }
-        reference.visualAttributes = automatic + accepted.map { VisualAttribute(category: $0.category, name: $0.name, origin: .manual, confidence: $0.confidence) }
+        func key(_ attribute: VisualAttribute) -> String {
+            "\(attribute.category.rawValue):\(attribute.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())"
+        }
+        var mergedAttributes = reference.visualAttributes
+        for suggested in payload.attributes {
+            if let index = mergedAttributes.firstIndex(where: { key($0) == key(suggested) }) {
+                guard mergedAttributes[index].origin != .manual else { continue }
+                mergedAttributes[index] = VisualAttribute(category: suggested.category, name: suggested.name, origin: .manual, confidence: suggested.confidence)
+            } else {
+                mergedAttributes.append(VisualAttribute(category: suggested.category, name: suggested.name, origin: .manual, confidence: suggested.confidence))
+            }
+        }
+        reference.visualAttributes = mergedAttributes
         reference.updatedAt = .now
         proposal.status = .approved
         proposal.reviewedAt = .now
@@ -833,7 +935,10 @@ public final class FieldRepository {
 
     @discardableResult
     public func approve(_ proposal: AgentProposal) throws -> KnowledgeItem {
-        let kind = KnowledgeKind(rawValue: proposal.proposalTypeRaw) ?? .learning
+        guard proposal.status == .pending else { throw ProposalRepositoryError.proposalNotPending }
+        guard let kind = KnowledgeKind(rawValue: proposal.proposalTypeRaw), kind != .reference else {
+            throw ProposalRepositoryError.invalidProposalType
+        }
         let item = KnowledgeItem(
             kind: kind,
             title: proposal.title,
@@ -856,6 +961,7 @@ public final class FieldRepository {
     }
 
     public func reject(_ proposal: AgentProposal) throws {
+        guard proposal.status == .pending else { throw ProposalRepositoryError.proposalNotPending }
         proposal.status = .rejected
         proposal.reviewedAt = .now
         try save()
@@ -881,11 +987,19 @@ public final class FieldRepository {
 
     @discardableResult
     public func saveSessionSummary(agent: String, projectID: UUID?, content: String) throws -> KnowledgeItem {
+        try saveSessionSummaryWithStatus(agent: agent, projectID: projectID, content: content).item
+    }
+
+    public func saveSessionSummaryWithStatus(agent: String, projectID: UUID?, content: String) throws -> (item: KnowledgeItem, deduplicated: Bool) {
         let recent = knowledge().first {
-            $0.projectID == projectID &&
-            $0.kind == .sessionSummary && $0.sourceAgent == agent && $0.body == content && Date.now.timeIntervalSince($0.createdAt) < 300
+            guard $0.projectID == projectID,
+                  $0.kind == .sessionSummary,
+                  $0.sourceAgent == agent,
+                  $0.body == content else { return false }
+            let age = Date.now.timeIntervalSince($0.createdAt)
+            return age >= 0 && age < 300
         }
-        if let recent { return recent }
+        if let recent { return (recent, true) }
 
         let item = try createKnowledge(
             kind: .sessionSummary,
@@ -898,7 +1012,7 @@ public final class FieldRepository {
             projectID: projectID
         )
         logActivity(agent: agent, action: "saved_session_summary", projectID: projectID, detail: item.title)
-        return item
+        return (item, false)
     }
 
     public func logActivity(agent: String, action: String, projectID: UUID? = nil, detail: String = "") {

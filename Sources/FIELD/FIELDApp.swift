@@ -9,17 +9,18 @@ struct FIELDApp: App {
         WindowGroup("FIELD LAB") {
             ContentView(appModel: appModel)
                 .environment(\.modelContext, appModel.container.mainContext)
+                .environment(\.locale, appModel.language.locale)
                 .tint(FieldPalette.accent)
+                .preferredColorScheme(.dark)
         }
-        .preferredColorScheme(.dark)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Quick Capture") {
+                Button(L10n.text("Quick Capture")) {
                     appModel.presentCapture()
                 }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
 
-                Button("Focus Search") {
+                Button(L10n.text("Focus Search")) {
                     appModel.selectedRoute = .lab
                 }
                 .keyboardShortcut("f", modifiers: [.command])
@@ -29,6 +30,7 @@ struct FIELDApp: App {
         #if os(macOS)
         MenuBarExtra("FIELD LAB", systemImage: "square.grid.2x2") {
             MenuBarContent(appModel: appModel)
+                .environment(\.locale, appModel.language.locale)
         }
         #endif
     }

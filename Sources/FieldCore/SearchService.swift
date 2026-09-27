@@ -48,6 +48,7 @@ public enum SearchService {
 
         if filter.kind == nil || filter.kind == .reference {
             for reference in references where !reference.archived {
+                guard filter.status == nil, filter.scope == nil else { continue }
                 let projectTitles = reference.projectIDs.compactMap { id in projects.first { $0.id == id }?.title }
                 let attributes = reference.visualAttributes.map { "\($0.category.rawValue) \($0.name)" }.joined(separator: " ")
                 let searchable = [
@@ -65,6 +66,7 @@ public enum SearchService {
                 let matchedTerms = terms.filter { searchable.contains($0) }
                 guard !matchedTerms.isEmpty else { continue }
                 guard filter.projectID == nil || reference.projectIDs.contains(filter.projectID!) else { continue }
+                guard filter.toolID == nil || reference.toolIDs.contains(filter.toolID!) else { continue }
                 let projectTitle = reference.projectIDs.compactMap { id in projects.first { $0.id == id }?.title }.first
                 var score = matchedTerms.count * 2
                 if reference.title.lowercased().contains(normalizedQuery) { score += 10 }
