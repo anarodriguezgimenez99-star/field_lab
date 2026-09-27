@@ -429,7 +429,7 @@ struct ExperimentWorkspaceView: View {
 
     @ViewBuilder
     private var workbenchMain: some View {
-        VStack(alignment: .leading, spacing: 26) {
+        VStack(alignment: .leading, spacing: 20) {
             if mode == .build {
                 ingredients
                 if duplicateNotice {
@@ -444,92 +444,35 @@ struct ExperimentWorkspaceView: View {
             }
             conclusionSection
         }
+        #if os(macOS)
+        .padding(20)
+        #else
         .padding(28)
+        #endif
     }
 
     private var ingredients: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 14) {
             WorkbenchSectionTitle(title: "INGREDIENTS", detail: "The setup you are testing")
 
-            WorkbenchSection(title: "REFERENCES", systemImage: "photo.on.rectangle") {
-                HStack(spacing: 10) {
-                    ForEach(references) { reference in
-                        ReferenceImageView(data: reference.thumbnailData ?? reference.imageData)
-                            .frame(width: 88, height: 72)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .overlay(alignment: .bottomLeading) {
-                                Text(reference.title).font(.caption2.weight(.medium)).lineLimit(1).padding(5).frame(maxWidth: 88, alignment: .leading).background(.black.opacity(0.5)).foregroundStyle(.white)
-                            }
-                    }
-                    Button { isShowingReferencePicker = true } label: {
-                        Label(L10n.text("Add reference"), systemImage: "plus")
-                            .frame(width: 88, height: 72)
-                            .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.tint)
-                    Button(L10n.text("Import"), systemImage: "square.and.arrow.down") { isShowingReferenceImporter = true }.buttonStyle(.bordered)
-                    Button(L10n.text("Paste"), systemImage: "doc.on.clipboard") { pasteReference() }.buttonStyle(.bordered)
-                }
-                if references.isEmpty { Text(L10n.text("Browse Collect, drag images here, or add an existing reference.")).font(.subheadline).foregroundStyle(.secondary) }
+            #if os(macOS)
+            LazyVGrid(columns: [
+                GridItem(.flexible(minimum: 260), spacing: 18),
+                GridItem(.flexible(minimum: 260), spacing: 18)
+            ], alignment: .leading, spacing: 14) {
+                referenceIngredient
+                promptIngredient
+                toolIngredient
+                settingsIngredient
             }
-            .onDrop(of: [UTType.image.identifier], isTargeted: nil) { providers in
-                guard let provider = providers.first else { return false }
-                provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
-                    Task { @MainActor in importReference(data) }
-                }
-                return true
+            #else
+            VStack(alignment: .leading, spacing: 18) {
+                referenceIngredient
+                promptIngredient
+                toolIngredient
+                settingsIngredient
             }
-
-            WorkbenchSection(title: "PROMPT", systemImage: "text.quote") {
-                TextEditor(text: $prompt)
-                    .frame(minHeight: 150)
-                    .scrollContentBackground(.hidden)
-                    .padding(10)
-                    .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                HStack(spacing: 8) {
-                    Button(L10n.text("+ Block")) { isShowingBlockPicker = true }.buttonStyle(.bordered)
-                    if !selectedPromptBlockIDs.isEmpty { Text(L10n.blockInsertion(selectedPromptBlockIDs.count)).font(.caption).foregroundStyle(.secondary) }
-                    Spacer()
-                    Button(L10n.text("Copy Prompt"), systemImage: "doc.on.doc") { copyToClipboard(prompt) }.buttonStyle(.bordered)
-                }
-            }
-
-            WorkbenchSection(title: "TOOL", systemImage: "wrench.and.screwdriver") {
-                HStack(spacing: 10) {
-                    Picker(L10n.text("Tool"), selection: $selectedToolID) {
-                        Text(L10n.text("Choose a tool")).tag(Optional<UUID>.none)
-                        ForEach(appModel.repository.tools()) { Text($0.name).tag(Optional($0.id)) }
-                    }
-                    .labelsHidden()
-                    .frame(maxWidth: 240)
-                    Button(L10n.text("+ Add Tool")) { isShowingToolCreator = true }.buttonStyle(.bordered)
-                    Button(L10n.text("Presets")) { isShowingPresetPicker = true }.buttonStyle(.bordered).disabled(selectedToolID == nil)
-                    Button(L10n.text("Save Preset")) { isShowingPresetCreator = true }.buttonStyle(.bordered).disabled(selectedToolID == nil)
-                }
-                HStack(spacing: 12) {
-                    TextField(L10n.text("Model"), text: $model)
-                    Text(L10n.text("External"))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 100, alignment: .leading)
-                }
-                if let selectedTool { Text(selectedTool.websiteURL.isEmpty ? L10n.text("External workflow · copy prompt, open the tool, then bring the result back.") : selectedTool.websiteURL).font(.caption).foregroundStyle(.secondary) }
-            }
-
-            WorkbenchSection(title: "SETTINGS", systemImage: "slider.horizontal.3") {
-                VStack(spacing: 8) {
-                    ForEach($settings) { $setting in
-                        SettingEntryRow(setting: $setting) { settings.removeAll { $0.id == setting.id }; persistSetup() }
-                    }
-                    Button(L10n.text("+ Add Setting"), systemImage: "plus") {
-                        settings.append(SettingEntry(key: "", value: ""))
-                        persistSetup()
-                    }
-                    .buttonStyle(.bordered)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
+            #endif
 
             if !relatedLearnings.isEmpty {
                 WorkbenchSection(title: "RELATED GUIDANCE", systemImage: "lightbulb") {
@@ -548,6 +491,144 @@ struct ExperimentWorkspaceView: View {
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
         }
+    }
+
+    private var referenceIngredient: some View {
+        WorkbenchSection(title: "REFERENCES", systemImage: "photo.on.rectangle") {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Button(L10n.text("Add reference"), systemImage: "plus") { isShowingReferencePicker = true }
+                        .buttonStyle(.borderedProminent)
+                        .tint(FieldPalette.accent)
+                        .controlSize(.small)
+                    Button(L10n.text("Import"), systemImage: "square.and.arrow.down") { isShowingReferenceImporter = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    Button(L10n.text("Paste"), systemImage: "doc.on.clipboard") { pasteReference() }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                }
+
+                if references.isEmpty {
+                    Text(L10n.text("Browse Collect, drag images here, or add an existing reference."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(references) { reference in
+                                ReferenceImageView(data: reference.thumbnailData ?? reference.imageData)
+                                    .frame(width: 68, height: 54)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .overlay(alignment: .bottomLeading) {
+                                        Text(reference.title)
+                                            .font(.caption2.weight(.medium))
+                                            .lineLimit(1)
+                                            .padding(4)
+                                            .frame(maxWidth: 68, alignment: .leading)
+                                            .background(.black.opacity(0.5))
+                                            .foregroundStyle(.white)
+                                    }
+                                    .accessibilityLabel(reference.title)
+                            }
+                        }
+                    }
+                    .frame(height: 54)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onDrop(of: [UTType.image.identifier], isTargeted: nil) { providers in
+            guard let provider = providers.first else { return false }
+            provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                Task { @MainActor in importReference(data) }
+            }
+            return true
+        }
+    }
+
+    private var promptIngredient: some View {
+        WorkbenchSection(title: "PROMPT", systemImage: "text.quote") {
+            VStack(alignment: .leading, spacing: 8) {
+                TextEditor(text: $prompt)
+                    #if os(macOS)
+                    .frame(height: 104)
+                    #else
+                    .frame(minHeight: 150)
+                    #endif
+                    .scrollContentBackground(.hidden)
+                    .padding(10)
+                    .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                HStack(spacing: 8) {
+                    Button(L10n.text("+ Block")) { isShowingBlockPicker = true }.buttonStyle(.bordered)
+                    if !selectedPromptBlockIDs.isEmpty { Text(L10n.blockInsertion(selectedPromptBlockIDs.count)).font(.caption).foregroundStyle(.secondary) }
+                    Spacer(minLength: 0)
+                    Button(L10n.text("Copy Prompt"), systemImage: "doc.on.doc") { copyToClipboard(prompt) }.buttonStyle(.bordered)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var toolIngredient: some View {
+        WorkbenchSection(title: "TOOL", systemImage: "wrench.and.screwdriver") {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Picker(L10n.text("Tool"), selection: $selectedToolID) {
+                        Text(L10n.text("Choose a tool")).tag(Optional<UUID>.none)
+                        ForEach(appModel.repository.tools()) { Text($0.name).tag(Optional($0.id)) }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                    Button(L10n.text("+ Add Tool")) { isShowingToolCreator = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                }
+                HStack(spacing: 8) {
+                    Button(L10n.text("Presets")) { isShowingPresetPicker = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .disabled(selectedToolID == nil)
+                    Button(L10n.text("Save Preset")) { isShowingPresetCreator = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .disabled(selectedToolID == nil)
+                }
+                HStack(spacing: 12) {
+                    TextField(L10n.text("Model"), text: $model)
+                    Text(L10n.text("External"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 80, alignment: .leading)
+                }
+                if let selectedTool {
+                    Text(selectedTool.websiteURL.isEmpty ? L10n.text("External workflow · copy prompt, open the tool, then bring the result back.") : selectedTool.websiteURL)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var settingsIngredient: some View {
+        WorkbenchSection(title: "SETTINGS", systemImage: "slider.horizontal.3") {
+            VStack(spacing: 8) {
+                ForEach($settings) { $setting in
+                    SettingEntryRow(setting: $setting) { settings.removeAll { $0.id == setting.id }; persistSetup() }
+                }
+                Button(L10n.text("+ Add Setting"), systemImage: "plus") {
+                    settings.append(SettingEntry(key: "", value: ""))
+                    persistSetup()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var runsSection: some View {
