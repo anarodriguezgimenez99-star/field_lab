@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Field LAB · References Preview</title>
+  <style>
+    :root {
+      --canvas: #f4f4f0;
+      --sidebar: #edeee8;
+      --surface: #ffffff;
+      --surface-soft: #f7f7f3;
+      --ink: #242521;
+      --muted: #74766f;
+      --faint: #a7a9a1;
+      --line: rgba(36, 37, 33, .11);
+      --line-strong: rgba(36, 37, 33, .19);
+      --selection: #e4e5df;
+      --accent: #d5e6d3;
+      --danger: #9d514b;
+      --shadow: 0 18px 48px rgba(33, 34, 30, .10);
+      --radius: 14px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 1060px; background: var(--canvas); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #5c775b; outline-offset: 3px; }
+    ::selection { background: #c7dfc5; color: var(--ink); }
+
+    .app {
+      width: min(1500px, calc(100vw - 40px));
+      height: min(920px, calc(100vh - 40px));
+      min-height: 700px;
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar { display: flex; flex-direction: column; padding: 22px 14px 16px; background: var(--sidebar); border-right: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 10px 23px; font-size: 15px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-mark { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: #fff; }
+    .brand-mark svg { width: 14px; height: 14px; }
+    .nav-section { margin: 9px 8px 7px; color: var(--faint); font-size: 10px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+    .nav { display: grid; gap: 2px; }
+    .nav button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: #6b6d66; text-align: left; font-size: 12px; cursor: pointer; }
+    .nav button:hover { background: rgba(255,255,255,.58); color: var(--ink); }
+    .nav button.active { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 0 rgba(0,0,0,.03); }
+    .nav svg { width: 15px; height: 15px; flex: none; stroke-width: 1.65; }
+    .sidebar-footer { margin-top: auto; padding: 14px 10px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .sidebar-footer strong { display: block; margin-bottom: 3px; color: var(--ink); font-size: 12px; }
+
+    .main { min-width: 0; display: flex; flex-direction: column; background: var(--surface); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; height: 66px; padding: 0 27px; border-bottom: 1px solid var(--line); }
+    .crumb { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--ink); font-weight: 700; }
+    .top-actions { display: flex; align-items: center; gap: 9px; }
+    .search { position: relative; width: 220px; }
+    .search svg { position: absolute; top: 10px; left: 11px; width: 15px; height: 15px; color: var(--muted); }
+    .search input { width: 100%; height: 36px; padding: 0 12px 0 34px; border: 1px solid var(--line); border-radius: 8px; outline: 0; background: var(--surface-soft); color: var(--ink); font-size: 12px; }
+    .search input:focus { border-color: var(--line-strong); background: var(--surface); }
+    .avatar { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%; background: #d4e0d1; color: #455542; font-size: 11px; font-weight: 800; }
+
+    .page { min-height: 0; flex: 1; display: flex; flex-direction: column; padding: 30px 27px 28px; }
+    .heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 22px; }
+    h1 { margin: 0; font-size: 30px; line-height: 1.05; letter-spacing: -.04em; font-weight: 770; }
+    .subtitle { max-width: 580px; margin: 9px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .primary { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid var(--ink); border-radius: 8px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .primary:hover { background: #41423d; }
+    .primary svg { width: 15px; height: 15px; }
+
+    .filters { display: flex; align-items: center; gap: 9px; margin: 25px 0 19px; padding-bottom: 17px; border-bottom: 1px solid var(--line); }
+    .filter-label { margin-right: 1px; color: var(--faint); font-size: 10px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+    .chip { min-height: 31px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
+    .chip:hover { border-color: var(--line-strong); color: var(--ink); }
+    .chip.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+    .source-select { height: 31px; margin-left: auto; padding: 0 29px 0 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-soft); color: var(--ink); font-size: 11px; }
+    .count { color: var(--muted); font-size: 11px; white-space: nowrap; }
+
+    .workspace { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 27px; }
+    .results { min-width: 0; min-height: 0; overflow: auto; padding-right: 2px; }
+    .results::-webkit-scrollbar, .detail::-webkit-scrollbar { width: 8px; }
+    .results::-webkit-scrollbar-thumb, .detail::-webkit-scrollbar-thumb { background: #d5d6d0; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 21px 16px; padding-bottom: 14px; }
+    .ref-card { min-width: 0; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+    .ref-card:focus-visible .thumb, .ref-card.selected .thumb { outline: 2px solid var(--ink); outline-offset: 3px; }
+    .thumb { position: relative; aspect-ratio: 1.03 / 1; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #e9e9e2; transition: transform .18s ease, box-shadow .18s ease; }
+    .ref-card:hover .thumb { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(33,34,30,.11); }
+    .thumb svg { width: 100%; height: 100%; display: block; }
+    .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .pin { position: absolute; top: 9px; right: 9px; width: 25px; height: 25px; display: grid; place-items: center; border-radius: 7px; background: rgba(255,255,255,.82); color: var(--ink); }
+    .pin svg { width: 13px; height: 13px; }
+    .card-copy { padding: 9px 2px 0; }
+    .card-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 730; }
+    .card-source { margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 10px; }
+    .card-tag { display: inline-block; margin-top: 7px; padding: 3px 6px; border-radius: 4px; background: var(--surface-soft); color: var(--muted); font-size: 9px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .empty { display: none; padding: 70px 25px; border: 1px dashed var(--line-strong); border-radius: 12px; color: var(--muted); text-align: center; }
+    .empty strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 14px; }
+
+    .detail { min-width: 0; overflow: auto; padding: 0 0 12px 25px; border-left: 1px solid var(--line); }
+    .detail-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .detail-label { color: var(--faint); font-size: 10px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+    .more { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; cursor: pointer; }
+    .more svg { width: 15px; height: 15px; }
+    .detail-hero { overflow: hidden; aspect-ratio: 1.34 / 1; border: 1px solid var(--line); border-radius: 12px; background: #d9ddd2; }
+    .detail-hero svg { width: 100%; height: 100%; display: block; }
+    .detail-hero.photo { aspect-ratio: 4 / 5; background: #171915; }
+    .detail-hero img { width: 100%; height: 100%; display: block; object-fit: contain; }
+    .detail h2 { margin: 17px 0 4px; font-size: 20px; letter-spacing: -.03em; }
+    .detail-source { color: var(--muted); font-size: 11px; }
+    .detail-source a { color: var(--ink); text-underline-offset: 3px; }
+    .note { margin: 17px 0 19px; padding: 13px 14px; border-left: 2px solid #b7c9b2; background: #f4f7f1; color: #596355; font-size: 12px; line-height: 1.5; }
+    .detail-section { padding: 17px 0; border-top: 1px solid var(--line); }
+    .section-heading { display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--faint); font-size: 10px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+    .status { color: #6a8169; letter-spacing: .03em; }
+    .attributes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+    .attribute dt { margin-bottom: 3px; color: var(--faint); font-size: 10px; }
+    .attribute dd { margin: 0; font-size: 11px; font-weight: 650; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 10px; }
+    .project-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; color: var(--ink); font-size: 11px; }
+    .project-row + .project-row { border-top: 1px solid var(--line); }
+    .project-row span:last-child { color: var(--muted); font-size: 10px; }
+    .detail-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .secondary { min-height: 35px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--ink); font-size: 11px; font-weight: 650; cursor: pointer; }
+    .secondary:hover { background: var(--surface-soft); border-color: var(--line-strong); }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 10; display: none; place-items: center; padding: 20px; background: rgba(24,25,22,.28); }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(520px, 100%); padding: 23px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: 0 24px 70px rgba(30,31,28,.22); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 19px; }
+    .modal h3 { margin: 0; font-size: 19px; letter-spacing: -.03em; }
+    .modal p { margin: 6px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .close { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; cursor: pointer; }
+    .close svg { width: 15px; height: 15px; }
+    .form-grid { display: grid; gap: 14px; }
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .field input, .field textarea, .field select { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 7px; outline: 0; background: var(--surface-soft); color: var(--ink); font-size: 12px; }
+    .field textarea { min-height: 77px; resize: vertical; }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--line-strong); background: var(--surface); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 21px; }
+
+    @media (max-width: 1180px) {
+      .app { width: calc(100vw - 20px); height: calc(100vh - 20px); min-height: 680px; margin: 10px auto; }
+      .workspace { grid-template-columns: minmax(0, 1fr) 320px; gap: 21px; }
+      .detail { padding-left: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M3 4.4 8 2l5 2.4v7.2L8 14l-5-2.4V4.4Z" stroke-width="1.4"/><path d="m3.4 4.6 4.6 2.2 4.6-2.2M8 6.8V13.5" stroke-width="1.2"/></svg></span> Field LAB</div>
+      <nav class="nav" aria-label="Primary navigation">
+        <div class="nav-section">Workspace</div>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="8.5"/></svg>Quick Capture</button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3"/></svg>Dashboard</button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 5.5h14v13H5z"/><path d="M8 9h8M8 13h5"/></svg>Inbox</button>
+        <div class="nav-section">Library</div>
+        <button class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.4"/><path d="m5 17 4.5-4.4 3.2 3 2.3-2.3L19 17"/></svg>References</button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 13h6M8 17h4"/></svg>Learnings</button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Prompt Blocks</button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 5.5h14v13H5z"/><path d="m8 9 2-2 2 2 2-2 2 2M8 14h8"/></svg>Recipes</button>
+        <div class="nav-section">Knowledge</div>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>Prompt Deck</button>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16v12H4z"/><path d="M7 10h10M7 14h6"/></svg>Tools</button>
+        <div class="nav-section">AI</div>
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3.5 14 9l5.5 2-5.5 2-2 5.5-2-5.5-5.5-2L10 9l2-5.5Z"/><path d="m18.5 4 .6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6.6-1.7Z"/></svg>AI Inbox</button>
+      </nav>
+      <div class="sidebar-footer"><strong>Reference workspace</strong>Collect, annotate, and connect the visual inputs behind your work.</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb"><span>Library</span><span>›</span><strong>References</strong></div>
+        <div class="top-actions">
+          <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.7" cy="10.7" r="6.2"/><path d="m15.5 15.5 4.1 4.1"/></svg><input id="search" type="search" placeholder="Search references" aria-label="Search references" /></label>
+          <div class="avatar" aria-label="Signed in as AR">AR</div>
+        </div>
+      </header>
+
+      <section class="page">
+        <div class="heading-row">
+          <div><h1>References</h1><p class="subtitle">Save inspiration from anywhere. Keep the reason it matters, then let it inform the work that follows.</p></div>
+          <button class="primary" id="importButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>Import reference</button>
+        </div>
+
+        <div class="filters">
+          <span class="filter-label">View</span>
+          <button class="chip active" data-filter="all">All <span>(8)</span></button>
+          <button class="chip" data-filter="unclassified">Unclassified <span>(2)</span></button>
+          <button class="chip" data-filter="pinned">Pinned <span>(3)</span></button>
+          <select class="source-select" id="sourceSelect" aria-label="Filter by source"><option value="all">All sources · 8</option><option value="cosmos">Cosmos · 3</option><option value="are.na">Are.na · 2</option><option value="manual">Manual · 3</option></select>
+          <span class="count" id="resultCount">8 items</span>
+        </div>
+
+        <div class="workspace">
+          <div class="results">
+            <div class="grid" id="grid"></div>
+            <div class="empty" id="empty"><strong>No references found</strong>Try a different search or filter.</div>
+          </div>
+
+          <aside class="detail" id="detail" aria-label="Reference detail"></aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head"><div><h3 id="modalTitle">Import a reference</h3><p>Bring in a visual, then add enough context to make it useful later.</p></div><button class="close" id="closeModal" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <form id="referenceForm">
+        <div class="form-grid">
+          <div class="field"><label for="referenceTitle">Title</label><input id="referenceTitle" placeholder="e.g. Soft product still life" required /></div>
+          <div class="field"><label for="referenceSource">Source URL</label><input id="referenceSource" type="url" placeholder="https://" /></div>
+          <div class="field"><label for="referenceNote">Why it matters</label><textarea id="referenceNote" placeholder="What should Field LAB remember about this?" ></textarea></div>
+          <div class="field"><label for="referenceTag">Tag</label><input id="referenceTag" placeholder="e.g. material, typography, lighting" /></div>
+        </div>
+        <div class="modal-actions"><button type="button" class="secondary" id="cancelModal">Cancel</button><button type="submit" class="primary">Save to Field LAB</button></div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    const icon = {
+      pin: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m15.7 4.3 4 4-2 2v4.6l-2 2V20l-3.7-3.7L8.3 20v-3.1l-2-2V10.3l-2-2 4-4 2 2h3.4l2-2Z"/></svg>',
+      more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
+      external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v5H5V5h5"/></svg>'
+    };
+
+    const refs = [
+      { id: 1, title: 'Warm bottle', source: 'Cosmos', domain: 'cosmos.so', tag: 'lighting', pinned: true, filter: 'classified', note: 'Hard light on a quiet surface.', art: 'bottle', attrs: [['Style','Hyperrealistic'],['Medium','Photography'],['Subject','Product'],['Lighting','Hard light']] },
+      { id: 2, title: 'Quiet editorial spread', source: 'Are.na', domain: 'are.na', tag: 'composition', pinned: true, filter: 'classified', note: 'A generous pause between image and language.', art: 'paper', attrs: [['Style','Editorial'],['Medium','Print'],['Subject','Layout'],['Lighting','Soft light']] },
+      { id: 3, title: 'Blue hour room', source: 'Cosmos', domain: 'cosmos.so', tag: 'color', pinned: false, filter: 'classified', note: 'Cool blue ambient light with one warm anchor.', art: 'room', attrs: [['Style','Cinematic'],['Medium','Photography'],['Subject','Interior'],['Lighting','Ambient']] },
+      { id: 4, title: 'A quiet green', source: 'Manual', domain: 'field.local', tag: 'material', pinned: true, filter: 'classified', note: 'Soft texture, no unnecessary detail.', art: 'green', attrs: [['Style','Minimal'],['Medium','Texture'],['Subject','Material'],['Lighting','Diffuse']] },
+      { id: 5, title: 'Letterform study', source: 'Are.na', domain: 'are.na', tag: 'typography', pinned: false, filter: 'classified', note: 'Contrast comes from scale before color.', art: 'type', attrs: [['Style','Typographic'],['Medium','Poster'],['Subject','Letterform'],['Lighting','Flat']] },
+      { id: 6, title: 'Clay and shadow', source: 'Manual', domain: 'field.local', tag: 'form', pinned: false, filter: 'unclassified', note: 'A useful study in rounded edges and weight.', art: 'clay', attrs: [['Style','Sculptural'],['Medium','Photography'],['Subject','Object'],['Lighting','Directional']] },
+      { id: 7, title: 'Window / table / morning', source: 'Cosmos', domain: 'cosmos.so', tag: 'mood', pinned: false, filter: 'classified', note: 'Daylight as a compositional material.', art: 'window', attrs: [['Style','Naturalistic'],['Medium','Photography'],['Subject','Still life'],['Lighting','Daylight']] },
+      { id: 8, title: 'Unsorted visual note', source: 'Manual', domain: 'field.local', tag: 'unclassified', pinned: false, filter: 'unclassified', note: 'Add a note when the connection becomes clearer.', art: 'unsorted', attrs: [['Style','Pending'],['Medium','Image'],['Subject','Pending'],['Lighting','Pending']] }
+    ];
+
+    const art = {
+      bottle: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#d7d4cb"/><rect y="214" width="320" height="96" fill="#bbb9b1"/><ellipse cx="162" cy="221" rx="66" ry="13" fill="#87877f" opacity=".48"/><path d="M139 78h47v31c0 10 21 21 24 47l11 65c2 12-8 20-20 20h-78c-12 0-22-8-20-20l11-65c3-26 24-37 24-47V78Z" fill="#546057"/><rect x="143" y="58" width="39" height="28" rx="5" fill="#343e39"/><path d="M140 131h45" stroke="#cdd3cb" stroke-width="3" opacity=".7"/><path d="M169 112c13 22 14 62 18 102" stroke="#f1f0e8" stroke-width="8" opacity=".28"/></svg>',
+      paper: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#e5e0d7"/><rect x="42" y="33" width="214" height="245" fill="#fbf8f0" transform="rotate(-4 42 33)"/><rect x="79" y="80" width="126" height="68" fill="#bdc7c1"/><rect x="79" y="164" width="122" height="4" fill="#3e413d"/><rect x="79" y="178" width="90" height="4" fill="#777970"/><rect x="79" y="192" width="107" height="4" fill="#a0a29a"/><path d="M219 80h18M219 88h12" stroke="#b6b5ac" stroke-width="3"/></svg>',
+      room: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#19394a"/><rect y="204" width="320" height="106" fill="#102b38"/><rect x="43" y="38" width="126" height="151" fill="#5c8ca0"/><path d="M43 171 169 39v150H43Z" fill="#78a7b5" opacity=".7"/><rect x="199" y="104" width="62" height="100" fill="#d7a75d"/><rect x="212" y="90" width="36" height="20" fill="#d7a75d"/><ellipse cx="230" cy="207" rx="55" ry="12" fill="#071d28" opacity=".62"/></svg>',
+      green: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#778878"/><path d="M-10 244c49-44 78-57 127-26 52 33 96-6 119-40 26-38 59-48 94-18v150H-10Z" fill="#aab5a3"/><path d="M0 80c47 22 54 77 40 144M89 14c-2 69 31 116 75 149M220 0c-25 60-20 110 8 165" stroke="#d4dacd" stroke-width="7" opacity=".45"/><circle cx="104" cy="77" r="28" fill="#5e7561" opacity=".75"/></svg>',
+      type: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#e1d6c8"/><text x="28" y="145" fill="#283b3d" font-family="Georgia, serif" font-size="100" font-weight="700">A</text><text x="121" y="213" fill="#ae5c43" font-family="Arial, sans-serif" font-size="88" font-weight="800">R</text><path d="M30 239h255" stroke="#283b3d" stroke-width="3"/><path d="M30 250h126" stroke="#ae5c43" stroke-width="3"/></svg>',
+      clay: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#d6c8ba"/><ellipse cx="163" cy="234" rx="86" ry="22" fill="#9e8978" opacity=".45"/><path d="M96 212c4-47 25-78 66-78s65 28 68 78c1 22-30 36-68 36-38 0-68-13-66-36Z" fill="#aa6f55"/><path d="M116 153c17-38 85-40 105 0-27-10-79-13-105 0Z" fill="#c48b6f"/><ellipse cx="161" cy="137" rx="38" ry="10" fill="#875643"/></svg>',
+      window: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#dce4e4"/><rect x="42" y="29" width="157" height="183" fill="#a7c8cd"/><path d="M42 145h157M121 29v183" stroke="#f5f4ec" stroke-width="8"/><rect y="221" width="320" height="89" fill="#c4bcae"/><path d="M198 218c26-3 54 4 84 30" stroke="#736b5d" stroke-width="6" opacity=".55"/><circle cx="222" cy="201" r="22" fill="#788c5f"/><rect x="214" y="207" width="7" height="41" fill="#5b644c"/></svg>',
+      unsorted: '<svg viewBox="0 0 320 310" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="310" fill="#dad8d1"/><path d="m34 94 80-54 62 34-80 54z" fill="#9aafa5"/><path d="m96 160 98-69 82 52-98 69z" fill="#b5a58d"/><path d="m28 236 73-46 83 48-74 45z" fill="#c7785c"/><circle cx="251" cy="66" r="26" fill="#596a73"/></svg>'
+    };
+
+    let selectedId = 1;
+    let selectedFilter = 'all';
+    let selectedSource = 'all';
+    let query = '';
+
+    function tagsFor(reference) { return reference.tags || [reference.tag]; }
+
+    function visualFor(reference) {
+      if (reference.image) return `<img src="${reference.image}" alt="${reference.alt}" loading="lazy" />`;
+      return art[reference.art];
+    }
+
+    function visibleRefs() {
+      return refs.filter(r => {
+        const matchesFilter = selectedFilter === 'all' || (selectedFilter === 'pinned' ? r.pinned : r.filter === selectedFilter);
+        const matchesSource = selectedSource === 'all' || r.source.toLowerCase() === selectedSource;
+        const haystack = [r.title, r.source, r.domain, ...tagsFor(r), r.note, ...r.attrs.flat()].join(' ').toLowerCase();
+        return matchesFilter && matchesSource && haystack.includes(query.toLowerCase());
+      });
+    }
+
+    function renderGrid() {
+      const visible = visibleRefs();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = visible.map(r => `<button class="ref-card ${r.id === selectedId ? 'selected' : ''}" data-id="${r.id}" aria-label="Open ${r.title}"><div class="thumb">${visualFor(r)}${r.pinned ? `<span class="pin">${icon.pin}</span>` : ''}</div><div class="card-copy"><div class="card-title">${r.title}</div><div class="card-source">${r.source} · ${r.domain}</div><div class="card-tags">${tagsFor(r).slice(0, 2).map(tag => `<span class="card-tag">${tag}</span>`).join('')}</div></div></button>`).join('');
+      document.getElementById('empty').style.display = visible.length ? 'none' : 'block';
+      document.getElementById('resultCount').textContent = `${visible.length} ${visible.length === 1 ? 'item' : 'items'}`;
+      grid.querySelectorAll('.ref-card').forEach(card => card.addEventListener('click', () => { selectedId = Number(card.dataset.id); renderGrid(); renderDetail(); }));
+    }
+
+    function renderDetail() {
+      const r = refs.find(item => item.id === selectedId) || refs[0];
+      document.getElementById('detail').innerHTML = `<div class="detail-top"><span class="detail-label">Selected reference</span><button class="more" aria-label="More actions">${icon.more}</button></div><div class="detail-hero ${r.image ? 'photo' : ''}">${visualFor(r)}</div><h2>${r.title}</h2><div class="detail-source">${r.source} · ${r.domain} · <a href="#" onclick="return false">Open original ${icon.external}</a></div><div class="note">${r.note}</div><div class="detail-section"><div class="section-heading"><span>Visual attributes</span><span class="status">Analysis complete</span></div><dl class="attributes">${r.attrs.map(a => `<div class="attribute"><dt>${a[0]}</dt><dd>${a[1]}</dd></div>`).join('')}</dl></div><div class="detail-section"><div class="section-heading"><span>Tags</span><button class="secondary" style="min-height:26px;padding:0 8px;font-size:10px">Edit</button></div><div class="tag-list">${[...tagsFor(r), 'reference', r.filter === 'unclassified' ? 'needs review' : 'ready'].map(tag => `<span class="tag">${tag}</span>`).join('')}</div></div><div class="detail-section"><div class="section-heading"><span>Projects</span><span>1 linked</span></div><div class="project-row"><span>Demo project</span><span>Project ↗</span></div></div><div class="detail-actions"><button class="secondary" id="detailNote">Add note</button><button class="secondary" id="detailPin">${r.pinned ? 'Unpin' : 'Pin'} reference</button></div>`;
+      document.getElementById('detailPin').addEventListener('click', () => { r.pinned = !r.pinned; renderGrid(); renderDetail(); });
+      document.getElementById('detailNote').addEventListener('click', openModal);
+    }
+
+    function openModal() { document.getElementById('modalBackdrop').classList.add('open'); document.getElementById('referenceTitle').focus(); }
+    function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
+
+    document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {
+      selectedFilter = button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(b => b.classList.toggle('active', b === button));
+      renderGrid();
+    }));
+    document.getElementById('sourceSelect').addEventListener('change', event => { selectedSource = event.target.value; renderGrid(); });
+    document.getElementById('search').addEventListener('input', event => { query = event.target.value.trim(); renderGrid(); });
+    document.getElementById('importButton').addEventListener('click', openModal);
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('cancelModal').addEventListener('click', closeModal);
+    document.getElementById('modalBackdrop').addEventListener('click', event => { if (event.target.id === 'modalBackdrop') closeModal(); });
+    document.getElementById('referenceForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const title = document.getElementById('referenceTitle').value.trim() || 'New reference';
+      refs.unshift({ id: Date.now(), title, source: 'Manual', domain: 'field.local', tag: document.getElementById('referenceTag').value.trim() || 'unclassified', pinned: false, filter: 'unclassified', note: document.getElementById('referenceNote').value.trim() || 'Add a note when the connection becomes clearer.', art: 'unsorted', attrs: [['Style','Pending'],['Medium','Image'],['Subject','Pending'],['Lighting','Pending']] });
+      selectedId = refs[0].id; selectedFilter = 'all'; document.querySelectorAll('[data-filter]').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all')); document.getElementById('referenceForm').reset(); closeModal(); renderGrid(); renderDetail();
+    });
+
+    renderGrid();
+    renderDetail();
+  </script>
+</body>
+</html>
