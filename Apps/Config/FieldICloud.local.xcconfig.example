@@ -1,0 +1,7 @@
+// Copy this file to FieldICloud.local.xcconfig and replace these samples with
+// identifiers registered to your Apple Developer team.
+FIELD_ICLOUD_CONTAINER_ID = iCloud.com.yourcompany.field
+FIELD_IOS_BUNDLE_ID = com.yourcompany.field.mobile
+FIELD_IOS_SHARE_EXTENSION_BUNDLE_ID = com.yourcompany.field.mobile.share
+FIELD_MACOS_BUNDLE_ID = com.yourcompany.field
+FIELD_APP_GROUP_ID = group.com.yourcompany.field

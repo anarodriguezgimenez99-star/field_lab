@@ -281,10 +281,63 @@ public final class FieldRepository {
     public func createExperiment(
         title: String,
         goal: String = "",
+        prompt: String = "",
+        conclusion: String = "",
         toolID: UUID? = nil,
-        projectID: UUID? = nil
+        projectID: UUID? = nil,
+        model: String = "",
+        referenceIDs: [UUID] = [],
+        settings: [SettingEntry] = [],
+        promptBlockIDs: [UUID] = [],
+        executionMode: ExperimentExecutionMode = .external
     ) throws -> FieldExperiment {
-        let experiment = FieldExperiment(title: title, goal: goal, toolID: toolID, projectID: projectID)
+        let experiment = FieldExperiment(
+            title: title,
+            goal: goal,
+            toolID: toolID,
+            projectID: projectID,
+            referenceIDs: referenceIDs,
+            prompt: prompt,
+            model: model,
+            settings: settings,
+            promptBlockIDs: promptBlockIDs,
+            executionMode: executionMode
+        )
+        experiment.conclusion = conclusion
+        context.insert(experiment)
+        try save()
+        return experiment
+    }
+
+    @discardableResult
+    public func createExperiment(
+        from recipe: KnowledgeItem,
+        title: String,
+        goal: String = "",
+        prompt: String,
+        projectID: UUID?,
+        toolID: UUID?,
+        model: String,
+        referenceIDs: [UUID]? = nil,
+        settings: [SettingEntry]? = nil,
+        promptBlockIDs: [UUID]? = nil,
+        executionMode: ExperimentExecutionMode? = nil
+    ) throws -> FieldExperiment {
+        guard let payload = recipePayload(recipe) else {
+            throw ExperimentRepositoryError.recipeNotFound
+        }
+        let experiment = FieldExperiment(
+            title: title,
+            goal: goal,
+            toolID: toolID,
+            projectID: projectID,
+            referenceIDs: referenceIDs ?? payload.references,
+            prompt: prompt,
+            model: model,
+            settings: settings ?? payload.settings,
+            promptBlockIDs: promptBlockIDs ?? payload.promptBlockIDs,
+            executionMode: executionMode ?? .external
+        )
         context.insert(experiment)
         try save()
         return experiment
@@ -460,7 +513,9 @@ public final class FieldRepository {
             candidate.evaluation = .works
         }
         run.evaluation = .best
+        run.updatedAt = .now
         experiment.bestRunID = run.id
+        experiment.updatedAt = .now
         try save()
     }
 
@@ -483,6 +538,7 @@ public final class FieldRepository {
     }
 
     public func updateExperimentRun(_ run: FieldExperimentRun) throws {
+        run.updatedAt = .now
         if let experiment = experiments().first(where: { $0.id == run.experimentID }) { experiment.updatedAt = .now }
         try save()
     }
@@ -560,10 +616,55 @@ public final class FieldRepository {
     }
 
     public func recipePayload(_ recipe: KnowledgeItem) -> RecipePayload? {
-        guard recipe.kind == .recipe,
-              let metadata = try? JSONSerialization.jsonObject(with: Data(recipe.metadataJSON.utf8)) as? [String: Any],
-              let encoded = metadata["payload"] as? String else { return nil }
-        return try? JSONDecoder().decode(RecipePayload.self, from: Data(encoded.utf8))
+        guard recipe.kind == .recipe else { return nil }
+        if let metadata = try? JSONSerialization.jsonObject(with: Data(recipe.metadataJSON.utf8)) as? [String: Any],
+           let encoded = metadata["payload"] as? String,
+           let payload = try? JSONDecoder().decode(RecipePayload.self, from: Data(encoded.utf8)) {
+            return payload
+        }
+        // Older and manually imported recipes only stored their prompt in `body`.
+        return RecipePayload(toolID: recipe.toolID, prompt: recipe.body)
+    }
+
+    @discardableResult
+    public func createRecipe(
+        title: String,
+        prompt: String,
+        status: KnowledgeStatus = .works,
+        scope: KnowledgeScope = .global,
+        projectID: UUID? = nil,
+        toolID: UUID? = nil,
+        model: String = "",
+        tags: [String] = [],
+        urlString: String = ""
+    ) throws -> KnowledgeItem {
+        let payload = RecipePayload(toolID: toolID, model: model, prompt: prompt)
+        return try createKnowledge(
+            kind: .recipe,
+            title: title,
+            body: prompt,
+            status: status,
+            scope: scope,
+            projectID: projectID,
+            toolID: toolID,
+            tags: tags,
+            urlString: urlString,
+            metadataJSON: encodeJSON(["payload": encodeJSON(payload)])
+        )
+    }
+
+    public func updateRecipePrompt(_ recipe: KnowledgeItem, prompt: String, toolID: UUID?, model: String) throws {
+        guard recipe.kind == .recipe else { throw ExperimentRepositoryError.recipeNotFound }
+        var payload = recipePayload(recipe) ?? RecipePayload(toolID: recipe.toolID, prompt: recipe.body)
+        payload.prompt = prompt
+        payload.toolID = toolID
+        payload.model = model
+        var metadata = (try? JSONSerialization.jsonObject(with: Data(recipe.metadataJSON.utf8))) as? [String: String] ?? [:]
+        metadata["payload"] = encodeJSON(payload)
+        recipe.body = prompt
+        recipe.toolID = toolID
+        recipe.metadataJSON = encodeJSON(metadata)
+        try updateKnowledge(recipe)
     }
 
     private func updateRecipePayload(_ recipe: KnowledgeItem, applying update: (inout RecipePayload) -> Void) {
@@ -705,12 +806,13 @@ public final class FieldRepository {
         importRecordID: UUID? = nil
     ) throws -> FieldReference {
         let resolvedSource = source ?? ReferenceSourceResolver.resolve(urlString: urlString)
+        let resolvedThumbnail = thumbnailData ?? imageData.flatMap { ReferenceImageThumbnail.make(from: $0) }
         let reference = FieldReference(
             title: title.isEmpty ? (resolvedSource.originalTitle.isEmpty ? "Untitled reference" : resolvedSource.originalTitle) : title,
             userNote: userNote,
             source: resolvedSource,
             imageData: imageData,
-            thumbnailData: thumbnailData,
+            thumbnailData: resolvedThumbnail,
             manualTags: tags,
             visualAttributes: visualAttributes,
             importRecordID: importRecordID,
@@ -723,6 +825,9 @@ public final class FieldRepository {
     }
 
     public func updateReference(_ reference: FieldReference) throws {
+        if reference.thumbnailData == nil, let imageData = reference.imageData {
+            reference.thumbnailData = ReferenceImageThumbnail.make(from: imageData)
+        }
         reference.updatedAt = .now
         try save()
     }

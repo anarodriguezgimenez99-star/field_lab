@@ -1,0 +1,205 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* FIELDMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* FIELDMobileApp.swift */; };
+		A10000000000000000000002 /* MobileTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* MobileTabsView.swift */; };
+		A10000000000000000000003 /* CaptureComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* CaptureComposer.swift */; };
+		A10000000000000000000004 /* CloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* CloudSyncSettingsView.swift */; };
+		A10000000000000000000012 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* ShareViewController.swift */; };
+		A10000000000000000000005 /* FIELDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* FIELDApp.swift */; };
+		A10000000000000000000006 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* ContentView.swift */; };
+		A10000000000000000000007 /* ReferenceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* ReferenceViews.swift */; };
+		A10000000000000000000008 /* LabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* LabViews.swift */; };
+		A10000000000000000000009 /* BorderGlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* BorderGlow.swift */; };
+		A10000000000000000000010 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* AppModel.swift */; };
+		A10000000000000000000011 /* MCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* MCPServer.swift */; };
+		A10000000000000000000021 /* FieldCore in Frameworks */ = {isa = PBXBuildFile; productRef = A60000000000000000000001 /* FieldCore */; };
+		A10000000000000000000022 /* FieldCore in Frameworks */ = {isa = PBXBuildFile; productRef = A60000000000000000000002 /* FieldCore */; };
+		A10000000000000000000023 /* FieldMCP in Frameworks */ = {isa = PBXBuildFile; productRef = A60000000000000000000003 /* FieldMCP */; };
+		A10000000000000000000024 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = A60000000000000000000004 /* MCP */; };
+		A10000000000000000000025 /* FieldCore in Share Extension Frameworks */ = {isa = PBXBuildFile; productRef = A60000000000000000000005 /* FieldCore */; };
+		A10000000000000000000026 /* FIELDShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* FIELDShare.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* Assets.xcassets */; };
+		A10000000000000000000013 /* FieldLanguage.swift in Mobile Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* FieldLanguage.swift */; };
+		A10000000000000000000014 /* FieldLanguage.swift in Desktop Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* FieldLanguage.swift */; };
+		A10000000000000000000015 /* FieldLanguage.swift in Share Extension Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* FieldLanguage.swift */; };
+		A10000000000000000000028 /* FIELDLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* FIELDLogo.png */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* FIELDMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FIELDMobileApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* MobileTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileTabsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* CaptureComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureComposer.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* CloudSyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncSettingsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000006 /* FIELDMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FIELDMobile.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000011 /* FIELDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FIELDApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A20000000000000000000013 /* ReferenceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceViews.swift; sourceTree = "<group>"; };
+		A20000000000000000000014 /* LabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabViews.swift; sourceTree = "<group>"; };
+		A20000000000000000000015 /* BorderGlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BorderGlow.swift; sourceTree = "<group>"; };
+		A20000000000000000000016 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000017 /* MCPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServer.swift; sourceTree = "<group>"; };
+		A20000000000000000000018 /* FIELDDesktop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FIELDDesktop.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000019 /* FieldICloud.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FieldICloud.xcconfig; sourceTree = "<group>"; };
+		A20000000000000000000021 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		A20000000000000000000022 /* Share Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000023 /* FIELDShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FIELDShare.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000024 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000025 /* FieldLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Sources/FIELD/FieldLanguage.swift; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000026 /* FIELDLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ../Sources/FIELD/Resources/FIELDLogo.png; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000031 /* FIELDMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FIELDMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000032 /* FIELD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FIELD.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000033 /* FIELDShare.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = FIELDShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A30000000000000000000001 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000021 /* FieldCore in Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A30000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000022 /* FieldCore in Frameworks */, A10000000000000000000023 /* FieldMCP in Frameworks */, A10000000000000000000024 /* MCP in Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A30000000000000000000003 /* Share Extension Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000025 /* FieldCore in Share Extension Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A30000000000000000000004 /* Embed App Extensions */ = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (A10000000000000000000026 /* FIELDShare.appex in Embed App Extensions */, ); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXGroup section */
+		A40000000000000000000001 = {
+			isa = PBXGroup;
+			children = (A40000000000000000000002 /* FIELDMobile */, A40000000000000000000003 /* FIELDDesktop */, A40000000000000000000004 /* Desktop Sources */, A40000000000000000000005 /* Config */, A40000000000000000000006 /* Products */, A40000000000000000000007 /* FIELDMobileShare */, );
+			sourceTree = "<group>";
+		};
+		A40000000000000000000002 /* FIELDMobile */ = {isa = PBXGroup; path = FIELDMobile; sourceTree = "<group>"; children = (A20000000000000000000001 /* FIELDMobileApp.swift */, A20000000000000000000002 /* MobileTabsView.swift */, A20000000000000000000003 /* CaptureComposer.swift */, A20000000000000000000004 /* CloudSyncSettingsView.swift */, A20000000000000000000005 /* Info.plist */, A20000000000000000000006 /* FIELDMobile.entitlements */, A20000000000000000000024 /* Assets.xcassets */, ); };
+		A40000000000000000000003 /* FIELDDesktop */ = {isa = PBXGroup; path = FIELDDesktop; sourceTree = "<group>"; children = (A20000000000000000000018 /* FIELDDesktop.entitlements */, ); };
+		A40000000000000000000004 /* Desktop Sources */ = {isa = PBXGroup; path = ../Sources/FIELD; sourceTree = "<group>"; children = (A20000000000000000000011 /* FIELDApp.swift */, A20000000000000000000012 /* ContentView.swift */, A20000000000000000000013 /* ReferenceViews.swift */, A20000000000000000000014 /* LabViews.swift */, A20000000000000000000015 /* BorderGlow.swift */, A20000000000000000000016 /* AppModel.swift */, A20000000000000000000017 /* MCPServer.swift */, A20000000000000000000025 /* FieldLanguage.swift */, A20000000000000000000026 /* FIELDLogo.png */, ); };
+		A40000000000000000000005 /* Config */ = {isa = PBXGroup; path = Config; sourceTree = "<group>"; children = (A20000000000000000000019 /* FieldICloud.xcconfig */, ); };
+		A40000000000000000000006 /* Products */ = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (A20000000000000000000031 /* FIELDMobile.app */, A20000000000000000000032 /* FIELD.app */, A20000000000000000000033 /* FIELDShare.appex */, ); };
+		A40000000000000000000007 /* FIELDMobileShare */ = {isa = PBXGroup; path = FIELDMobileShare; sourceTree = "<group>"; children = (A20000000000000000000021 /* ShareViewController.swift */, A20000000000000000000022 /* Share Info.plist */, A20000000000000000000023 /* FIELDShare.entitlements */, ); };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A50000000000000000000001 /* FIELDMobile */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80000000000000000000002 /* Build configuration list for PBXNativeTarget "FIELDMobile" */;
+			buildPhases = (A30000000000000000000001 /* Frameworks */, A70000000000000000000001 /* Sources */, A70000000000000000000010 /* Resources */, A30000000000000000000004 /* Embed App Extensions */, );
+			buildRules = ();
+			dependencies = (A50000000000000000000020 /* Share Extension dependency */, );
+			name = FIELDMobile;
+			packageProductDependencies = (A60000000000000000000001 /* FieldCore */, );
+			productName = FIELDMobile;
+			productReference = A20000000000000000000031 /* FIELDMobile.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A50000000000000000000002 /* FIELD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80000000000000000000003 /* Build configuration list for PBXNativeTarget "FIELD" */;
+			buildPhases = (A30000000000000000000002 /* Frameworks */, A70000000000000000000002 /* Sources */, A70000000000000000000012 /* Resources */, );
+			buildRules = ();
+			dependencies = ();
+			name = FIELD;
+			packageProductDependencies = (A60000000000000000000002 /* FieldCore */, A60000000000000000000003 /* FieldMCP */, A60000000000000000000004 /* MCP */, );
+			productName = FIELD;
+			productReference = A20000000000000000000032 /* FIELD.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A50000000000000000000003 /* FIELDShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80000000000000000000004 /* Build configuration list for PBXNativeTarget "FIELDShare" */;
+			buildPhases = (A30000000000000000000003 /* Share Extension Frameworks */, A70000000000000000000003 /* Share Extension Sources */, );
+			buildRules = ();
+			dependencies = ();
+			name = FIELDShare;
+			packageProductDependencies = (A60000000000000000000005 /* FieldCore */, );
+			productName = FIELDShare;
+			productReference = A20000000000000000000033 /* FIELDShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A50000000000000000000010 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A50000000000000000000001 = {CreatedOnToolsVersion = 16.0; SystemCapabilities = {com.apple.ApplicationGroups = {enabled = 1; }; com.apple.BackgroundModes = {enabled = 1; }; com.apple.iCloud = {enabled = 1; }; com.apple.Push = {enabled = 1; }; }; };
+					A50000000000000000000002 = {CreatedOnToolsVersion = 16.0; SystemCapabilities = {com.apple.iCloud = {enabled = 1; }; com.apple.Push = {enabled = 1; }; }; };
+					A50000000000000000000003 = {CreatedOnToolsVersion = 16.0; SystemCapabilities = {com.apple.ApplicationGroups = {enabled = 1; }; }; };
+				};
+			};
+			buildConfigurationList = A80000000000000000000001 /* Build configuration list for PBXProject "FIELD" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base, );
+			mainGroup = A40000000000000000000001;
+			packageReferences = (A60000000000000000000010 /* Local FIELD package */, A60000000000000000000011 /* MCP Swift SDK */, );
+			productRefGroup = A40000000000000000000006 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (A50000000000000000000001 /* FIELDMobile */, A50000000000000000000002 /* FIELD */, A50000000000000000000003 /* FIELDShare */, );
+		};
+/* End PBXProject section */
+
+/* Begin PBXContainerItemProxy section */
+		A50000000000000000000021 /* Share Extension container proxy */ = {isa = PBXContainerItemProxy; containerPortal = A50000000000000000000010 /* Project object */; proxyType = 1; remoteGlobalIDString = A50000000000000000000003; remoteInfo = FIELDShare; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		A50000000000000000000020 /* Share Extension dependency */ = {isa = PBXTargetDependency; target = A50000000000000000000003 /* FIELDShare */; targetProxy = A50000000000000000000021 /* Share Extension container proxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A70000000000000000000010 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000027 /* Assets.xcassets in Resources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000011 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000012 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000028 /* FIELDLogo.png in Resources */, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A70000000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* FIELDMobileApp.swift in Sources */, A10000000000000000000002 /* MobileTabsView.swift in Sources */, A10000000000000000000003 /* CaptureComposer.swift in Sources */, A10000000000000000000004 /* CloudSyncSettingsView.swift in Sources */, A10000000000000000000013 /* FieldLanguage.swift in Mobile Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000005 /* FIELDApp.swift in Sources */, A10000000000000000000006 /* ContentView.swift in Sources */, A10000000000000000000007 /* ReferenceViews.swift in Sources */, A10000000000000000000008 /* LabViews.swift in Sources */, A10000000000000000000009 /* BorderGlow.swift in Sources */, A10000000000000000000010 /* AppModel.swift in Sources */, A10000000000000000000011 /* MCPServer.swift in Sources */, A10000000000000000000014 /* FieldLanguage.swift in Desktop Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000003 /* Share Extension Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000012 /* ShareViewController.swift in Sources */, A10000000000000000000015 /* FieldLanguage.swift in Share Extension Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A90000000000000000000001 /* Debug Project */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; MACOSX_DEPLOYMENT_TARGET = 14.0; ONLY_ACTIVE_ARCH = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		A90000000000000000000002 /* Release Project */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; MACOSX_DEPLOYMENT_TARGET = 14.0; SWIFT_VERSION = 6.0; }; name = Release; };
+		A90000000000000000000011 /* Mobile Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = A20000000000000000000019 /* FieldICloud.xcconfig */; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = FIELDMobile/FIELDMobile.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = FIELDMobile/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(FIELD_IOS_BUNDLE_ID)"; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; }; name = Debug; };
+		A90000000000000000000012 /* Mobile Release */ = {isa = XCBuildConfiguration; baseConfigurationReference = A20000000000000000000019 /* FieldICloud.xcconfig */; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = FIELDMobile/FIELDMobile.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = FIELDMobile/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(FIELD_IOS_BUNDLE_ID)"; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; }; name = Release; };
+		A90000000000000000000013 /* Desktop Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = A20000000000000000000019 /* FieldICloud.xcconfig */; buildSettings = {CODE_SIGN_ENTITLEMENTS = FIELDDesktop/FIELDDesktop.entitlements; CODE_SIGN_STYLE = Automatic; ENABLE_APP_SANDBOX = NO; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "FIELD LAB"; INFOPLIST_KEY_FIELD_ICLOUD_CONTAINER_ID = "$(FIELD_ICLOUD_CONTAINER_ID)"; MACOSX_DEPLOYMENT_TARGET = 14.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(FIELD_MACOS_BUNDLE_ID)"; PRODUCT_NAME = FIELD; SDKROOT = macosx; SUPPORTED_PLATFORMS = macosx; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		A90000000000000000000014 /* Desktop Release */ = {isa = XCBuildConfiguration; baseConfigurationReference = A20000000000000000000019 /* FieldICloud.xcconfig */; buildSettings = {CODE_SIGN_ENTITLEMENTS = FIELDDesktop/FIELDDesktop.entitlements; CODE_SIGN_STYLE = Automatic; ENABLE_APP_SANDBOX = NO; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "FIELD LAB"; INFOPLIST_KEY_FIELD_ICLOUD_CONTAINER_ID = "$(FIELD_ICLOUD_CONTAINER_ID)"; MACOSX_DEPLOYMENT_TARGET = 14.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(FIELD_MACOS_BUNDLE_ID)"; PRODUCT_NAME = FIELD; SDKROOT = macosx; SUPPORTED_PLATFORMS = macosx; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; }; name = Release; };
+		A90000000000000000000015 /* Share Extension Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = A20000000000000000000019 /* FieldICloud.xcconfig */; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = FIELDMobileShare/FIELDShare.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = FIELDMobileShare/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(FIELD_IOS_SHARE_EXTENSION_BUNDLE_ID)"; PRODUCT_NAME = FIELDShare; SDKROOT = iphoneos; SKIP_INSTALL = YES; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		A90000000000000000000016 /* Share Extension Release */ = {isa = XCBuildConfiguration; baseConfigurationReference = A20000000000000000000019 /* FieldICloud.xcconfig */; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = FIELDMobileShare/FIELDShare.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = FIELDMobileShare/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(FIELD_IOS_SHARE_EXTENSION_BUNDLE_ID)"; PRODUCT_NAME = FIELDShare; SDKROOT = iphoneos; SKIP_INSTALL = YES; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A80000000000000000000001 /* Build configuration list for PBXProject "FIELD" */ = {isa = XCConfigurationList; buildConfigurations = (A90000000000000000000001 /* Debug Project */, A90000000000000000000002 /* Release Project */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A80000000000000000000002 /* Build configuration list for PBXNativeTarget "FIELDMobile" */ = {isa = XCConfigurationList; buildConfigurations = (A90000000000000000000011 /* Mobile Debug */, A90000000000000000000012 /* Mobile Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A80000000000000000000003 /* Build configuration list for PBXNativeTarget "FIELD" */ = {isa = XCConfigurationList; buildConfigurations = (A90000000000000000000013 /* Desktop Debug */, A90000000000000000000014 /* Desktop Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A80000000000000000000004 /* Build configuration list for PBXNativeTarget "FIELDShare" */ = {isa = XCConfigurationList; buildConfigurations = (A90000000000000000000015 /* Share Extension Debug */, A90000000000000000000016 /* Share Extension Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+	A60000000000000000000011 /* MCP Swift SDK */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/modelcontextprotocol/swift-sdk.git"; requirement = {kind = exactVersion; version = 0.12.1; }; };
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A60000000000000000000010 /* Local FIELD package */ = {isa = XCLocalSwiftPackageReference; relativePath = ..; };
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A60000000000000000000001 /* FieldCore */ = {isa = XCSwiftPackageProductDependency; package = A60000000000000000000010 /* Local FIELD package */; productName = FieldCore; };
+		A60000000000000000000002 /* FieldCore */ = {isa = XCSwiftPackageProductDependency; package = A60000000000000000000010 /* Local FIELD package */; productName = FieldCore; };
+		A60000000000000000000003 /* FieldMCP */ = {isa = XCSwiftPackageProductDependency; package = A60000000000000000000010 /* Local FIELD package */; productName = FieldMCP; };
+		A60000000000000000000004 /* MCP */ = {isa = XCSwiftPackageProductDependency; package = A60000000000000000000011 /* MCP Swift SDK */; productName = MCP; };
+		A60000000000000000000005 /* FieldCore */ = {isa = XCSwiftPackageProductDependency; package = A60000000000000000000010 /* Local FIELD package */; productName = FieldCore; };
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A50000000000000000000010 /* Project object */;
+}

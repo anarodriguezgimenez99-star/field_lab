@@ -1,4 +1,5 @@
 import Foundation
+import CoreData
 import SwiftData
 
 public enum KnowledgeKind: String, CaseIterable, Codable, Sendable {
@@ -91,18 +92,18 @@ public enum ProposalRepositoryError: Error, Equatable, Sendable {
 
 @Model
 public final class FieldProject {
-    public var id: UUID
-    public var title: String
-    public var summary: String
-    public var brief: String
-    public var creativeDirection: String
-    public var constraints: String
-    public var alwaysRemember: String
-    public var deliverables: String
-    public var archived: Bool
-    public var pinned: Bool
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var summary: String = ""
+    public var brief: String = ""
+    public var creativeDirection: String = ""
+    public var constraints: String = ""
+    public var alwaysRemember: String = ""
+    public var deliverables: String = ""
+    public var archived: Bool = false
+    public var pinned: Bool = false
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public init(
         id: UUID = UUID(),
@@ -115,8 +116,8 @@ public final class FieldProject {
         deliverables: String = "",
         archived: Bool = false,
         pinned: Bool = false,
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now
     ) {
         self.id = id
         self.title = title
@@ -135,17 +136,17 @@ public final class FieldProject {
 
 @Model
 public final class FieldTool {
-    public var id: UUID
-    public var name: String
-    public var category: String
-    public var websiteURL: String
-    public var notes: String
-    public var uses: String
-    public var strengths: String
-    public var weaknesses: String
-    public var pinned: Bool
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var name: String = ""
+    public var category: String = ""
+    public var websiteURL: String = ""
+    public var notes: String = ""
+    public var uses: String = ""
+    public var strengths: String = ""
+    public var weaknesses: String = ""
+    public var pinned: Bool = false
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public init(
         id: UUID = UUID(),
@@ -157,8 +158,8 @@ public final class FieldTool {
         strengths: String = "",
         weaknesses: String = "",
         pinned: Bool = false,
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now
     ) {
         self.id = id
         self.name = name
@@ -176,23 +177,23 @@ public final class FieldTool {
 
 @Model
 public final class KnowledgeItem {
-    public var id: UUID
-    public var kindRaw: String
-    public var title: String
-    public var body: String
-    public var statusRaw: String
-    public var scopeRaw: String
-    public var sourceTypeRaw: String
-    public var sourceAgent: String
-    public var approvedByUser: Bool
-    public var pinned: Bool
-    public var projectID: UUID?
-    public var toolID: UUID?
-    public var tagNames: String
-    public var urlString: String
-    public var metadataJSON: String
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var kindRaw: String = ""
+    public var title: String = ""
+    public var body: String = ""
+    public var statusRaw: String = ""
+    public var scopeRaw: String = ""
+    public var sourceTypeRaw: String = ""
+    public var sourceAgent: String = ""
+    public var approvedByUser: Bool = false
+    public var pinned: Bool = false
+    public var projectID: UUID? = nil
+    public var toolID: UUID? = nil
+    public var tagNames: String = ""
+    public var urlString: String = ""
+    public var metadataJSON: String = ""
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public var kind: KnowledgeKind {
         get { KnowledgeKind(rawValue: kindRaw) ?? .note }
@@ -225,7 +226,7 @@ public final class KnowledgeItem {
     }
 
     @Attribute(.externalStorage)
-    public var imageData: Data?
+    public var imageData: Data? = nil
 
     public init(
         id: UUID = UUID(),
@@ -244,8 +245,8 @@ public final class KnowledgeItem {
         urlString: String = "",
         imageData: Data? = nil,
         metadataJSON: String = "",
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now
     ) {
         self.id = id
         self.kindRaw = kind.rawValue
@@ -270,11 +271,11 @@ public final class KnowledgeItem {
 
 @Model
 public final class FieldTag {
-    public var id: UUID
-    public var name: String
-    public var createdAt: Date
+    public var id: UUID = UUID()
+    public var name: String = ""
+    public var createdAt: Date = Date.now
 
-    public init(id: UUID = UUID(), name: String, createdAt: Date = .now) {
+    public init(id: UUID = UUID(), name: String, createdAt: Date = Date.now) {
         self.id = id
         self.name = name
         self.createdAt = createdAt
@@ -283,18 +284,18 @@ public final class FieldTag {
 
 @Model
 public final class AgentProposal {
-    public var id: UUID
-    public var agent: String
-    public var proposalTypeRaw: String
-    public var title: String
-    public var content: String
-    public var projectID: UUID?
-    public var toolID: UUID?
-    public var referenceID: UUID?
-    public var statusRaw: String
-    public var createdAt: Date
-    public var reviewedAt: Date?
-    public var approvedKnowledgeID: UUID?
+    public var id: UUID = UUID()
+    public var agent: String = ""
+    public var proposalTypeRaw: String = ""
+    public var title: String = ""
+    public var content: String = ""
+    public var projectID: UUID? = nil
+    public var toolID: UUID? = nil
+    public var referenceID: UUID? = nil
+    public var statusRaw: String = ""
+    public var createdAt: Date = Date.now
+    public var reviewedAt: Date? = nil
+    public var approvedKnowledgeID: UUID? = nil
 
     public var status: ProposalStatus {
         get { ProposalStatus(rawValue: statusRaw) ?? .pending }
@@ -311,7 +312,7 @@ public final class AgentProposal {
         toolID: UUID? = nil,
         referenceID: UUID? = nil,
         status: ProposalStatus = .pending,
-        createdAt: Date = .now,
+        createdAt: Date = Date.now,
         reviewedAt: Date? = nil,
         approvedKnowledgeID: UUID? = nil
     ) {
@@ -332,18 +333,18 @@ public final class AgentProposal {
 
 @Model
 public final class AgentActivity {
-    public var id: UUID
-    public var agent: String
-    public var action: String
-    public var timestamp: Date
-    public var projectID: UUID?
-    public var detail: String
+    public var id: UUID = UUID()
+    public var agent: String = ""
+    public var action: String = ""
+    public var timestamp: Date = Date.now
+    public var projectID: UUID? = nil
+    public var detail: String = ""
 
     public init(
         id: UUID = UUID(),
         agent: String,
         action: String,
-        timestamp: Date = .now,
+        timestamp: Date = Date.now,
         projectID: UUID? = nil,
         detail: String = ""
     ) {
@@ -358,14 +359,14 @@ public final class AgentActivity {
 
 @Model
 public final class FieldFlow {
-    public var id: UUID
-    public var title: String
-    public var summary: String
-    public var pinned: Bool
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var summary: String = ""
+    public var pinned: Bool = false
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
-    public init(id: UUID = UUID(), title: String, summary: String = "", pinned: Bool = false, createdAt: Date = .now, updatedAt: Date = .now) {
+    public init(id: UUID = UUID(), title: String, summary: String = "", pinned: Bool = false, createdAt: Date = Date.now, updatedAt: Date = Date.now) {
         self.id = id
         self.title = title
         self.summary = summary
@@ -377,15 +378,15 @@ public final class FieldFlow {
 
 @Model
 public final class FieldFlowStep {
-    public var id: UUID
-    public var flowID: UUID
-    public var order: Int
-    public var title: String
-    public var instructions: String
-    public var toolID: UUID?
-    public var recipeID: UUID?
-    public var templateText: String
-    public var notes: String
+    public var id: UUID = UUID()
+    public var flowID: UUID = UUID()
+    public var order: Int = 0
+    public var title: String = ""
+    public var instructions: String = ""
+    public var toolID: UUID? = nil
+    public var recipeID: UUID? = nil
+    public var templateText: String = ""
+    public var notes: String = ""
 
     public init(id: UUID = UUID(), flowID: UUID, order: Int, title: String, instructions: String = "", toolID: UUID? = nil, recipeID: UUID? = nil, templateText: String = "", notes: String = "") {
         self.id = id
@@ -401,7 +402,10 @@ public final class FieldFlowStep {
 }
 
 public enum FieldModelContainer {
-    public static func make(inMemory: Bool = false) throws -> ModelContainer {
+    public static func make(
+        inMemory: Bool = false,
+        cloudKitContainerIdentifier: String? = nil
+    ) throws -> ModelContainer {
         let schema = Schema([
             FieldProject.self,
             FieldTool.self,
@@ -424,10 +428,98 @@ public enum FieldModelContainer {
             let directoryURL = URL(fileURLWithPath: storeDirectory, isDirectory: true)
             try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
             let storeURL = directoryURL.appendingPathComponent("FIELD.store", isDirectory: false)
-            configuration = ModelConfiguration("FIELD", schema: schema, url: storeURL)
+            configuration = ModelConfiguration(
+                "FIELD",
+                schema: schema,
+                url: storeURL,
+                cloudKitDatabase: cloudKitConfiguration(for: cloudKitContainerIdentifier)
+            )
         } else {
-            configuration = ModelConfiguration(isStoredInMemoryOnly: false)
+            configuration = ModelConfiguration(
+                "FIELD",
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                cloudKitDatabase: cloudKitConfiguration(for: cloudKitContainerIdentifier)
+            )
         }
+        // CloudKit's development schema initialization is explicit and can upload
+        // representative records, so keep it opt-in and out of Release builds.
+#if DEBUG
+        if !inMemory,
+           let cloudKitContainerIdentifier,
+           ProcessInfo.processInfo.environment["FIELD_INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
+            if #available(iOS 26.0, macOS 26.0, *) {
+                try initializeDevelopmentCloudKitSchema(
+                    schema: schema,
+                    configuration: configuration,
+                    containerIdentifier: cloudKitContainerIdentifier
+                )
+            } else {
+                throw FieldModelContainerError.cloudKitSchemaInitializationRequiresOS26
+            }
+        }
+#endif
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+#if DEBUG
+    @available(iOS 26.0, macOS 26.0, *)
+    private static func initializeDevelopmentCloudKitSchema(
+        schema: Schema,
+        configuration: ModelConfiguration,
+        containerIdentifier: String
+    ) throws {
+        try autoreleasepool {
+            let storeDescription = NSPersistentStoreDescription(url: configuration.url)
+            storeDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: containerIdentifier
+            )
+            storeDescription.shouldAddStoreAsynchronously = false
+
+            guard let managedObjectModel = NSManagedObjectModel.makeManagedObjectModel(for: schema) else {
+                throw FieldModelContainerError.unableToBuildCloudKitSchemaModel
+            }
+
+            let container = NSPersistentCloudKitContainer(
+                name: "FIELD",
+                managedObjectModel: managedObjectModel
+            )
+            container.persistentStoreDescriptions = [storeDescription]
+
+            var loadError: Error?
+            container.loadPersistentStores { _, error in
+                loadError = error
+            }
+            if let loadError {
+                throw loadError
+            }
+
+            try container.initializeCloudKitSchema()
+            if let store = container.persistentStoreCoordinator.persistentStores.first {
+                try container.persistentStoreCoordinator.remove(store)
+            }
+        }
+    }
+#endif
+
+    private static func cloudKitConfiguration(
+        for identifier: String?
+    ) -> ModelConfiguration.CloudKitDatabase {
+        guard let identifier, !identifier.isEmpty else { return .none }
+        return .private(identifier)
+    }
+}
+
+private enum FieldModelContainerError: LocalizedError {
+    case unableToBuildCloudKitSchemaModel
+    case cloudKitSchemaInitializationRequiresOS26
+
+    var errorDescription: String? {
+        switch self {
+        case .unableToBuildCloudKitSchemaModel:
+            "FIELD could not create a Core Data model for the CloudKit schema."
+        case .cloudKitSchemaInitializationRequiresOS26:
+            "Initialize FIELD's CloudKit development schema on iOS 26 or macOS 26, then deploy it before using older devices."
+        }
     }
 }

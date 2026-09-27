@@ -23,10 +23,22 @@ final class AppModel: ObservableObject {
         language = FieldLanguage(
             rawValue: UserDefaults.standard.string(forKey: FieldLanguage.preferenceKey) ?? FieldLanguage.spanish.rawValue
         ) ?? .spanish
+        let configuredCloudKitIdentifier = Bundle.main.object(forInfoDictionaryKey: "FIELD_ICLOUD_CONTAINER_ID") as? String
+        let cloudKitContainerIdentifier = configuredCloudKitIdentifier.flatMap {
+            !$0.isEmpty && $0 != "iCloud.com.example.field" ? $0 : nil
+        }
         do {
-            container = try FieldModelContainer.make()
+            container = try FieldModelContainer.make(cloudKitContainerIdentifier: cloudKitContainerIdentifier)
         } catch {
-            fatalError("Field LAB could not create its local store: \(error)")
+            guard cloudKitContainerIdentifier?.isEmpty == false else {
+                fatalError("Field LAB could not create its local store: \(error)")
+            }
+            do {
+                container = try FieldModelContainer.make()
+                NSLog("Field LAB opened its local library because iCloud could not start: %@", error.localizedDescription)
+            } catch {
+                fatalError("Field LAB could not create its local store: \(error)")
+            }
         }
         repository = FieldRepository(context: container.mainContext)
         mcpServer = MCPServerManager(repository: repository)

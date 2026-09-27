@@ -271,50 +271,50 @@ public struct ReferenceQuery: Codable, Equatable, Sendable {
 
 @Model
 public final class FieldReference {
-    public var id: UUID
-    public var title: String
-    public var userNote: String
-    public var createdAt: Date
-    public var updatedAt: Date
-    public var importedAt: Date
-    public var importRecordID: UUID?
-    public var pinned: Bool
-    public var archived: Bool
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var userNote: String = ""
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
+    public var importedAt: Date = Date.now
+    public var importRecordID: UUID? = nil
+    public var pinned: Bool = false
+    public var archived: Bool = false
 
     @Attribute(.externalStorage)
-    public var imageData: Data?
+    public var imageData: Data? = nil
     @Attribute(.externalStorage)
-    public var thumbnailData: Data?
-    public var imageWidth: Double?
-    public var imageHeight: Double?
-    public var aspectRatio: Double?
-    public var orientationRaw: String?
+    public var thumbnailData: Data? = nil
+    public var imageWidth: Double? = nil
+    public var imageHeight: Double? = nil
+    public var aspectRatio: Double? = nil
+    public var orientationRaw: String? = nil
 
-    public var sourceKindRaw: String
-    public var sourceName: String
-    public var sourceURL: String
-    public var sourceDomain: String
-    public var sourceIdentifier: String
-    public var author: String
-    public var originalTitle: String
+    public var sourceKindRaw: String = ""
+    public var sourceName: String = ""
+    public var sourceURL: String = ""
+    public var sourceDomain: String = ""
+    public var sourceIdentifier: String = ""
+    public var author: String = ""
+    public var originalTitle: String = ""
 
-    public var manualTagsRaw: String
-    public var automaticTagsRaw: String
-    public var visualAttributesJSON: String
-    public var dominantColorsJSON: String
-    public var ocrText: String
-    public var analysisStateRaw: String
-    public var duplicateFingerprint: String
+    public var manualTagsRaw: String = ""
+    public var automaticTagsRaw: String = ""
+    public var visualAttributesJSON: String = ""
+    public var dominantColorsJSON: String = ""
+    public var ocrText: String = ""
+    public var analysisStateRaw: String = ""
+    public var duplicateFingerprint: String = ""
 
     /// Relationships are stored as UUID lists, following Field LAB's current
     /// CloudKit-safe relationship strategy and avoiding required cycles.
-    public var projectIDsJSON: String
-    public var toolIDsJSON: String
-    public var styleIDsJSON: String
-    public var recipeIDsJSON: String
-    public var experimentIDsJSON: String
-    public var flowIDsJSON: String
-    public var collectionIDsJSON: String
+    public var projectIDsJSON: String = ""
+    public var toolIDsJSON: String = ""
+    public var styleIDsJSON: String = ""
+    public var recipeIDsJSON: String = ""
+    public var experimentIDsJSON: String = ""
+    public var flowIDsJSON: String = ""
+    public var collectionIDsJSON: String = ""
 
     public var source: ReferenceSource {
         get {
@@ -411,9 +411,9 @@ public final class FieldReference {
         collectionIDs: [UUID] = [],
         pinned: Bool = false,
         archived: Bool = false,
-        createdAt: Date = .now,
-        updatedAt: Date = .now,
-        importedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now,
+        importedAt: Date = Date.now
     ) {
         self.id = id
         self.title = title
@@ -470,14 +470,14 @@ public final class FieldReference {
 
 @Model
 public final class ReferenceCollection {
-    public var id: UUID
-    public var title: String
-    public var kindRaw: String
-    public var filterDefinitionJSON: String
-    public var referenceIDsJSON: String
-    public var pinned: Bool
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var kindRaw: String = ""
+    public var filterDefinitionJSON: String = ""
+    public var referenceIDsJSON: String = ""
+    public var pinned: Bool = false
+    public var createdAt: Date = Date.now
+    public var updatedAt: Date = Date.now
 
     public var kind: ReferenceCollectionKind {
         get { ReferenceCollectionKind(rawValue: kindRaw) ?? .manual }
@@ -507,8 +507,8 @@ public final class ReferenceCollection {
         filter: ReferenceFilter? = nil,
         referenceIDs: [UUID] = [],
         pinned: Bool = false,
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date.now,
+        updatedAt: Date = Date.now
     ) {
         self.id = id
         self.title = title
@@ -550,7 +550,7 @@ public struct ReferenceImportRecord: Codable, Identifiable, Equatable, Sendable 
 
     public init(
         id: UUID = UUID(),
-        createdAt: Date = .now,
+        createdAt: Date = Date.now,
         contentType: ReferenceImportContentType,
         assetFileName: String = "",
         urlString: String = "",
@@ -572,6 +572,8 @@ public struct ReferenceImportRecord: Codable, Identifiable, Equatable, Sendable 
 public final class ReferenceImportQueue: @unchecked Sendable {
     public let directory: URL
     private let fileManager: FileManager
+    public private(set) var malformedRecordCount = 0
+    public private(set) var malformedRecordQuarantineFailureCount = 0
 
     public init(directory: URL, fileManager: FileManager = .default) throws {
         self.directory = directory
@@ -597,10 +599,26 @@ public final class ReferenceImportQueue: @unchecked Sendable {
     }
 
     public func pending() throws -> [ReferenceImportRecord] {
-        try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        malformedRecordCount = 0
+        malformedRecordQuarantineFailureCount = 0
+        var records: [ReferenceImportRecord] = []
+        let files = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "json" }
-            .compactMap { try? JSONDecoder().decode(ReferenceImportRecord.self, from: Data(contentsOf: $0)) }
-            .sorted { $0.createdAt < $1.createdAt }
+
+        for file in files {
+            do {
+                let data = try Data(contentsOf: file)
+                records.append(try JSONDecoder().decode(ReferenceImportRecord.self, from: data))
+            } catch {
+                malformedRecordCount += 1
+                do {
+                    try quarantine(file)
+                } catch {
+                    malformedRecordQuarantineFailureCount += 1
+                }
+            }
+        }
+        return records.sorted { $0.createdAt < $1.createdAt }
     }
 
     public func assetData(for record: ReferenceImportRecord) throws -> Data? {
@@ -609,11 +627,47 @@ public final class ReferenceImportQueue: @unchecked Sendable {
     }
 
     public func remove(_ record: ReferenceImportRecord) throws {
+        if !record.assetFileName.isEmpty {
+            let assetURL = directory.appendingPathComponent(record.assetFileName)
+            if fileManager.fileExists(atPath: assetURL.path) { try fileManager.removeItem(at: assetURL) }
+        }
         let recordURL = directory.appendingPathComponent("\(record.id.uuidString).json")
         if fileManager.fileExists(atPath: recordURL.path) { try fileManager.removeItem(at: recordURL) }
-        guard !record.assetFileName.isEmpty else { return }
-        let assetURL = directory.appendingPathComponent(record.assetFileName)
-        if fileManager.fileExists(atPath: assetURL.path) { try fileManager.removeItem(at: assetURL) }
+    }
+
+    private func quarantine(_ recordURL: URL) throws {
+        let quarantineDirectory = directory.appendingPathComponent("FailedImports", isDirectory: true)
+        try fileManager.createDirectory(at: quarantineDirectory, withIntermediateDirectories: true)
+        let assetURL = directory
+            .appendingPathComponent(recordURL.deletingPathExtension().lastPathComponent)
+            .appendingPathExtension("asset")
+        if fileManager.fileExists(atPath: assetURL.path) {
+            let quarantinedAssetURL = quarantineDirectory.appendingPathComponent(assetURL.lastPathComponent)
+            try fileManager.moveItem(at: assetURL, to: quarantinedAssetURL)
+        }
+
+        let quarantinedRecordURL = quarantineDirectory.appendingPathComponent(recordURL.lastPathComponent)
+        try fileManager.moveItem(at: recordURL, to: quarantinedRecordURL)
+    }
+}
+
+public struct ReferenceImportReport {
+    public let imported: [FieldReference]
+    public let failures: [String]
+
+    public init(imported: [FieldReference], failures: [String]) {
+        self.imported = imported
+        self.failures = failures
+    }
+}
+
+public enum ReferenceImportServiceError: LocalizedError, Equatable {
+    case partialFailure([String])
+
+    public var errorDescription: String? {
+        switch self {
+        case .partialFailure(let failures): failures.joined(separator: "\n")
+        }
     }
 }
 
@@ -630,29 +684,75 @@ public final class ReferenceImportService {
     /// retry converge instead of creating a duplicate.
     @discardableResult
     public func processPending(_ queue: ReferenceImportQueue) throws -> [FieldReference] {
-        var imported: [FieldReference] = []
-        for record in try queue.pending() {
-            if let existing = repository.references(filter: ReferenceFilter(includeArchived: true)).first(where: { $0.importRecordID == record.id }) {
-                imported.append(existing)
-                try queue.remove(record)
-                continue
-            }
-
-            let asset = try queue.assetData(for: record)
-            let source = ReferenceSourceResolver.resolve(urlString: record.urlString)
-            let fallbackTitle = record.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            let title = fallbackTitle.isEmpty ? (source.name == "Manual" ? "Imported reference" : source.name) : String(fallbackTitle.prefix(120))
-            let reference = try repository.createReference(
-                title: title,
-                userNote: record.note.isEmpty ? record.text : record.note,
-                urlString: record.urlString,
-                source: source,
-                imageData: asset,
-                importRecordID: record.id
-            )
-            imported.append(reference)
-            try queue.remove(record)
+        let report = try processPendingReport(queue)
+        guard report.failures.isEmpty else {
+            throw ReferenceImportServiceError.partialFailure(report.failures)
         }
-        return imported
+        return report.imported
+    }
+
+    public func processPendingReport(_ queue: ReferenceImportQueue) throws -> ReferenceImportReport {
+        var imported: [FieldReference] = []
+        var failures: [String] = []
+        for record in try queue.pending() {
+            do {
+                if repository.references(filter: ReferenceFilter(includeArchived: true)).contains(where: { $0.importRecordID == record.id }) {
+                    try queue.remove(record)
+                    continue
+                }
+
+                let asset = try queue.assetData(for: record)
+                let source = ReferenceSourceResolver.resolve(urlString: record.urlString)
+                let sharedTextLines = record.text
+                    .components(separatedBy: .newlines)
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                let fallbackTitle = sharedTextLines.first ?? ""
+                let sourceTitle: String
+                if source.name == "Web", !source.domain.isEmpty {
+                    sourceTitle = source.domain
+                } else if source.name == "Manual" {
+                    sourceTitle = "Referencia importada"
+                } else {
+                    sourceTitle = source.name
+                }
+                let title = fallbackTitle.isEmpty ? sourceTitle : String(fallbackTitle.prefix(120))
+                let sharedNote: String
+                if sharedTextLines.count > 1 {
+                    sharedNote = sharedTextLines.dropFirst().joined(separator: "\n")
+                } else if fallbackTitle.count > 120 {
+                    sharedNote = record.text
+                } else {
+                    sharedNote = ""
+                }
+                let note = record.note.isEmpty ? sharedNote : record.note
+                let reference = try repository.createReference(
+                    title: title,
+                    userNote: note,
+                    urlString: record.urlString,
+                    source: source,
+                    imageData: asset,
+                    importRecordID: record.id
+                )
+                imported.append(reference)
+                try queue.remove(record)
+            } catch {
+                failures.append("\(record.id.uuidString): \(error.localizedDescription)")
+            }
+        }
+
+        if queue.malformedRecordCount > 0 {
+            failures.insert(
+                "Se apartaron \(queue.malformedRecordCount) importaciones dañadas en FailedImports.",
+                at: 0
+            )
+        }
+        if queue.malformedRecordQuarantineFailureCount > 0 {
+            failures.insert(
+                "No se pudieron apartar \(queue.malformedRecordQuarantineFailureCount) importaciones dañadas; siguen en la cola.",
+                at: 0
+            )
+        }
+        return ReferenceImportReport(imported: imported, failures: failures)
     }
 }

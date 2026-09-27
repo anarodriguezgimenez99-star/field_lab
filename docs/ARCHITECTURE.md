@@ -2,19 +2,23 @@
 
 ## Current shape
 
-Field LAB is a Swift Package with three production targets and two test targets:
+Field LAB is a shared Swift Package with three production targets and two test targets, plus an Xcode project containing the macOS and iPhone app targets:
 
 - `FieldCore`: SwiftData models, repository, search and prompt composition. It has no UI or MCP dependency.
 - `FieldMCP`: the protocol-facing tool catalog. It depends on `FieldCore`, but not on SwiftUI or the localhost listener.
-- `FIELD`: SwiftUI macOS application target and platform integrations, including the localhost HTTP adapter.
+- `FIELD`: SwiftUI macOS application sources and platform integrations, including the localhost HTTP adapter.
+- `FIELDMobile`: SwiftUI iPhone app in `Apps/FIELD.xcodeproj`; uses `FieldCore` for capture and reading.
+- `FIELDShare`: iOS Share Extension in the same project; stages shared URLs, images and text in the App Group queue.
+- Xcode `FIELD`: macOS app target over the existing app sources; enables the same CloudKit container as iPhone.
 - `FieldCoreTests`: in-memory SwiftData tests for core behavior.
 - `FieldMCPTests`: official MCP in-memory transport integration tests.
 
 References use the same layers through a dedicated `FieldReference` model,
 `ReferenceSourceResolver`, `ReferenceFilter`/`ReferenceQuery`, and repository
-methods. `ReferenceImportQueue` stages share/import payloads outside the main
-SwiftData store so a future App Group extension never opens the CloudKit-backed
-container directly.
+methods. `ReferenceImportQueue` stages share/import payloads in the App Group
+outside the main SwiftData store. The iPhone Share Extension writes to this
+queue; the mobile app imports records into the CloudKit-backed store when it
+becomes active.
 
 The normal data path is:
 
@@ -52,9 +56,11 @@ receive compact metadata and cannot read arbitrary local paths.
 
 ## Persistence
 
-The schema stores enum values as raw strings to keep migrations explicit and avoid fragile persisted enum representations. Relationships use UUID references in the first slice; this keeps the local model simple and gives CloudKit migration room without relationship cycles.
+The schema stores enum values as raw strings to keep migrations explicit and avoid fragile persisted enum representations. Cross-model references use UUID values rather than required SwiftData relationships.
 
-`FieldModelContainer.make(inMemory:)` is the single construction point. The production app uses a local store. CloudKit configuration is intentionally not assumed until entitlements and a container exist.
+`FieldModelContainer.make(inMemory:cloudKitContainerIdentifier:)` is the single construction point. The desktop and iPhone Xcode targets use the same private CloudKit container when configured; each keeps a local store for offline use. The plain Swift Package executable explicitly uses a local-only store.
+
+CloudKit compatibility is part of the shared schema: persistent model fields have defaults, enum values are stored as strings, there are no uniqueness constraints, and cross-model references remain UUID values rather than required SwiftData relationships.
 
 ## Search
 
@@ -66,12 +72,12 @@ The schema stores enum values as raw strings to keep migrations explicit and avo
 
 ## UI direction
 
-The available UI is Operate-mode native macOS UI: NavigationSplitView, a
-three-item sidebar (Collect, Lab, Learn) plus Settings, system controls,
-keyboard commands and content-first detail panes. A future iPhone app is
-planned around the same three conceptual areas as tabs. The visual language is
-restrained, editorial and calm; hierarchy comes from typography, spacing and
-the data itself rather than dashboard cards.
+The macOS app is Operate-mode native UI: NavigationSplitView, a three-item
+sidebar (Collect, Lab, Learn) plus Settings, system controls, keyboard commands
+and content-first detail panes. iPhone uses the same three conceptual areas as
+native tabs, with capture sheets, in-tab search, and Settings in the toolbar.
+The visual language is restrained, editorial and calm; hierarchy comes from
+typography, spacing and the data itself rather than dashboard cards.
 
 Experiments and Experiment Runs are persisted in FieldCore and accessed through
 FieldRepository, alongside the existing knowledge and reference models. The UI

@@ -1,0 +1,12 @@
+// Placeholder defaults for local builds. Put team-owned identifiers in the
+// ignored FieldICloud.local.xcconfig file at the bottom of this file.
+FIELD_ICLOUD_CONTAINER_ID = iCloud.com.example.field
+FIELD_IOS_BUNDLE_ID = com.example.field.mobile
+FIELD_IOS_SHARE_EXTENSION_BUNDLE_ID = com.example.field.mobile.share
+FIELD_MACOS_BUNDLE_ID = com.example.field
+FIELD_APP_GROUP_ID = group.com.example.field
+FIELD_APS_ENVIRONMENT = development
+FIELD_APS_ENVIRONMENT[config=Release] = production
+
+// Optional private overrides. Keep team-owned identifiers out of source control.
+#include? "FieldICloud.local.xcconfig"

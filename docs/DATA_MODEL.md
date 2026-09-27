@@ -29,7 +29,7 @@
 
 ## Future migration notes
 
-When CloudKit is enabled, preserve raw-string enum fields, avoid required relationship cycles, and add schema versions for any normalization of tags or attachments. Large attachment data should use external storage and should not be included in context packs.
+CloudKit sync is supported by the shared targets. Preserve raw-string enum fields, avoid required relationship cycles, and add schema versions for any normalization of tags or attachments. Non-optional attributes need defaults; large attachment data should use external storage and should not be included in context packs.
 
 References follow those constraints deliberately: provider/source kinds, analysis
 state, collection kinds and attribute origins are raw strings; project/tool/
