@@ -104,14 +104,12 @@ struct FieldSidebar: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Color.accentColor.opacity(0.16))
-                    Image(systemName: "square.grid.2x2.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.tint)
-                }
-                .frame(width: 34, height: 34)
+                Image("FIELDLogo", bundle: .module)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 38, height: 38)
+                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.text("FIELD LAB"))

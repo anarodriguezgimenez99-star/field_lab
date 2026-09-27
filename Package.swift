@@ -38,7 +38,10 @@ let package = Package(
                 "FieldMCP",
                 .product(name: "MCP", package: "swift-sdk")
             ],
-            path: "Sources/FIELD"
+            path: "Sources/FIELD",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "FieldCoreTests",
