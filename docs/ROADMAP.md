@@ -18,8 +18,8 @@ Persistence, projects, tools, learnings, notes, prompt blocks, references, searc
 
 References V1 is the local-first vertical slice: dedicated model, source
 resolver, image/URL/note import, visual grid, source/pinned/unclassified filters,
-manual tags and attributes, Project relationships, global search, compact MCP
-tools and an iOS Share Extension using the App Group-compatible import queue.
+manual tags and attributes, Project relationships, global search and compact
+MCP tools.
 
 ## V1.1 — local reference intelligence and capture surfaces
 
@@ -29,10 +29,15 @@ Menu Bar quick copy improvements, pinned items and Core Spotlight.
 
 ## V1.2 — depth and portability
 
-CloudKit development sync is wired into the desktop and iPhone targets; the
-container and signing team still need account configuration. Production schema
-promotion, richer experiment attachments, styles, sessions UI, Rediscover,
-Shuffle and Markdown/JSON export remain follow-up work.
+Production schema promotion, richer experiment attachments, styles, sessions
+UI, Rediscover, Shuffle and Markdown/JSON export remain follow-up work.
+
+## Future — iPhone companion
+
+The repository contains an iPhone app, Share Extension and CloudKit prototype.
+Finishing account configuration, testing sync and preparing the companion for
+distribution are future work; the current release is macOS-only and stores data
+locally.
 
 ## Explicit non-goals
 

@@ -21,28 +21,19 @@ you trust. See [installation notes](docs/INSTALLATION.md).
 ## Run
 
 Open [`Apps/FIELD.xcodeproj`](Apps/FIELD.xcodeproj) in Xcode. Use the
-`FIELDDesktop` scheme for the Mac app and `FIELDMobile` for iPhone; both use the shared
-`FieldCore` package and can share a private CloudKit library after you configure
-your Apple Developer team and container. The iPhone app also includes a Share
-Extension that stages URLs, images and text from other apps. The legacy Swift
-Package `FIELD` executable remains available for local development without
-iCloud:
+`FIELDDesktop` scheme to build the Mac app. The repository also contains an
+iPhone app and Share Extension prototype as groundwork for a future companion;
+they are not part of the current release. The legacy Swift Package `FIELD`
+executable remains available for local development:
 
 ```sh
 swift run FIELD
 ```
 
-Before running the Xcode apps on a device with CloudKit, add your team-owned
-bundle IDs, CloudKit container and App Group to the ignored
-`Apps/Config/FieldICloud.local.xcconfig`, then select your signing team for all
-three targets. See
-[docs/ICLOUD_SETUP.md](docs/ICLOUD_SETUP.md).
-
-The repository is pinned to MCP Swift SDK `0.12.1`. Both Apple apps share the
-same SwiftData schema and private CloudKit container. The iPhone app is a
-capture-and-consult surface with three native tabs; the macOS app remains the
-full workspace. The MCP server runs only in the macOS app and stays stopped by
-default.
+The current Mac release stores data locally; iPhone support and iCloud sync
+are future work. The prototype's CloudKit and Share Extension setup notes are
+in [docs/ICLOUD_SETUP.md](docs/ICLOUD_SETUP.md). The MCP server runs only in the
+macOS app and stays stopped by default.
 
 Every future user-facing capability that is useful to an agent should be exposed through MCP when privacy and approval rules allow it. Add each MCP feature as one capability declaration containing its input schema, write effect and handler; the registry publishes and routes it automatically. See [docs/MCP.md](docs/MCP.md) for the feature contract and security boundary.
 

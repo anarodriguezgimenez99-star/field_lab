@@ -1,8 +1,8 @@
 import Foundation
 
-/// Shares HTTP header line splitting between the local adapter and its tests.
-package enum MCPHTTPRequestHeaderParser {
-    package static func lines(_ headerText: String) -> [String] {
+/// Splits HTTP header text into lines for the local adapter and its clients.
+public enum MCPHTTPRequestHeaderParser {
+    public static func lines(_ headerText: String) -> [String] {
         headerText
             .replacingOccurrences(of: "\r\n", with: "\n")
             .split(separator: "\n")
