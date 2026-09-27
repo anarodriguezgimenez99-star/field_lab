@@ -5,6 +5,19 @@ test ideas in Lab, and keep reusable knowledge in Learn. Existing tools,
 projects, workflows and MCP capabilities remain available as context and
 Settings rather than competing top-level sections.
 
+> **Availability:** FIELD LAB currently supports Apple silicon Macs running macOS 14 or later.
+> There is no iPhone app or iCloud sync yet. Data is stored locally on the Mac.
+
+## Install on Mac
+
+Download the latest `.dmg` from GitHub Releases, open it and drag `FIELD LAB`
+to Applications. Intel Macs are not supported.
+
+The current preview is unsigned and not notarized. macOS may ask you to
+authorize it in **System Settings → Privacy & Security** the first time you
+open it. Only do this for a build downloaded from the official repository that
+you trust. See [installation notes](docs/INSTALLATION.md).
+
 ## Run
 
 Open the folder as a Swift Package in Xcode and run the `FIELD` executable target. The first launch creates an empty local store; use Quick Capture or the Add buttons to start building the Field LAB library.

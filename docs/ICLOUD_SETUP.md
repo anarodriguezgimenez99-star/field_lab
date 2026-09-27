@@ -1,5 +1,9 @@
 # iCloud / CloudKit setup
 
+**Availability:** iCloud sync is not available in the current release. There is
+no iPhone app or CloudKit configuration yet, and the Mac app uses a local
+SwiftData store. This document is a future implementation checklist.
+
 CloudKit is intentionally not enabled in the first local development slice. The app must work without it.
 
 When enabling sync:
