@@ -98,6 +98,16 @@ struct ContentView: View {
 struct FieldSidebar: View {
     @ObservedObject var appModel: AppModel
 
+    private var fieldLogo: Image {
+        #if os(macOS)
+        if let logoURL = Bundle.module.url(forResource: "FIELDLogo", withExtension: "png"),
+           let logo = NSImage(contentsOf: logoURL) {
+            return Image(nsImage: logo)
+        }
+        #endif
+        return Image(systemName: "square.grid.2x2.fill")
+    }
+
     private var proposalCount: Int {
         appModel.repository.proposals(status: .pending).count
     }
@@ -105,7 +115,7 @@ struct FieldSidebar: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 10) {
-                Image("FIELDLogo", bundle: .module)
+                fieldLogo
                     .resizable()
                     .scaledToFit()
                     .frame(width: 38, height: 38)
