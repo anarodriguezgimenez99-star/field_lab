@@ -24,13 +24,13 @@ struct ContentView: View {
             set: { appModel.selectedRoute = $0 }
         )) {
             FieldRouteView(appModel: appModel, route: .collect)
-                .tabItem { Label("Recopilar", systemImage: FieldRoute.collect.systemImage) }
+                .tabItem { Label(L10n.text("Recopilar"), systemImage: FieldRoute.collect.systemImage) }
                 .tag(FieldRoute.collect)
             FieldRouteView(appModel: appModel, route: .lab)
-                .tabItem { Label("Laboratorio", systemImage: FieldRoute.lab.systemImage) }
+                .tabItem { Label(L10n.text("Laboratorio"), systemImage: FieldRoute.lab.systemImage) }
                 .tag(FieldRoute.lab)
             FieldRouteView(appModel: appModel, route: .learn)
-                .tabItem { Label("Aprender", systemImage: FieldRoute.learn.systemImage) }
+                .tabItem { Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage) }
                 .tag(FieldRoute.learn)
         }
         .sheet(isPresented: $appModel.isPresentingCapture) {
@@ -66,9 +66,9 @@ struct ContentView: View {
                         }
                     }
                     .disabled(mcpServer.isStopping)
-                    .help(mcpServer.isRunning || mcpServer.isStarting ? "Abrir ajustes del servidor MCP" : "Iniciar servidor MCP y abrir ajustes")
-                    .accessibilityLabel(mcpServer.isRunning || mcpServer.isStarting ? "Abrir ajustes del servidor MCP" : "Iniciar servidor MCP")
-                    .accessibilityValue(mcpServer.isRunning ? "Activo" : mcpServer.isStarting ? "Iniciando" : "Detenido")
+                    .help(mcpServer.isRunning || mcpServer.isStarting ? L10n.text("Abrir ajustes del servidor MCP") : L10n.text("Iniciar servidor MCP y abrir ajustes"))
+                    .accessibilityLabel(mcpServer.isRunning || mcpServer.isStarting ? L10n.text("Abrir ajustes del servidor MCP") : L10n.text("Iniciar servidor MCP"))
+                    .accessibilityValue(mcpServer.isRunning ? L10n.text("Activo") : mcpServer.isStarting ? L10n.text("Iniciando") : L10n.text("Detenido"))
                 }
             }
             .background(FieldPalette.canvas)
@@ -114,9 +114,9 @@ struct FieldSidebar: View {
                 .frame(width: 34, height: 34)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("FIELD LAB")
+                    Text(L10n.text("FIELD LAB"))
                         .font(.system(.headline, design: .rounded).weight(.semibold))
-                    Text("Memoria creativa")
+                    Text(L10n.text("Memoria creativa"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -132,8 +132,12 @@ struct FieldSidebar: View {
                     sidebarLink(.collect)
                     sidebarLink(.lab)
                     NavigationLink(value: FieldRoute.learn) {
-                        Label("Aprender", systemImage: FieldRoute.learn.systemImage)
-                            .badge(proposalCount == 0 ? nil : proposalCount)
+                        if proposalCount > 0 {
+                            Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
+                                .badge(proposalCount)
+                        } else {
+                            Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
+                        }
                     }
                 }
 
@@ -206,9 +210,9 @@ struct LegacyOverviewView: View {
             VStack(alignment: .leading, spacing: 22) {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Laboratorio")
+                        Text(L10n.text("Laboratorio"))
                             .font(.system(.largeTitle, design: .rounded).weight(.semibold))
-                        Text("Una vista clara de lo que empieza a ser útil.")
+                        Text(L10n.text("Una vista clara de lo que empieza a ser útil."))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -238,7 +242,7 @@ struct LegacyOverviewView: View {
                                                     .font(.subheadline.weight(.medium))
                                                     .foregroundStyle(.primary)
                                                     .lineLimit(1)
-                                                Text(item.kind.displayName)
+                                                Text(L10n.text(item.kind.displayName))
                                                     .font(.caption)
                                                     .foregroundStyle(.secondary)
                                             }
@@ -253,24 +257,24 @@ struct LegacyOverviewView: View {
 
                     FieldLegacySummaryCard(title: "Mazo de prompts", systemImage: "rectangle.stack") {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(promptBlockCount == 0 ? "Crea tu primer conjunto de lenguaje reutilizable." : "\(promptBlockCount) bloques listos para combinar.")
+                            Text(promptBlockCount == 0 ? L10n.text("Crea tu primer conjunto de lenguaje reutilizable.") : L10n.blocksReadyToCombine(promptBlockCount))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: 0)
-                            Button("Abrir mazo de prompts") { appModel.selectedRoute = .promptDeck }
+                            Button(L10n.text("Abrir mazo de prompts")) { appModel.selectedRoute = .promptDeck }
                                 .buttonStyle(.bordered)
                         }
                     }
 
                     FieldLegacySummaryCard(title: "Bandeja", systemImage: "tray") {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(inboxCount == 0 ? "No hay nada esperando tu atención." : "\(inboxCount) captura\(inboxCount == 1 ? "" : "s") esperando ser ordenada\(inboxCount == 1 ? "" : "s").")
+                            Text(inboxCount == 0 ? L10n.text("No hay nada esperando tu atención.") : L10n.inboxStatus(inboxCount))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: 0)
-                            Button("Abrir bandeja") { appModel.selectedRoute = .notes }
+                            Button(L10n.text("Abrir bandeja")) { appModel.selectedRoute = .notes }
                                 .buttonStyle(.bordered)
                         }
                     }
@@ -289,7 +293,7 @@ struct LegacyOverviewView: View {
                                         .lineLimit(1)
                                 }
                                 Spacer(minLength: 0)
-                                Button("Ver proyectos") { appModel.selectedRoute = .projects }
+                                Button(L10n.text("Ver proyectos")) { appModel.selectedRoute = .projects }
                                     .buttonStyle(.bordered)
                             }
                         }
@@ -297,12 +301,12 @@ struct LegacyOverviewView: View {
 
                     FieldLegacySummaryCard(title: "Conexión de IA", systemImage: "antenna.radiowaves.left.and.right") {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(appModel.mcpServer.isRunning ? "El puente local está activo." : "Conecta Claude, Codex y agentes compatibles en local.")
+                            Text(appModel.mcpServer.isRunning ? L10n.text("El puente local está activo.") : L10n.text("Conecta Claude, Codex y agentes compatibles en local."))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: 0)
-                            Button(appModel.mcpServer.isRunning ? "Gestionar conexión" : "Configurar conexión") { appModel.selectedRoute = .mcp }
+                            Button(appModel.mcpServer.isRunning ? L10n.text("Gestionar conexión") : L10n.text("Configurar conexión")) { appModel.selectedRoute = .mcp }
                                 .buttonStyle(.bordered)
                         }
                     }
@@ -311,7 +315,7 @@ struct LegacyOverviewView: View {
             .padding(28)
         }
         .background(FieldPalette.canvas)
-        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: "Buscar en FIELD LAB")
+        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar en FIELD LAB"))
     }
 
     private func route(for kind: KnowledgeKind) -> FieldRoute {
@@ -362,7 +366,7 @@ struct FieldLegacySummaryCard<Content: View>: View {
                     Image(systemName: systemImage)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
-                    Text(title)
+                    Text(L10n.text(title))
                         .font(.headline)
                     Spacer(minLength: 0)
                 }
@@ -387,12 +391,12 @@ struct FieldLegacyEmpty: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(message)
+            Text(L10n.text(message))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            Button(actionTitle, action: action)
+            Button(L10n.text(actionTitle), action: action)
                 .buttonStyle(.bordered)
         }
     }
@@ -427,7 +431,7 @@ struct KnowledgeBrowserView: View {
                 title: titleOverride ?? kind?.displayName ?? "Todo el conocimiento",
                 subtitle: inboxOnly ? "Un lugar tranquilo para lo que aún no estás listo para organizar." : "Conserva lo que quieras encontrar, conectar y reutilizar.",
                 count: items.count,
-                actionTitle: kind == nil ? "Captura rápida" : "Añadir \(kind?.displayName.lowercased() ?? "elemento")",
+                actionTitle: kind == nil ? "Captura rápida" : "\(L10n.text("Añadir")) \(L10n.text(kind?.displayName ?? "elemento"))",
                 actionSystemImage: "plus"
             ) {
                 if kind == nil {
@@ -455,17 +459,17 @@ struct KnowledgeBrowserView: View {
                             KnowledgeRow(item: item)
                                 .tag(item.id)
                                 .contextMenu {
-                                    Button("Editar") {
+                                    Button(L10n.text("Editar")) {
                                         editingItem = item
                                         isPresentingEditor = true
                                     }
-                                    Button(item.pinned ? "Desfijar" : "Fijar") {
+                                    Button(item.pinned ? L10n.text("Desfijar") : L10n.text("Fijar")) {
                                         item.pinned.toggle()
                                         try? appModel.repository.updateKnowledge(item)
                                         appModel.refresh()
                                     }
                                     Divider()
-                                    Button("Eliminar", role: .destructive) {
+                                    Button(L10n.text("Eliminar"), role: .destructive) {
                                         try? appModel.repository.delete(item)
                                         if selectedID == item.id { selectedID = nil }
                                         appModel.refresh()
@@ -493,7 +497,7 @@ struct KnowledgeBrowserView: View {
                 }
             }
         }
-        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: "Buscar en FIELD LAB")
+        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar en FIELD LAB"))
         .sheet(isPresented: $isPresentingEditor) {
             KnowledgeEditorView(appModel: appModel, item: editingItem, defaultKind: kind ?? .note)
                 .frame(width: 560, height: 500)
@@ -522,14 +526,14 @@ struct KnowledgeRow: View {
                     Spacer()
                     if item.pinned { Image(systemName: "pin.fill").font(.caption).foregroundStyle(.secondary) }
                 }
-                Text(item.body.isEmpty ? "Aún no hay descripción" : item.body)
+                Text(item.body.isEmpty ? L10n.text("Aún no hay descripción") : item.body)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                 HStack(spacing: 8) {
-                    Text(item.kind.displayName)
-                    Text("·")
-                    Text(item.status.displayName)
+                    Text(L10n.text(item.kind.displayName))
+                    Text(L10n.text("·"))
+                    Text(L10n.text(item.status.displayName))
                 }
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -562,17 +566,17 @@ struct KnowledgeDetailView: View {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(item.kind.displayName)
+                        Text(L10n.text(item.kind.displayName))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.tint)
                         Text(item.title)
                             .font(.system(size: 30, weight: .semibold, design: .rounded))
-                        Text(item.status.displayName)
+                        Text(L10n.text(item.status.displayName))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Editar", action: edit)
+                    Button(L10n.text("Editar"), action: edit)
                         .buttonStyle(.bordered)
                 }
 
@@ -596,7 +600,7 @@ struct KnowledgeDetailView: View {
                     }
                     #endif
                     if let url = URL(string: item.urlString), !item.urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Link(destination: url) { Label("Abrir referencia", systemImage: "arrow.up.right.square") }
+                        Link(destination: url) { Label(L10n.text("Abrir referencia"), systemImage: "arrow.up.right.square") }
                     }
                 }
 
@@ -607,14 +611,14 @@ struct KnowledgeDetailView: View {
                 }
 
                 DetailSection(title: "Procedencia") {
-                    LabeledContent("Fuente", value: item.sourceType.displayName)
-                    if !item.sourceAgent.isEmpty { LabeledContent("Agente", value: item.sourceAgent) }
-                    LabeledContent("Creado", value: item.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    LabeledContent(L10n.text("Fuente"), value: L10n.text(item.sourceType.displayName))
+                    if !item.sourceAgent.isEmpty { LabeledContent(L10n.text("Agente"), value: item.sourceAgent) }
+                    LabeledContent(L10n.text("Creado"), value: item.createdAt.formatted(date: .abbreviated, time: .shortened))
                     if let project = appModel.repository.projects(includeArchived: true).first(where: { $0.id == item.projectID }) {
-                        LabeledContent("Proyecto", value: project.title)
+                        LabeledContent(L10n.text("Proyecto"), value: project.title)
                     }
                     if let tool = appModel.repository.tools().first(where: { $0.id == item.toolID }) {
-                        LabeledContent("Herramienta", value: tool.name)
+                        LabeledContent(L10n.text("Herramienta"), value: tool.name)
                     }
                 }
             }
@@ -632,7 +636,7 @@ struct KnowledgeEditorView: View {
     @State private var kind: KnowledgeKind
     @State private var status: KnowledgeStatus
     @State private var title: String
-    @State private var body: String
+    @State private var knowledgeBody: String
     @State private var tags: String
     @State private var selectedProjectID: UUID?
     @State private var selectedToolID: UUID?
@@ -647,7 +651,7 @@ struct KnowledgeEditorView: View {
         _kind = State(initialValue: item?.kind ?? defaultKind)
         _status = State(initialValue: item?.status ?? .new)
         _title = State(initialValue: item?.title ?? "")
-        _body = State(initialValue: item?.body ?? "")
+        _knowledgeBody = State(initialValue: item?.body ?? "")
         _tags = State(initialValue: item?.tagNames ?? "")
         _selectedProjectID = State(initialValue: item?.projectID)
         _selectedToolID = State(initialValue: item?.toolID)
@@ -658,52 +662,52 @@ struct KnowledgeEditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack {
-                Text(item == nil ? "Nuevo conocimiento" : "Editar conocimiento")
+                Text(item == nil ? L10n.text("Nuevo conocimiento") : L10n.text("Editar conocimiento"))
                     .font(.title2.weight(.semibold))
                 Spacer()
-                Button("Cancelar") { dismiss() }
+                Button(L10n.text("Cancelar")) { dismiss() }
             }
 
             Form {
-                Picker("Tipo", selection: $kind) {
-                    ForEach(KnowledgeKind.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                Picker(L10n.text("Tipo"), selection: $kind) {
+                    ForEach(KnowledgeKind.allCases, id: \.self) { Text(L10n.text($0.displayName)).tag($0) }
                 }
-                TextField("Título", text: $title)
-                TextField("Etiquetas", text: $tags, prompt: Text("luz, realismo"))
+                TextField(L10n.text("Título"), text: $title)
+                TextField(L10n.text("Etiquetas"), text: $tags, prompt: Text(L10n.text("luz, realismo")))
                 if kind == .reference {
-                    TextField("URL (opcional)", text: $urlString)
+                    TextField(L10n.text("URL (opcional)"), text: $urlString)
                     HStack {
-                        Text(imageData == nil ? "No hay imagen adjunta" : "Imagen adjunta")
+                        Text(imageData == nil ? L10n.text("No hay imagen adjunta") : L10n.text("Imagen adjunta"))
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Button("Elegir imagen") { isImportingImage = true }
+                        Button(L10n.text("Elegir imagen")) { isImportingImage = true }
                         if imageData != nil {
-                            Button("Eliminar", role: .destructive) { imageData = nil }
+                            Button(L10n.text("Eliminar"), role: .destructive) { imageData = nil }
                         }
                     }
                 }
-                Picker("Estado", selection: $status) {
-                    ForEach(KnowledgeStatus.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                Picker(L10n.text("Estado"), selection: $status) {
+                    ForEach(KnowledgeStatus.allCases, id: \.self) { Text(L10n.text($0.displayName)).tag($0) }
                 }
-                Picker("Proyecto", selection: $selectedProjectID) {
-                    Text("Global").tag(Optional<UUID>.none)
+                Picker(L10n.text("Proyecto"), selection: $selectedProjectID) {
+                    Text(L10n.text("Global")).tag(Optional<UUID>.none)
                     ForEach(appModel.repository.projects(includeArchived: true)) { project in
                         Text(project.title).tag(Optional(project.id))
                     }
                 }
-                Picker("Herramienta", selection: $selectedToolID) {
-                    Text("Sin herramienta").tag(Optional<UUID>.none)
+                Picker(L10n.text("Herramienta"), selection: $selectedToolID) {
+                    Text(L10n.text("Sin herramienta")).tag(Optional<UUID>.none)
                     ForEach(appModel.repository.tools()) { tool in
                         Text(tool.name).tag(Optional(tool.id))
                     }
                 }
-                TextEditor(text: $body)
+                TextEditor(text: $knowledgeBody)
                     .frame(minHeight: 150)
             }
 
             HStack {
                 Spacer()
-                Button(item == nil ? "Guardar" : "Guardar cambios") { save() }
+                Button(item == nil ? L10n.text("Guardar") : L10n.text("Guardar cambios")) { save() }
                     .buttonStyle(.borderedProminent)
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
@@ -720,7 +724,7 @@ struct KnowledgeEditorView: View {
             if let item {
                 item.kind = kind
                 item.title = title
-                item.body = body
+                item.body = knowledgeBody
                 item.status = status
                 item.tags = tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 item.scope = selectedProjectID == nil ? .global : .project
@@ -733,7 +737,7 @@ struct KnowledgeEditorView: View {
                 _ = try appModel.repository.createKnowledge(
                     kind: kind,
                     title: title,
-                    body: body,
+                    body: knowledgeBody,
                     status: status,
                     scope: selectedProjectID == nil ? .global : .project,
                     projectID: selectedProjectID,
@@ -757,7 +761,7 @@ struct QuickCaptureView: View {
 
     @State private var kind: KnowledgeKind
     @State private var title = ""
-    @State private var body = ""
+    @State private var captureBody = ""
     @State private var tags = ""
     @State private var projectID: UUID?
     @State private var toolID: UUID?
@@ -779,9 +783,9 @@ struct QuickCaptureView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Captura rápida")
+                    Text(L10n.text("Captura rápida"))
                         .font(.system(.title3, design: .rounded).weight(.semibold))
-                    Text("Guarda un fragmento útil en FIELD LAB")
+                    Text(L10n.text("Guarda un fragmento útil en FIELD LAB"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -796,16 +800,16 @@ struct QuickCaptureView: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
-                .accessibilityLabel("Cerrar captura rápida")
+                .accessibilityLabel(L10n.text("Cerrar captura rápida"))
             }
             .padding(.bottom, 18)
 
             Divider()
 
             HStack {
-                Picker("Tipo", selection: $kind) {
+                Picker(L10n.text("Tipo"), selection: $kind) {
                     ForEach([KnowledgeKind.learning, .reference, .note, .idea, .promptBlock], id: \.self) {
-                        Text($0.displayName).tag($0)
+                        Text(L10n.text($0.displayName)).tag($0)
                     }
                 }
                 .pickerStyle(.menu)
@@ -813,7 +817,7 @@ struct QuickCaptureView: View {
             }
             .padding(.vertical, 14)
 
-            TextField(kind == .learning ? "¿Qué has aprendido?" : "Título", text: $title)
+            TextField(kind == .learning ? L10n.text("¿Qué has aprendido?") : L10n.text("Título"), text: $title)
                 .textFieldStyle(.plain)
                 .font(.system(.title3, design: .rounded))
                 .focused($focusedField, equals: .title)
@@ -822,14 +826,14 @@ struct QuickCaptureView: View {
             Divider()
 
             ZStack(alignment: .topLeading) {
-                TextEditor(text: $body)
+                TextEditor(text: $captureBody)
                     .textEditorStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .focused($focusedField, equals: .body)
                     .frame(minHeight: 88)
 
-                if body.isEmpty {
-                    Text("Añadir descripción")
+                if captureBody.isEmpty {
+                    Text(L10n.text("Añadir descripción"))
                         .foregroundStyle(.secondary)
                         .padding(.top, 7)
                         .allowsHitTesting(false)
@@ -837,20 +841,20 @@ struct QuickCaptureView: View {
             }
 
             HStack(spacing: 14) {
-                TextField("Etiquetas", text: $tags)
+                TextField(L10n.text("Etiquetas"), text: $tags)
                     .textFieldStyle(.plain)
                     .frame(maxWidth: 150)
 
-                Picker("Proyecto", selection: $projectID) {
-                    Text("Global").tag(Optional<UUID>.none)
+                Picker(L10n.text("Proyecto"), selection: $projectID) {
+                    Text(L10n.text("Global")).tag(Optional<UUID>.none)
                     ForEach(appModel.repository.projects()) { project in
                         Text(project.title).tag(Optional(project.id))
                     }
                 }
                 .pickerStyle(.menu)
 
-                Picker("Herramienta", selection: $toolID) {
-                    Text("Sin herramienta").tag(Optional<UUID>.none)
+                Picker(L10n.text("Herramienta"), selection: $toolID) {
+                    Text(L10n.text("Sin herramienta")).tag(Optional<UUID>.none)
                     ForEach(appModel.repository.tools()) { tool in
                         Text(tool.name).tag(Optional(tool.id))
                     }
@@ -862,14 +866,14 @@ struct QuickCaptureView: View {
             .font(.subheadline)
 
             HStack {
-                Toggle("Crear otra", isOn: $createMore)
+                Toggle(L10n.text("Crear otra"), isOn: $createMore)
                     .toggleStyle(.switch)
                 Spacer()
-                Button("Guardar") { save() }
+                Button(L10n.text("Guardar")) { save() }
                     .buttonStyle(.borderedProminent)
                     .tint(FieldPalette.accent)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && captureBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding(.top, 18)
         }
@@ -881,7 +885,7 @@ struct QuickCaptureView: View {
 
     private func save() {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanBody = captureBody.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalTitle = cleanTitle.isEmpty ? String(cleanBody.prefix(72)) : cleanTitle
         let parsedTags = tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         if kind == .reference {
@@ -907,7 +911,7 @@ struct QuickCaptureView: View {
         appModel.refresh()
         if createMore {
             title = ""
-            body = ""
+            captureBody = ""
             tags = ""
             projectID = nil
             toolID = nil
@@ -944,14 +948,14 @@ struct PromptDeckView: View {
 
             HSplitView {
                 List {
-                    Section("Bloques") {
+                    Section(L10n.text("Bloques")) {
                         ForEach(blocks) { block in
                             Button {
                                 if selectedIDs.contains(block.id) { selectedIDs.remove(block.id) } else { selectedIDs.insert(block.id) }
                             } label: {
                                 HStack {
                                     Image(systemName: selectedIDs.contains(block.id) ? "checkmark.circle.fill" : "circle")
-                                        .foregroundStyle(selectedIDs.contains(block.id) ? .tint : .secondary)
+                                        .foregroundStyle(selectedIDs.contains(block.id) ? Color.accentColor : Color.secondary)
                                     VStack(alignment: .leading) {
                                         Text(block.title)
                                         Text(block.body).font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -967,14 +971,14 @@ struct PromptDeckView: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        Text("Conjunto actual")
+                        Text(L10n.text("Conjunto actual"))
                             .font(.headline)
                         Spacer()
-                        Button("Guardar como receta") { isSavingRecipe = true }
+                        Button(L10n.text("Guardar como receta")) { isSavingRecipe = true }
                             .buttonStyle(.bordered)
                             .disabled(stack.isEmpty)
                     }
-                    Text(stack.isEmpty ? "Elige dos o más bloques para crear un conjunto reutilizable." : stack)
+                    Text(stack.isEmpty ? L10n.text("Elige dos o más bloques para crear un conjunto reutilizable.") : stack)
                         .font(.body)
                         .foregroundStyle(stack.isEmpty ? .secondary : .primary)
                         .textSelection(.enabled)
@@ -1012,11 +1016,11 @@ struct SaveRecipeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack { Text("Guardar como receta").font(.title2.weight(.semibold)); Spacer(); Button("Cancelar") { dismiss() } }
-            TextField("Título de la receta", text: $title)
+            HStack { Text(L10n.text("Guardar como receta")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Cancelar")) { dismiss() } }
+            TextField(L10n.text("Título de la receta"), text: $title)
             TextEditor(text: $notes).frame(minHeight: 100).overlay(RoundedRectangle(cornerRadius: 8).stroke(.quaternary))
             DetailSection(title: "Conjunto de prompts") { Text(stack).font(.caption).foregroundStyle(.secondary).lineLimit(3) }
-            HStack { Spacer(); Button("Guardar receta") {
+            HStack { Spacer(); Button(L10n.text("Guardar receta")) {
                 _ = try? appModel.repository.createKnowledge(kind: .recipe, title: title, body: [stack, notes].filter { !$0.isEmpty }.joined(separator: "\n\n"), status: .works, tags: ["prompt-stack"])
                 appModel.refresh(); dismiss()
             }.buttonStyle(.borderedProminent).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
@@ -1050,18 +1054,18 @@ struct FlowsBrowserView: View {
             HSplitView {
                 List(selection: $selectedID) {
                     if flows.isEmpty {
-                        ContentUnavailableView("Aún no hay flujos", systemImage: "arrow.triangle.branch", description: Text("Documenta un método creativo repetible para poder reutilizarlo."))
+                        ContentUnavailableView(L10n.text("Aún no hay flujos"), systemImage: "arrow.triangle.branch", description: Text(L10n.text("Documenta un método creativo repetible para poder reutilizarlo.")))
                     } else {
                         ForEach(flows) { flow in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(flow.title).font(.headline)
-                                Text("\(appModel.repository.flowSteps(flowID: flow.id).count) pasos · \(flow.summary)").font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                                Text("\(L10n.pluralized(appModel.repository.flowSteps(flowID: flow.id).count, singular: "paso", plural: "pasos")) · \(flow.summary)").font(.caption).foregroundStyle(.secondary).lineLimit(2)
                             }
                             .padding(.vertical, 4)
                             .tag(flow.id)
                             .contextMenu {
-                                Button("Editar") { editingFlow = flow; isPresentingEditor = true }
-                                Button("Eliminar", role: .destructive) { try? appModel.repository.deleteFlow(flow); if selectedID == flow.id { selectedID = nil }; appModel.refresh() }
+                                Button(L10n.text("Editar")) { editingFlow = flow; isPresentingEditor = true }
+                                Button(L10n.text("Eliminar"), role: .destructive) { try? appModel.repository.deleteFlow(flow); if selectedID == flow.id { selectedID = nil }; appModel.refresh() }
                             }
                         }
                     }
@@ -1098,16 +1102,16 @@ struct FlowDetailView: View {
                         Text(flow.summary).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Editar", action: edit).buttonStyle(.bordered)
-                    Button("Iniciar flujo", action: start).buttonStyle(.borderedProminent)
+                    Button(L10n.text("Editar"), action: edit).buttonStyle(.bordered)
+                    Button(L10n.text("Iniciar flujo"), action: start).buttonStyle(.borderedProminent)
                 }
                 let steps = appModel.repository.flowSteps(flowID: flow.id)
                 if steps.isEmpty {
-                        ContentUnavailableView("Aún no hay pasos", systemImage: "list.number", description: Text("Añade el primer paso para convertir este método en una guía ejecutable."))
+                        ContentUnavailableView(L10n.text("Aún no hay pasos"), systemImage: "list.number", description: Text(L10n.text("Añade el primer paso para convertir este método en una guía ejecutable.")))
                 } else {
                     ForEach(steps) { step in
                         HStack(alignment: .top, spacing: 14) {
-                            Text(String(format: "%02d", step.order)).font(.system(.title3, design: .monospaced)).foregroundStyle(.tint).frame(width: 34, alignment: .leading)
+                            Text(String(format: L10n.text("%02d"), step.order)).font(.system(.title3, design: .monospaced)).foregroundStyle(.tint).frame(width: 34, alignment: .leading)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(step.title).font(.headline)
                                 if !step.instructions.isEmpty { Text(step.instructions).foregroundStyle(.secondary) }
@@ -1120,8 +1124,8 @@ struct FlowDetailView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { editingStep = step; isPresentingStepEditor = true }
                         .contextMenu {
-                            Button("Editar paso") { editingStep = step; isPresentingStepEditor = true }
-                            Button("Eliminar paso", role: .destructive) {
+                            Button(L10n.text("Editar paso")) { editingStep = step; isPresentingStepEditor = true }
+                            Button(L10n.text("Eliminar paso"), role: .destructive) {
                                 try? appModel.repository.deleteFlowStep(step)
                                 appModel.refresh()
                             }
@@ -1129,7 +1133,7 @@ struct FlowDetailView: View {
                         Divider()
                     }
                 }
-                Button("Añadir paso") {
+                Button(L10n.text("Añadir paso")) {
                     guard let step = try? appModel.repository.createFlowStep(flowID: flow.id, title: "Nuevo paso") else { return }
                     editingStep = step
                     isPresentingStepEditor = true
@@ -1174,27 +1178,27 @@ struct FlowStepEditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Editar paso").font(.title2.weight(.semibold))
+                Text(L10n.text("Editar paso")).font(.title2.weight(.semibold))
                 Spacer()
-                Button("Cancelar") { dismiss() }
+                Button(L10n.text("Cancelar")) { dismiss() }
             }
             Form {
-                TextField("Título del paso", text: $title)
-                TextField("¿Qué ocurre en este paso?", text: $instructions, axis: .vertical).lineLimit(2...4)
-                Picker("Herramienta", selection: $toolIDString) {
-                    Text("Sin herramienta").tag("")
+                TextField(L10n.text("Título del paso"), text: $title)
+                TextField(L10n.text("¿Qué ocurre en este paso?"), text: $instructions, axis: .vertical).lineLimit(2...4)
+                Picker(L10n.text("Herramienta"), selection: $toolIDString) {
+                    Text(L10n.text("Sin herramienta")).tag("")
                     ForEach(tools) { Text($0.name).tag($0.id.uuidString) }
                 }
-                Picker("Receta", selection: $recipeIDString) {
-                    Text("Sin receta").tag("")
+                Picker(L10n.text("Receta"), selection: $recipeIDString) {
+                    Text(L10n.text("Sin receta")).tag("")
                     ForEach(recipes) { Text($0.title).tag($0.id.uuidString) }
                 }
-                TextField("Prompt o plantilla de trabajo", text: $templateText, axis: .vertical).lineLimit(3...7)
-                TextField("Notas privadas", text: $notes, axis: .vertical).lineLimit(2...5)
+                TextField(L10n.text("Prompt o plantilla de trabajo"), text: $templateText, axis: .vertical).lineLimit(3...7)
+                TextField(L10n.text("Notas privadas"), text: $notes, axis: .vertical).lineLimit(2...5)
             }
             HStack {
                 Spacer()
-                Button("Guardar paso") { save() }.buttonStyle(.borderedProminent).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button(L10n.text("Guardar paso")) { save() }.buttonStyle(.borderedProminent).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
         .padding(24)
@@ -1229,9 +1233,9 @@ struct FlowEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack { Text(flow == nil ? "Nuevo flujo" : "Editar flujo").font(.title2.weight(.semibold)); Spacer(); Button("Cancelar") { dismiss() } }
-            Form { TextField("Título del flujo", text: $title); TextField("¿Qué consigue este método?", text: $summary, axis: .vertical).lineLimit(2...4) }
-            HStack { Spacer(); Button(flow == nil ? "Crear flujo" : "Guardar cambios") { save() }.buttonStyle(.borderedProminent).disabled(title.isEmpty) }
+            HStack { Text(flow == nil ? L10n.text("Nuevo flujo") : L10n.text("Editar flujo")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Cancelar")) { dismiss() } }
+            Form { TextField(L10n.text("Título del flujo"), text: $title); TextField(L10n.text("¿Qué consigue este método?"), text: $summary, axis: .vertical).lineLimit(2...4) }
+            HStack { Spacer(); Button(flow == nil ? L10n.text("Crear flujo") : L10n.text("Guardar cambios")) { save() }.buttonStyle(.borderedProminent).disabled(title.isEmpty) }
         }.padding(24)
     }
 
@@ -1259,21 +1263,21 @@ struct StartFlowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            HStack { VStack(alignment: .leading, spacing: 4) { Text(flow.title).font(.title2.weight(.semibold)); Text("Paso \(min(index + 1, max(steps.count, 1))) de \(steps.count)").font(.subheadline).foregroundStyle(.secondary) }; Spacer(); Button("Hecho") { dismiss() } }
+            HStack { VStack(alignment: .leading, spacing: 4) { Text(flow.title).font(.title2.weight(.semibold)); Text(L10n.stepProgress(current: min(index + 1, max(steps.count, 1)), total: steps.count)).font(.subheadline).foregroundStyle(.secondary) }; Spacer(); Button(L10n.text("Hecho")) { dismiss() } }
             if let step {
                 Text(step.title).font(.largeTitle.weight(.semibold))
                 if let toolID = step.toolID, let tool = appModel.repository.tools().first(where: { $0.id == toolID }) { Label(tool.name, systemImage: "wrench.and.screwdriver").foregroundStyle(.tint) }
-                Text(step.instructions.isEmpty ? "Aún no hay instrucciones." : step.instructions).font(.title3)
+                Text(step.instructions.isEmpty ? L10n.text("Aún no hay instrucciones.") : step.instructions).font(.title3)
                 if !step.templateText.isEmpty {
                     DetailSection(title: "Plantilla") {
                         Text(step.templateText).textSelection(.enabled)
-                        Button(copied ? "Copiado" : "Copiar plantilla") { copy(step.templateText) }.buttonStyle(.bordered)
+                        Button(copied ? L10n.text("Copiado") : L10n.text("Copiar plantilla")) { copy(step.templateText) }.buttonStyle(.bordered)
                     }
                 }
                 Spacer()
-                HStack { Button("Anterior") { index = max(index - 1, 0) }.disabled(index == 0); Spacer(); Button(index == steps.count - 1 ? "Terminar" : "Siguiente") { if index < steps.count - 1 { index += 1 } else { dismiss() } }.buttonStyle(.borderedProminent) }
+                HStack { Button(L10n.text("Anterior")) { index = max(index - 1, 0) }.disabled(index == 0); Spacer(); Button(index == steps.count - 1 ? L10n.text("Terminar") : L10n.text("Siguiente")) { if index < steps.count - 1 { index += 1 } else { dismiss() } }.buttonStyle(.borderedProminent) }
             } else {
-                ContentUnavailableView("No hay pasos", systemImage: "list.number", description: Text("Añade pasos a este flujo antes de iniciarlo."))
+                ContentUnavailableView(L10n.text("No hay pasos"), systemImage: "list.number", description: Text(L10n.text("Añade pasos a este flujo antes de iniciarlo.")))
                 Spacer()
             }
         }.padding(28)
@@ -1321,9 +1325,9 @@ struct ProjectsBrowserView: View {
                         .padding(.vertical, 4)
                         .tag(project.id)
                         .contextMenu {
-                            Button("Editar") { editingProject = project; isPresentingEditor = true }
-                            Button("Archivar") { project.archived = true; try? appModel.repository.updateProject(project); appModel.refresh() }
-                            Button("Eliminar", role: .destructive) { try? appModel.repository.deleteProject(project); appModel.refresh() }
+                            Button(L10n.text("Editar")) { editingProject = project; isPresentingEditor = true }
+                            Button(L10n.text("Archivar")) { project.archived = true; try? appModel.repository.updateProject(project); appModel.refresh() }
+                            Button(L10n.text("Eliminar"), role: .destructive) { try? appModel.repository.deleteProject(project); appModel.refresh() }
                         }
                     }
                 }
@@ -1353,26 +1357,26 @@ struct ProjectDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                HStack { Text(project.title).font(.system(size: 32, weight: .semibold, design: .rounded)); Spacer(); Button("Editar", action: edit).buttonStyle(.bordered) }
+                HStack { Text(project.title).font(.system(size: 32, weight: .semibold, design: .rounded)); Spacer(); Button(L10n.text("Editar"), action: edit).buttonStyle(.bordered) }
                 if !project.summary.isEmpty { Text(project.summary).font(.title3).foregroundStyle(.secondary) }
-                DetailSection(title: "Resumen") { Text(project.brief.isEmpty ? "Aún no escrito." : project.brief) }
-                DetailSection(title: "Dirección creativa") { Text(project.creativeDirection.isEmpty ? "Aún no escrita." : project.creativeDirection) }
-                DetailSection(title: "Restricciones") { Text(project.constraints.isEmpty ? "Aún no escritas." : project.constraints) }
-                DetailSection(title: "Entregables") { Text(project.deliverables.isEmpty ? "Aún no escritos." : project.deliverables) }
+                DetailSection(title: "Resumen") { Text(project.brief.isEmpty ? L10n.text("Aún no escrito.") : project.brief) }
+                DetailSection(title: "Dirección creativa") { Text(project.creativeDirection.isEmpty ? L10n.text("Aún no escrita.") : project.creativeDirection) }
+                DetailSection(title: "Restricciones") { Text(project.constraints.isEmpty ? L10n.text("Aún no escritas.") : project.constraints) }
+                DetailSection(title: "Entregables") { Text(project.deliverables.isEmpty ? L10n.text("Aún no escritos.") : project.deliverables) }
                 DetailSection(title: "Recordar siempre") {
-                    Text(project.alwaysRemember.isEmpty ? "Aún no escrito." : project.alwaysRemember)
+                    Text(project.alwaysRemember.isEmpty ? L10n.text("Aún no escrito.") : project.alwaysRemember)
                         .foregroundStyle(.tint)
                 }
                 DetailSection(title: "Conocimiento del proyecto") {
                     let items = appModel.repository.knowledge(projectID: project.id)
-                    if items.isEmpty { Text("Aún no hay conocimiento conectado.").foregroundStyle(.secondary) }
+                    if items.isEmpty { Text(L10n.text("Aún no hay conocimiento conectado.")).foregroundStyle(.secondary) }
                     else { ForEach(items.prefix(10)) { item in Text("• \(item.title)") } }
                 }
                 DetailSection(title: "Referencias") {
                     let references = appModel.repository.references().filter { $0.projectIDs.contains(project.id) }
                     HStack {
                         if references.isEmpty {
-                            Text("Aún no hay referencias visuales conectadas.").foregroundStyle(.secondary)
+                            Text(L10n.text("Aún no hay referencias visuales conectadas.")).foregroundStyle(.secondary)
                         } else {
                             ForEach(references.prefix(6)) { reference in
                                 ReferenceImageView(data: reference.thumbnailData ?? reference.imageData)
@@ -1382,7 +1386,7 @@ struct ProjectDetailView: View {
                             }
                         }
                         Spacer()
-                        Button("Añadir desde la biblioteca") { isShowingReferences = true }
+                        Button(L10n.text("Añadir desde la biblioteca")) { isShowingReferences = true }
                             .buttonStyle(.bordered)
                     }
                 }
@@ -1421,17 +1425,17 @@ struct ProjectEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack { Text(project == nil ? "Nuevo proyecto" : "Editar proyecto").font(.title2.weight(.semibold)); Spacer(); Button("Cancelar") { dismiss() } }
+            HStack { Text(project == nil ? L10n.text("Nuevo proyecto") : L10n.text("Editar proyecto")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Cancelar")) { dismiss() } }
             Form {
-                TextField("Título del proyecto", text: $title)
-                TextField("Resumen en una línea", text: $summary)
-                TextField("Resumen", text: $brief, axis: .vertical).lineLimit(2...4)
-                TextField("Dirección creativa", text: $direction, axis: .vertical).lineLimit(2...4)
-                TextField("Restricciones", text: $constraints, axis: .vertical).lineLimit(2...4)
-                TextField("Entregables", text: $deliverables, axis: .vertical).lineLimit(2...4)
-                TextField("Recordar siempre", text: $remember, axis: .vertical).lineLimit(2...4)
+                TextField(L10n.text("Título del proyecto"), text: $title)
+                TextField(L10n.text("Resumen en una línea"), text: $summary)
+                TextField(L10n.text("Resumen"), text: $brief, axis: .vertical).lineLimit(2...4)
+                TextField(L10n.text("Dirección creativa"), text: $direction, axis: .vertical).lineLimit(2...4)
+                TextField(L10n.text("Restricciones"), text: $constraints, axis: .vertical).lineLimit(2...4)
+                TextField(L10n.text("Entregables"), text: $deliverables, axis: .vertical).lineLimit(2...4)
+                TextField(L10n.text("Recordar siempre"), text: $remember, axis: .vertical).lineLimit(2...4)
             }
-            HStack { Spacer(); Button(project == nil ? "Crear proyecto" : "Guardar cambios") { save() }.buttonStyle(.borderedProminent).disabled(title.isEmpty) }
+            HStack { Spacer(); Button(project == nil ? L10n.text("Crear proyecto") : L10n.text("Guardar cambios")) { save() }.buttonStyle(.borderedProminent).disabled(title.isEmpty) }
         }
         .padding(24)
     }
@@ -1489,8 +1493,8 @@ struct ToolsBrowserView: View {
                         }
                         .tag(tool.id)
                         .contextMenu {
-                            Button("Editar") { editingTool = tool; isPresentingEditor = true }
-                            Button("Eliminar", role: .destructive) { try? appModel.repository.deleteTool(tool); appModel.refresh() }
+                            Button(L10n.text("Editar")) { editingTool = tool; isPresentingEditor = true }
+                            Button(L10n.text("Eliminar"), role: .destructive) { try? appModel.repository.deleteTool(tool); appModel.refresh() }
                         }
                     }
                 }.frame(minWidth: 320)
@@ -1510,18 +1514,18 @@ struct ToolDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                HStack { Text(tool.name).font(.system(size: 32, weight: .semibold, design: .rounded)); Spacer(); Button("Editar", action: edit).buttonStyle(.bordered) }
+                HStack { Text(tool.name).font(.system(size: 32, weight: .semibold, design: .rounded)); Spacer(); Button(L10n.text("Editar"), action: edit).buttonStyle(.bordered) }
                 Text(tool.category).foregroundStyle(.tint)
                 if let url = URL(string: tool.websiteURL), !tool.websiteURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Link(destination: url) { Label("Abrir web de la herramienta", systemImage: "arrow.up.right.square") }
+                    Link(destination: url) { Label(L10n.text("Abrir web de la herramienta"), systemImage: "arrow.up.right.square") }
                 }
-                DetailSection(title: "La uso para") { Text(tool.uses.isEmpty ? "Aún no escrito." : tool.uses) }
-                DetailSection(title: "Funciona bien para") { Text(tool.strengths.isEmpty ? "Aún no escrito." : tool.strengths) }
-                DetailSection(title: "Problemas habituales") { Text(tool.weaknesses.isEmpty ? "Aún no escritos." : tool.weaknesses) }
-                DetailSection(title: "Notas") { Text(tool.notes.isEmpty ? "Aún no escritas." : tool.notes) }
+                DetailSection(title: "La uso para") { Text(tool.uses.isEmpty ? L10n.text("Aún no escrito.") : tool.uses) }
+                DetailSection(title: "Funciona bien para") { Text(tool.strengths.isEmpty ? L10n.text("Aún no escrito.") : tool.strengths) }
+                DetailSection(title: "Problemas habituales") { Text(tool.weaknesses.isEmpty ? L10n.text("Aún no escritos.") : tool.weaknesses) }
+                DetailSection(title: "Notas") { Text(tool.notes.isEmpty ? L10n.text("Aún no escritas.") : tool.notes) }
                 DetailSection(title: "Conocimiento conectado") {
                     let items = appModel.repository.knowledge().filter { $0.toolID == tool.id }
-                    if items.isEmpty { Text("Aún no hay conocimiento conectado.").foregroundStyle(.secondary) }
+                    if items.isEmpty { Text(L10n.text("Aún no hay conocimiento conectado.")).foregroundStyle(.secondary) }
                     else { ForEach(items.prefix(12)) { Text("• \($0.title)") } }
                 }
             }.padding(32)
@@ -1555,17 +1559,17 @@ struct ToolEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack { Text(tool == nil ? "Añadir herramienta" : "Editar herramienta").font(.title2.weight(.semibold)); Spacer(); Button("Cancelar") { dismiss() } }
+            HStack { Text(tool == nil ? L10n.text("Añadir herramienta") : L10n.text("Editar herramienta")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Cancelar")) { dismiss() } }
             Form {
-                TextField("Nombre", text: $name)
-                TextField("Categoría", text: $category)
-                TextField("Web (opcional)", text: $websiteURL)
-                TextField("La uso para", text: $uses, axis: .vertical)
-                TextField("Funciona bien para", text: $strengths, axis: .vertical)
-                TextField("Problemas habituales", text: $weaknesses, axis: .vertical)
-                TextField("Notas", text: $notes, axis: .vertical)
+                TextField(L10n.text("Nombre"), text: $name)
+                TextField(L10n.text("Categoría"), text: $category)
+                TextField(L10n.text("Web (opcional)"), text: $websiteURL)
+                TextField(L10n.text("La uso para"), text: $uses, axis: .vertical)
+                TextField(L10n.text("Funciona bien para"), text: $strengths, axis: .vertical)
+                TextField(L10n.text("Problemas habituales"), text: $weaknesses, axis: .vertical)
+                TextField(L10n.text("Notas"), text: $notes, axis: .vertical)
             }
-            HStack { Spacer(); Button(tool == nil ? "Guardar herramienta" : "Guardar cambios") { save() }.buttonStyle(.borderedProminent).disabled(name.isEmpty) }
+            HStack { Spacer(); Button(tool == nil ? L10n.text("Guardar herramienta") : L10n.text("Guardar cambios")) { save() }.buttonStyle(.borderedProminent).disabled(name.isEmpty) }
         }.padding(24)
     }
 
@@ -1599,10 +1603,10 @@ struct AIInboxView: View {
             Divider()
             HSplitView {
                 List(selection: $selectedID) {
-                    if proposals.isEmpty { ContentUnavailableView("Nada pendiente", systemImage: "checkmark.circle", description: Text("Las propuestas de los agentes aparecerán aquí para revisarlas.")) }
+                    if proposals.isEmpty { ContentUnavailableView(L10n.text("Nada pendiente"), systemImage: "checkmark.circle", description: Text(L10n.text("Las propuestas de los agentes aparecerán aquí para revisarlas."))) }
                     else {
                         ForEach(proposals) { proposal in
-                            VStack(alignment: .leading, spacing: 4) { Text(proposal.title).font(.headline); Text("\(proposal.agent) · \(proposal.proposalTypeRaw.capitalized)").font(.caption).foregroundStyle(.secondary) }.tag(proposal.id)
+                            VStack(alignment: .leading, spacing: 4) { Text(proposal.title).font(.headline); Text("\(proposal.agent) · \(L10n.text(proposal.proposalTypeRaw.capitalized))").font(.caption).foregroundStyle(.secondary) }.tag(proposal.id)
                         }
                     }
                 }.frame(minWidth: 350)
@@ -1621,16 +1625,16 @@ struct ProposalDetailView: View {
         VStack(alignment: .leading, spacing: 20) {
             Text(proposal.title).font(.title.weight(.semibold))
             Text(proposal.content).textSelection(.enabled)
-            Text("Propuesta de \(proposal.agent) · \(proposal.createdAt.formatted(date: .abbreviated, time: .shortened))").font(.subheadline).foregroundStyle(.secondary)
+            Text("\(L10n.text("Propuesta de")) \(proposal.agent) · \(proposal.createdAt.formatted(date: .abbreviated, time: .shortened))").font(.subheadline).foregroundStyle(.secondary)
             Spacer()
             HStack {
-                Button("Rechazar", role: .destructive) { try? appModel.repository.reject(proposal); appModel.refresh() }.buttonStyle(.bordered)
+                Button(L10n.text("Rechazar"), role: .destructive) { try? appModel.repository.reject(proposal); appModel.refresh() }.buttonStyle(.bordered)
                 Spacer()
-            Button("Aprobar") {
+            Button(L10n.text("Aprobar")) {
                 if proposal.referenceID != nil {
-                    try? appModel.repository.approveReferenceTags(proposal)
+                    _ = try? appModel.repository.approveReferenceTags(proposal)
                 } else {
-                    try? appModel.repository.approve(proposal)
+                    _ = try? appModel.repository.approve(proposal)
                 }
                 appModel.refresh()
             }
@@ -1650,7 +1654,7 @@ struct ActivityView: View {
                 ForEach(appModel.repository.activities()) { activity in
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: "circle.fill").font(.caption2).foregroundStyle(.tint).padding(.top, 5)
-                        VStack(alignment: .leading, spacing: 4) { Text("\(activity.agent) · \(activity.action.replacingOccurrences(of: "_", with: " "))").font(.headline); if !activity.detail.isEmpty { Text(activity.detail).foregroundStyle(.secondary) }; Text(activity.timestamp.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.tertiary) }
+                        VStack(alignment: .leading, spacing: 4) { Text(activity.agent).font(.headline); Text(L10n.activityAction(activity.action)).font(.caption).foregroundStyle(.secondary); if !activity.detail.isEmpty { Text(activity.detail).foregroundStyle(.secondary) }; Text(activity.timestamp.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.tertiary) }
                     }.padding(.vertical, 4)
                 }
             }
@@ -1678,7 +1682,7 @@ struct MCPSettingsView: View {
                         .frame(width: 10, height: 10)
                     Text(serverStatus).font(.headline)
                     Spacer()
-                    Text("Solo este Mac · 127.0.0.1")
+                    Text(L10n.text("Solo este Mac · 127.0.0.1"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -1688,32 +1692,32 @@ struct MCPSettingsView: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Spacer()
-                        Button(copiedItem == "endpoint" ? "Copiado" : "Copiar") { copy(mcpServer.endpoint, item: "endpoint") }
+                        Button(copiedItem == L10n.text("endpoint") ? L10n.text("Copiado") : L10n.text("Copiar")) { copy(mcpServer.endpoint, item: "endpoint") }
                             .buttonStyle(.bordered)
                     }
-                    Text("Puerto \(mcpServer.port) · HTTP local protegido con token")
+                    Text(L10n.portDescription(mcpServer.port))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     if !mcpServer.isRunning {
-                        Text(mcpServer.isStarting ? "Esperando a que termine la selección de puerto…" : "Inicia el servidor antes de copiar la configuración; el puerto definitivo aparece al activarse.")
+                        Text(mcpServer.isStarting ? L10n.text("Esperando a que termine la selección de puerto…") : L10n.text("Inicia el servidor antes de copiar la configuración; el puerto definitivo aparece al activarse."))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
                 DetailSection(title: "Token local") {
                     HStack {
-                        Text(showToken ? mcpServer.token : String(repeating: "•", count: 20))
+                        Text(showToken ? mcpServer.token : String(repeating: L10n.text("•"), count: 20))
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Spacer()
-                        Button(showToken ? "Ocultar" : "Mostrar") { showToken.toggle() }
+                        Button(showToken ? L10n.text("Ocultar") : L10n.text("Mostrar")) { showToken.toggle() }
                             .buttonStyle(.bordered)
-                        Button(copiedItem == "token" ? "Copiado" : "Copiar") { copy(mcpServer.token, item: "token") }
+                        Button(copiedItem == L10n.text("token") ? L10n.text("Copiado") : L10n.text("Copiar")) { copy(mcpServer.token, item: "token") }
                             .buttonStyle(.bordered)
                     }
                     Text(mcpServer.usesKeychainHeaderHelper
-                         ? "Guardado en el Llavero de macOS. Codex y Claude Code lo consultan con un helper local al conectar; macOS puede pedir permiso la primera vez."
-                         : "Guardado en el Llavero de macOS. Configura FIELD_MCP_TOKEN en el entorno del cliente MCP.")
+                         ? L10n.text("Guardado en el Llavero de macOS. Codex y Claude Code lo consultan con un helper local al conectar; macOS puede pedir permiso la primera vez.")
+                         : L10n.text("Guardado en el Llavero de macOS. Configura FIELD_MCP_TOKEN en el entorno del cliente MCP."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1724,22 +1728,22 @@ struct MCPSettingsView: View {
                         if mcpServer.isStarting || mcpServer.isStopping {
                             ProgressView().controlSize(.small)
                         } else {
-                            Label(mcpServer.isRunning ? "Detener servidor" : "Iniciar servidor", systemImage: mcpServer.isRunning ? "stop.fill" : "play.fill")
+                            Label(mcpServer.isRunning ? L10n.text("Detener servidor") : L10n.text("Iniciar servidor"), systemImage: mcpServer.isRunning ? "stop.fill" : "play.fill")
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(mcpServer.isStarting || mcpServer.isStopping)
-                    Button("Regenerar token") { mcpServer.regenerateToken() }
+                    Button(L10n.text("Regenerar token")) { mcpServer.regenerateToken() }
                         .buttonStyle(.bordered)
                         .disabled(mcpServer.isStarting || mcpServer.isStopping)
                     Spacer()
                     if let copiedItem {
-                        Label("\(copiedItem) copiado", systemImage: "checkmark")
+                        Label(L10n.copiedDescription(copiedItem), systemImage: "checkmark")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text("Regenerar el token detiene el servidor para revocar el anterior. Inícialo otra vez antes de reconectar las IA.")
+                Text(L10n.text("Regenerar el token detiene el servidor para revocar el anterior. Inícialo otra vez antes de reconectar las IA."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let lastError = mcpServer.lastError {
@@ -1749,11 +1753,11 @@ struct MCPSettingsView: View {
                 }
                 DetailSection(title: "Conectar Codex") {
                     Text(mcpServer.codexSetup).font(.system(.body, design: .monospaced)).textSelection(.enabled)
-                    Button(copiedItem == "Codex" ? "Copiado" : "Copiar configuración de Codex") { copy(mcpServer.codexSetup, item: "Codex") }
+                    Button(copiedItem == L10n.text("Codex") ? L10n.text("Copiado") : L10n.text("Copiar configuración de Codex")) { copy(mcpServer.codexSetup, item: "Codex") }
                         .buttonStyle(.bordered)
                     Text(mcpServer.usesKeychainHeaderHelper
-                         ? "Codex consulta el Llavero mediante un helper local; el token no queda en config.toml."
-                         : "Codex lee FIELD_MCP_TOKEN del entorno del proceso. Reinícialo si acabas de configurar esa variable.")
+                         ? L10n.text("Codex consulta el Llavero mediante un helper local; el token no queda en config.toml.")
+                         : L10n.text("Codex lee FIELD_MCP_TOKEN del entorno del proceso. Reinícialo si acabas de configurar esa variable."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1762,11 +1766,11 @@ struct MCPSettingsView: View {
                         .font(.system(.body, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(copiedItem == "Claude Code" ? "Copiado" : "Copiar configuración de Claude Code") { copy(mcpServer.claudeCodeSetup, item: "Claude Code") }
+                    Button(copiedItem == L10n.text("Claude Code") ? L10n.text("Copiado") : L10n.text("Copiar configuración de Claude Code")) { copy(mcpServer.claudeCodeSetup, item: "Claude Code") }
                         .buttonStyle(.bordered)
                     Text(mcpServer.usesKeychainHeaderHelper
-                         ? "Claude Code consulta el Llavero mediante un helper local; verifica el estado con /mcp."
-                         : "Claude Code expande FIELD_MCP_TOKEN en su configuración MCP. Comprueba la conexión con /mcp.")
+                         ? L10n.text("Claude Code consulta el Llavero mediante un helper local; verifica el estado con /mcp.")
+                         : L10n.text("Claude Code expande FIELD_MCP_TOKEN en su configuración MCP. Comprueba la conexión con /mcp."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1775,7 +1779,7 @@ struct MCPSettingsView: View {
                         .font(.system(.callout, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(copiedItem == "prompt" ? "Prompt copiado" : "Copiar prompt de configuración") { copy(mcpServer.setupPrompt, item: "prompt") }
+                    Button(copiedItem == L10n.text("prompt") ? L10n.text("Prompt copiado") : L10n.text("Copiar prompt de configuración")) { copy(mcpServer.setupPrompt, item: "prompt") }
                         .buttonStyle(.bordered)
                 }
                 DetailSection(title: "Permisos") {
@@ -1791,9 +1795,9 @@ struct MCPSettingsView: View {
     }
 
     private var serverStatus: String {
-        if mcpServer.isStarting { return "Iniciando servidor…" }
-        if mcpServer.isStopping { return "Deteniendo servidor…" }
-        return mcpServer.isRunning ? "Servidor activo" : "Servidor detenido"
+        if mcpServer.isStarting { return L10n.text("MCP server starting") }
+        if mcpServer.isStopping { return L10n.text("MCP server stopping") }
+        return mcpServer.isRunning ? L10n.text("MCP server active") : L10n.text("MCP server stopped")
     }
 
     private func copy(_ value: String, item: String) {
@@ -1808,13 +1812,13 @@ struct MCPSettingsView: View {
 struct MenuBarContent: View {
     @ObservedObject var appModel: AppModel
     var body: some View {
-        Button("Aprendizaje") { appModel.presentCapture(kind: .learning) }
-        Button("Referencia") { appModel.presentCapture(kind: .reference) }
-        Button("Nota") { appModel.presentCapture(kind: .note) }
+        Button(L10n.text("Aprendizaje")) { appModel.presentCapture(kind: .learning) }
+        Button(L10n.text("Referencia")) { appModel.presentCapture(kind: .reference) }
+        Button(L10n.text("Nota")) { appModel.presentCapture(kind: .note) }
         Divider()
-        Button("Abrir FIELD LAB") { appModel.selectedRoute = .lab }
-        Button("Crear prompt") { appModel.selectedRoute = .learn }
-        Button("Ajustes") { appModel.selectedRoute = .settings }
+        Button(L10n.text("Abrir FIELD LAB")) { appModel.selectedRoute = .lab }
+        Button(L10n.text("Crear prompt")) { appModel.selectedRoute = .learn }
+        Button(L10n.text("Ajustes")) { appModel.selectedRoute = .settings }
     }
 }
 
@@ -1834,7 +1838,7 @@ struct DetailSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: () -> Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) { Text(title.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary); content() }
+        VStack(alignment: .leading, spacing: 8) { Text(L10n.text(title).uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary); content() }
     }
 }
 
@@ -1846,7 +1850,7 @@ struct FlowTags: View {
 struct PermissionRow: View {
     let title: String
     let enabled: Bool
-    var body: some View { HStack { Image(systemName: enabled ? "checkmark.circle.fill" : "minus.circle").foregroundStyle(enabled ? .green : .secondary); Text(title); Spacer(); Text(enabled ? "Activo" : "Desactivado").font(.caption).foregroundStyle(.secondary) } }
+    var body: some View { HStack { Image(systemName: enabled ? "checkmark.circle.fill" : "minus.circle").foregroundStyle(enabled ? .green : .secondary); Text(L10n.text(title)); Spacer(); Text(enabled ? L10n.text("Activo") : L10n.text("Desactivado")).font(.caption).foregroundStyle(.secondary) } }
 }
 
 struct FieldPageHeader: View {
@@ -1860,16 +1864,16 @@ struct FieldPageHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 20) {
             VStack(alignment: .leading, spacing: 5) {
-                Text(title)
+                Text(L10n.text(title))
                     .font(.system(.largeTitle, design: .rounded).weight(.semibold))
                     .lineLimit(1)
                 HStack(spacing: 8) {
-                    Text(subtitle)
+                    Text(L10n.text(subtitle))
                         .foregroundStyle(.secondary)
                     if let count {
-                        Text("·")
+                        Text(L10n.text("·"))
                             .foregroundStyle(.tertiary)
-                        Text(count == 1 ? "1 item" : "\(count) items")
+                        Text(L10n.pluralized(count, singular: "item", plural: "items"))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -1881,7 +1885,7 @@ struct FieldPageHeader: View {
 
             if !actionTitle.isEmpty {
                 Button(action: action) {
-                    Label(actionTitle, systemImage: actionSystemImage)
+                    Label(L10n.text(actionTitle), systemImage: actionSystemImage)
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -1897,9 +1901,9 @@ struct FieldSectionHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(title)
+            Text(L10n.text(title))
                 .font(.system(.largeTitle, design: .rounded).weight(.semibold))
-            Text(subtitle)
+            Text(L10n.text(subtitle))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -1926,17 +1930,17 @@ struct FieldEmptyState: View {
             }
             .frame(width: 56, height: 56)
 
-            Text(title)
+            Text(L10n.text(title))
                 .font(.title2.weight(.semibold))
 
-            Text(message)
+            Text(L10n.text(message))
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 380)
 
             if let actionTitle, let action {
-                Button(actionTitle, action: action)
+                Button(L10n.text(actionTitle), action: action)
                     .buttonStyle(.borderedProminent)
                     .padding(.top, 4)
             }
@@ -1956,9 +1960,9 @@ struct FieldContextHint: View {
             Image(systemName: systemImage)
                 .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(.tertiary)
-            Text(title)
+            Text(L10n.text(title))
                 .font(.headline)
-            Text(message)
+            Text(L10n.text(message))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

@@ -103,6 +103,7 @@ public enum ReferenceSourceResolver {
             let name = $0.name.lowercased()
             return !name.hasPrefix("utm_") && name != "fbclid" && name != "gclid"
         }
+        if components.queryItems?.isEmpty == true { components.queryItems = nil }
         if components.path.count > 1 && components.path.hasSuffix("/") { components.path.removeLast() }
         return components.string ?? trimmed
     }

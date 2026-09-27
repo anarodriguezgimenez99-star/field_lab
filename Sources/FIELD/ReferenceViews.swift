@@ -81,14 +81,14 @@ struct ReferencesView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .contextMenu {
-                                    Button("Editar") { editingReference = reference; isPresentingEditor = true }
-                                    Button(reference.pinned ? "Desfijar" : "Fijar") {
+                                    Button(L10n.text("Editar")) { editingReference = reference; isPresentingEditor = true }
+                                    Button(reference.pinned ? L10n.text("Desfijar") : L10n.text("Fijar")) {
                                         reference.pinned.toggle()
                                         try? appModel.repository.updateReference(reference)
                                         appModel.refresh()
                                     }
                                     Divider()
-                                    Button("Eliminar", role: .destructive) {
+                                    Button(L10n.text("Eliminar"), role: .destructive) {
                                         try? appModel.repository.deleteReference(reference)
                                         if selectedID == reference.id { selectedID = nil }
                                         appModel.refresh()
@@ -117,20 +117,20 @@ struct ReferencesView: View {
             }
         }
         .background(FieldPalette.canvas)
-        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: "Buscar referencias, OCR y etiquetas…")
+        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar referencias, OCR y etiquetas…"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Button("Referencia") { editingReference = nil; isPresentingEditor = true }
-                    Button("Nota") { appModel.presentCapture(kind: .note) }
+                    Button(L10n.text("Referencia")) { editingReference = nil; isPresentingEditor = true }
+                    Button(L10n.text("Nota")) { appModel.presentCapture(kind: .note) }
                 } label: {
-                    Label("Añadir", systemImage: "plus")
+                    Label(L10n.text("Añadir"), systemImage: "plus")
                 }
             }
             #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
                 Button { isShowingSettings = true } label: { Image(systemName: "gearshape") }
-                    .accessibilityLabel("Ajustes")
+                    .accessibilityLabel(L10n.text("Ajustes"))
             }
             #endif
         }
@@ -178,19 +178,19 @@ struct ReferencesView: View {
                 .padding(.bottom, 24)
             }
             .background(FieldPalette.canvas)
-            .navigationTitle("Recopilar")
-            .searchable(text: $appModel.searchText, prompt: "Buscar referencias")
+            .navigationTitle(L10n.text("Recopilar"))
+            .searchable(text: $appModel.searchText, prompt: L10n.text("Buscar referencias"))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Button("Referencia") { editingReference = nil; isPresentingEditor = true }
-                        Button("Nota") { appModel.presentCapture(kind: .note) }
+                        Button(L10n.text("Referencia")) { editingReference = nil; isPresentingEditor = true }
+                        Button(L10n.text("Nota")) { appModel.presentCapture(kind: .note) }
                     } label: { Image(systemName: "plus") }
-                        .accessibilityLabel("Añadir a Recopilar")
+                        .accessibilityLabel(L10n.text("Añadir a Recopilar"))
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button { isShowingSettings = true } label: { Image(systemName: "gearshape") }
-                        .accessibilityLabel("Ajustes")
+                        .accessibilityLabel(L10n.text("Ajustes"))
                 }
             }
             .sheet(isPresented: $isPresentingEditor) {
@@ -228,10 +228,10 @@ struct ReferencesView: View {
 
             Divider().frame(height: 20).padding(.horizontal, 4)
 
-            Picker("Fuente", selection: $selectedSource) {
+            Picker(L10n.text("Fuente"), selection: $selectedSource) {
                 ForEach(sourceNames, id: \.self) { source in
                     let count = source == "Todas las fuentes" ? allReferences.count : allReferences.filter { $0.sourceName == source }.count
-                    Text("\(source)  \(count)").tag(source)
+                    Text("\(L10n.text(source))  \(count)").tag(source)
                 }
             }
             .labelsHidden()
@@ -241,11 +241,11 @@ struct ReferencesView: View {
             Spacer(minLength: 0)
 
             #if os(iOS)
-            Button { isShowingFilters = true } label: { Label("Filtros", systemImage: "line.3.horizontal.decrease.circle") }
+            Button { isShowingFilters = true } label: { Label(L10n.text("Filtros"), systemImage: "line.3.horizontal.decrease.circle") }
                 .buttonStyle(.bordered)
                 .sheet(isPresented: $isShowingFilters) { ReferenceFilterSheet(showUnclassified: $showUnclassified, showPinned: $showPinned) }
             #else
-            Button { isImportingFile = true } label: { Label("Elegir imagen", systemImage: "photo.badge.plus") }
+            Button { isImportingFile = true } label: { Label(L10n.text("Elegir imagen"), systemImage: "photo.badge.plus") }
                 .buttonStyle(.bordered)
             #endif
         }
@@ -256,7 +256,7 @@ struct ReferencesView: View {
 
     private func filterChip(_ title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
+            Text(L10n.text(title))
                 .font(.subheadline.weight(isSelected ? .semibold : .regular))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -341,7 +341,7 @@ struct ReferenceLibraryTile: View {
                     Image(systemName: reference.source.kind == .web ? "link" : "square.and.arrow.down")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
-                    Text(reference.source.name)
+                    Text(L10n.text(reference.source.name))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -362,7 +362,7 @@ struct ReferenceLibraryTile: View {
         }
         .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(reference.title), source \(reference.source.name)")
+        .accessibilityLabel("\(reference.title), \(L10n.text("Fuente")) \(L10n.text(reference.source.name))")
     }
 }
 
@@ -418,21 +418,21 @@ struct ReferenceDetailView: View {
                         Text(reference.title).font(.system(.title, design: .rounded).weight(.semibold))
                         HStack(spacing: 6) {
                             Image(systemName: "link").font(.caption)
-                            Text(reference.source.name).font(.subheadline.weight(.medium))
+                            Text(L10n.text(reference.source.name)).font(.subheadline.weight(.medium))
                             if !reference.sourceDomain.isEmpty { Text("· \(reference.sourceDomain)").font(.subheadline).foregroundStyle(.secondary) }
                         }
                         .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 12)
-                    Button(reference.pinned ? "Desfijar" : "Fijar") {
+                    Button(reference.pinned ? L10n.text("Desfijar") : L10n.text("Fijar")) {
                         reference.pinned.toggle()
                         try? appModel.repository.updateReference(reference)
                         appModel.refresh()
                     }
                     .buttonStyle(.bordered)
-                    Button("Usar en LAB", systemImage: "testtube.2") { isShowingUseInExperiment = true }
+                    Button(L10n.text("Usar en LAB"), systemImage: "testtube.2") { isShowingUseInExperiment = true }
                         .buttonStyle(.bordered)
-                    Button("Editar", action: edit).buttonStyle(.borderedProminent)
+                    Button(L10n.text("Editar"), action: edit).buttonStyle(.borderedProminent)
                 }
 
                 if !reference.userNote.isEmpty {
@@ -441,7 +441,7 @@ struct ReferenceDetailView: View {
 
                 if !reference.sourceURL.isEmpty, let url = URL(string: reference.sourceURL) {
                     DetailSection(title: "Fuente") {
-                        Link(destination: url) { Label("Abrir original", systemImage: "arrow.up.right") }
+                        Link(destination: url) { Label(L10n.text("Abrir original"), systemImage: "arrow.up.right") }
                         Text(reference.sourceURL).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                     }
                 }
@@ -453,7 +453,7 @@ struct ReferenceDetailView: View {
                                 let values = reference.visualAttributes.filter { $0.category == category }
                                 if !values.isEmpty {
                                     HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                        Text(category.displayName.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary).frame(width: 88, alignment: .leading)
+                                        Text(L10n.text(category.displayName).uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary).frame(width: 88, alignment: .leading)
                                         FlowTags(tags: values.map(\.name))
                                     }
                                 }
@@ -468,26 +468,26 @@ struct ReferenceDetailView: View {
 
                 DetailSection(title: "Proyectos") {
                     let projects = appModel.repository.projects(includeArchived: true).filter { reference.projectIDs.contains($0.id) }
-                    if projects.isEmpty { Text("Aún no está conectada a ningún proyecto.").foregroundStyle(.secondary) }
+                    if projects.isEmpty { Text(L10n.text("Aún no está conectada a ningún proyecto.")).foregroundStyle(.secondary) }
                     else { FlowTags(tags: projects.map(\.title)) }
                 }
 
                 DetailSection(title: "Experimentos relacionados") {
                     let experiments = appModel.repository.experiments().filter { $0.referenceIDs.contains(reference.id) }
-                    if experiments.isEmpty { Text("Aún no hay experimentos conectados.").foregroundStyle(.secondary) }
+                    if experiments.isEmpty { Text(L10n.text("Aún no hay experimentos conectados.")).foregroundStyle(.secondary) }
                     else { FlowTags(tags: experiments.map(\.title)) }
                 }
 
                 DetailSection(title: "Herramientas") {
                     let tools = appModel.repository.tools().filter { reference.toolIDs.contains($0.id) }
-                    if tools.isEmpty { Text("Aún no hay metadatos de herramientas.").foregroundStyle(.secondary) }
+                    if tools.isEmpty { Text(L10n.text("Aún no hay metadatos de herramientas.")).foregroundStyle(.secondary) }
                     else { FlowTags(tags: tools.map(\.name)) }
                 }
 
                 DetailSection(title: "Metadatos") {
-                    LabeledContent("Importada", value: reference.importedAt.formatted(date: .abbreviated, time: .shortened))
-                    LabeledContent("Análisis", value: reference.analysisState.rawValue.capitalized)
-                    if let width = reference.imageWidth, let height = reference.imageHeight { LabeledContent("Dimensiones", value: "\(Int(width)) × \(Int(height))") }
+                    LabeledContent(L10n.text("Importada"), value: reference.importedAt.formatted(date: .abbreviated, time: .shortened))
+                    LabeledContent(L10n.text("Análisis"), value: L10n.referenceAnalysisState(reference.analysisState.rawValue))
+                    if let width = reference.imageWidth, let height = reference.imageHeight { LabeledContent(L10n.text("Dimensiones"), value: "\(Int(width)) × \(Int(height))") }
                     if !reference.ocrText.isEmpty { LabeledContent("OCR", value: String(reference.ocrText.prefix(180))) }
                 }
             }
@@ -533,43 +533,43 @@ struct ReferenceEditorView: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(reference == nil ? "Guardar referencia" : "Editar referencia").font(.title2.weight(.semibold))
-                    Text("La clasificación puede esperar. Conserva la fuente y el motivo.").font(.subheadline).foregroundStyle(.secondary)
+                    Text(reference == nil ? L10n.text("Guardar referencia") : L10n.text("Editar referencia")).font(.title2.weight(.semibold))
+                    Text(L10n.text("La clasificación puede esperar. Conserva la fuente y el motivo.")).font(.subheadline).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Cancelar") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button(L10n.text("Cancelar")) { dismiss() }.keyboardShortcut(.cancelAction)
             }
 
             Form {
-                TextField("Título", text: $title)
-                TextField("URL original", text: $urlString)
-                TextField("¿Por qué guardé esto?", text: $note, axis: .vertical).lineLimit(3...6)
-                TextField("Etiquetas", text: $tags, prompt: Text("campaña, verano, luz de producto"))
+                TextField(L10n.text("Título"), text: $title)
+                TextField(L10n.text("URL original"), text: $urlString)
+                TextField(L10n.text("¿Por qué guardé esto?"), text: $note, axis: .vertical).lineLimit(3...6)
+                TextField(L10n.text("Etiquetas"), text: $tags, prompt: Text(L10n.text("campaña, verano, luz de producto")))
 
                 HStack {
-                    Text(imageData == nil ? "No hay imagen adjunta" : "Imagen adjunta").foregroundStyle(.secondary)
+                    Text(imageData == nil ? L10n.text("No hay imagen adjunta") : L10n.text("Imagen adjunta")).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Elegir imagen") { isImportingImage = true }
-                    if imageData != nil { Button("Eliminar", role: .destructive) { imageData = nil } }
+                    Button(L10n.text("Elegir imagen")) { isImportingImage = true }
+                    if imageData != nil { Button(L10n.text("Eliminar"), role: .destructive) { imageData = nil } }
                 }
 
-                Section("Atributos visuales manuales") {
+                Section(L10n.text("Atributos visuales manuales")) {
                     HStack {
-                        Picker("Categoría", selection: $newAttributeCategory) { ForEach(VisualAttributeCategory.allCases, id: \.self) { Text($0.displayName).tag($0) } }
-                        TextField("Añadir atributo", text: $newAttributeName)
-                        Button("Añadir") { addAttribute() }.disabled(newAttributeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        Picker(L10n.text("Categoría"), selection: $newAttributeCategory) { ForEach(VisualAttributeCategory.allCases, id: \.self) { Text(L10n.text($0.displayName)).tag($0) } }
+                        TextField(L10n.text("Añadir atributo"), text: $newAttributeName)
+                        Button(L10n.text("Añadir")) { addAttribute() }.disabled(newAttributeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                     if attributes.isEmpty {
-                        Text("Aún no hay clasificación creativa. Esta referencia aparecerá en Sin clasificar.").font(.caption).foregroundStyle(.secondary)
+                        Text(L10n.text("Aún no hay clasificación creativa. Esta referencia aparecerá en Sin clasificar.")).font(.caption).foregroundStyle(.secondary)
                     } else {
-                        FlowTags(tags: attributes.map { "\($0.category.displayName): \($0.name)" })
-                        Button("Borrar atributos", role: .destructive) { attributes.removeAll() }.font(.caption)
+                        FlowTags(tags: attributes.map { "\(L10n.text($0.category.displayName)): \($0.name)" })
+                        Button(L10n.text("Borrar atributos"), role: .destructive) { attributes.removeAll() }.font(.caption)
                     }
                 }
 
-                Section("Proyectos") {
+                Section(L10n.text("Proyectos")) {
                     let projects = appModel.repository.projects(includeArchived: true)
-                    if projects.isEmpty { Text("Crea primero un proyecto para conectar esta referencia.").font(.caption).foregroundStyle(.secondary) }
+                    if projects.isEmpty { Text(L10n.text("Crea primero un proyecto para conectar esta referencia.")).font(.caption).foregroundStyle(.secondary) }
                     else {
                         ForEach(projects) { project in
                             Toggle(project.title, isOn: Binding(
@@ -586,12 +586,12 @@ struct ReferenceEditorView: View {
             HStack {
                 if !urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     let source = ReferenceSourceResolver.resolve(urlString: urlString)
-                    Label("Fuente detectada: \(source.name)", systemImage: "checkmark.circle")
+                    Label("\(L10n.text("Fuente detectada")): \(L10n.text(source.name))", systemImage: "checkmark.circle")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(reference == nil ? "Guardar en FIELD LAB" : "Guardar cambios") { save() }
+                Button(reference == nil ? L10n.text("Guardar en FIELD LAB") : L10n.text("Guardar cambios")) { save() }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && imageData == nil)
@@ -655,8 +655,8 @@ struct ProjectReferencePicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack { Text("Referencias del proyecto").font(.title2.weight(.semibold)); Spacer(); Button("Hecho") { save(); dismiss() } }
-            Text("Elige referencias existentes. Seguirán siendo elementos compartidos de la biblioteca.").font(.subheadline).foregroundStyle(.secondary)
+            HStack { Text(L10n.text("Referencias del proyecto")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Hecho")) { save(); dismiss() } }
+            Text(L10n.text("Elige referencias existentes. Seguirán siendo elementos compartidos de la biblioteca.")).font(.subheadline).foregroundStyle(.secondary)
             List(appModel.repository.references()) { reference in
                 Toggle(isOn: Binding(
                     get: { selectedIDs.contains(reference.id) },
@@ -664,7 +664,7 @@ struct ProjectReferencePicker: View {
                 )) {
                     HStack(spacing: 10) {
                         ReferenceImageView(data: reference.thumbnailData ?? reference.imageData).frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: 7))
-                        VStack(alignment: .leading) { Text(reference.title).lineLimit(1); Text(reference.source.name).font(.caption).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading) { Text(reference.title).lineLimit(1); Text(L10n.text(reference.source.name)).font(.caption).foregroundStyle(.secondary) }
                     }
                 }
             }
@@ -691,11 +691,11 @@ struct ReferenceFilterSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Toggle("Sin clasificar", isOn: $showUnclassified)
-                Toggle("Fijadas", isOn: $showPinned)
+                Toggle(L10n.text("Sin clasificar"), isOn: $showUnclassified)
+                Toggle(L10n.text("Fijadas"), isOn: $showPinned)
             }
-            .navigationTitle("Filtros")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Hecho") { dismiss() } } }
+            .navigationTitle(L10n.text("Filtros"))
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Hecho")) { dismiss() } } }
         }
     }
 }

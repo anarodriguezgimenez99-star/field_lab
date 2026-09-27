@@ -28,7 +28,7 @@ struct LabView: View {
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 } else {
-                    Section("Recent Experiments") {
+                    Section(L10n.text("Recent Experiments")) {
                         ForEach(experiments) { experiment in
                             NavigationLink(value: experiment.id) {
                                 ExperimentRow(experiment: experiment, appModel: appModel)
@@ -37,13 +37,13 @@ struct LabView: View {
                     }
                 }
             }
-            .navigationTitle("LAB")
+            .navigationTitle(L10n.text("LAB"))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { isPresentingNewExperiment = true } label: { Label("New Experiment", systemImage: "plus") }
+                    Button { isPresentingNewExperiment = true } label: { Label(L10n.text("New Experiment"), systemImage: "plus") }
                 }
             }
-            .searchable(text: $appModel.searchText, prompt: "Search experiments")
+            .searchable(text: $appModel.searchText, prompt: L10n.text("Search experiments"))
             .navigationDestination(for: UUID.self) { id in
                 if let experiment = experiments.first(where: { $0.id == id }) {
                     ExperimentWorkspaceView(appModel: appModel, experiment: experiment)
@@ -75,12 +75,12 @@ struct LabView: View {
             } else {
                 HSplitView {
                     List(selection: $selectedID) {
-                        Section("Recent Experiments") {
+                        Section(L10n.text("Recent Experiments")) {
                             ForEach(experiments) { experiment in
                                 ExperimentRow(experiment: experiment, appModel: appModel)
                                     .tag(experiment.id)
                                     .contextMenu {
-                                        Button("Delete", role: .destructive) {
+                                        Button(L10n.text("Delete"), role: .destructive) {
                                             try? appModel.repository.deleteExperiment(experiment)
                                             if selectedID == experiment.id { selectedID = nil }
                                             appModel.refresh()
@@ -103,7 +103,7 @@ struct LabView: View {
             }
         }
         .background(FieldPalette.canvas)
-        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: "Search experiments")
+        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Search experiments"))
         .onAppear {
             if selectedID == nil {
                 selectedID = experiments.first(where: { $0.status != .archived })?.id ?? experiments.first?.id
@@ -122,35 +122,35 @@ struct LabEmptyState: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("LAB")
+            Text(L10n.text("LAB"))
                 .font(.system(.largeTitle, design: .rounded).weight(.semibold))
-            Text("Test, compare and document what works.")
+            Text(L10n.text("Test, compare and document what works."))
                 .font(.title3)
-            Text("Build a visual workbench from references, a prompt, a tool and the settings that matter. Each Run stays reproducible while you learn.")
+            Text(L10n.text("Build a visual workbench from references, a prompt, a tool and the settings that matter. Each Run stays reproducible while you learn."))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 500, alignment: .leading)
-            Button("New Experiment", action: action)
+            Button(L10n.text("New Experiment"), action: action)
                 .buttonStyle(.borderedProminent)
                 .tint(FieldPalette.accent)
                 .keyboardShortcut(.defaultAction)
                 .padding(.top, 4)
 
             HStack(spacing: 8) {
-                Text("INGREDIENTS")
+                Text(L10n.text("INGREDIENTS"))
                 Image(systemName: "arrow.right")
-                Text("RUNS")
+                Text(L10n.text("RUNS"))
                 Image(systemName: "arrow.right")
-                Text("COMPARE")
+                Text(L10n.text("COMPARE"))
                 Image(systemName: "arrow.right")
-                Text("LEARN")
+                Text(L10n.text("LEARN"))
             }
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
             .padding(.top, 18)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text("Recent Experiments").font(.headline)
-                Text("Your documented Runs will appear here.").font(.subheadline).foregroundStyle(.secondary)
+                Text(L10n.text("Recent Experiments")).font(.headline)
+                Text(L10n.text("Your documented Runs will appear here.")).font(.subheadline).foregroundStyle(.secondary)
             }
             .padding(.top, 22)
         }
@@ -174,7 +174,7 @@ struct ExperimentRow: View {
                 HStack {
                     Text(experiment.title).font(.headline).lineLimit(1)
                     Spacer()
-                    Text(runCount == 0 ? "Setup" : "(runCount) run\(runCount == 1 ? "" : "s")")
+                    Text(runCount == 0 ? L10n.text("Setup") : L10n.pluralized(runCount, singular: "run", plural: "runs"))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
@@ -210,33 +210,33 @@ struct ExperimentEditorView: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("New Experiment").font(.title2.weight(.semibold))
-                    Text("Start with a question, or load a Recipe as a starting point.").foregroundStyle(.secondary)
+                    Text(L10n.text("New Experiment")).font(.title2.weight(.semibold))
+                    Text(L10n.text("Start with a question, or load a Recipe as a starting point.")).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button(L10n.text("Cancel")) { dismiss() }.keyboardShortcut(.cancelAction)
             }
 
             Form {
-                TextField("Experiment title", text: $title)
-                TextField("What am I trying to learn?", text: $goal, axis: .vertical).lineLimit(2...4)
-                Picker("Starting tool", selection: $selectedToolID) {
-                    Text("Choose later").tag(Optional<UUID>.none)
+                TextField(L10n.text("Experiment title"), text: $title)
+                TextField(L10n.text("What am I trying to learn?"), text: $goal, axis: .vertical).lineLimit(2...4)
+                Picker(L10n.text("Starting tool"), selection: $selectedToolID) {
+                    Text(L10n.text("Choose later")).tag(Optional<UUID>.none)
                     ForEach(appModel.repository.tools()) { Text($0.name).tag(Optional($0.id)) }
                 }
-                Picker("Start from Recipe", selection: $selectedRecipeID) {
-                    Text("Blank setup").tag(Optional<UUID>.none)
+                Picker(L10n.text("Start from Recipe"), selection: $selectedRecipeID) {
+                    Text(L10n.text("Blank setup")).tag(Optional<UUID>.none)
                     ForEach(recipes) { Text($0.title).tag(Optional($0.id)) }
                 }
-                Picker("Project", selection: $selectedProjectID) {
-                    Text("No project").tag(Optional<UUID>.none)
+                Picker(L10n.text("Project"), selection: $selectedProjectID) {
+                    Text(L10n.text("No project")).tag(Optional<UUID>.none)
                     ForEach(appModel.repository.projects(includeArchived: true)) { Text($0.title).tag(Optional($0.id)) }
                 }
             }
 
             HStack {
                 Spacer()
-                Button("Create Experiment") { create() }
+                Button(L10n.text("Create Experiment")) { create() }
                     .buttonStyle(.borderedProminent)
                     .tint(FieldPalette.accent)
                     .keyboardShortcut(.defaultAction)
@@ -321,7 +321,7 @@ struct ExperimentWorkspaceView: View {
         VStack(spacing: 0) {
             workbenchHeader
             Divider()
-            Picker("Workbench mode", selection: $mode) {
+            Picker(L10n.text("Workbench mode"), selection: $mode) {
                 ForEach(WorkbenchMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
@@ -404,21 +404,21 @@ struct ExperimentWorkspaceView: View {
             VStack(alignment: .leading, spacing: 7) {
                 Text(experiment.title)
                     .font(.system(.largeTitle, design: .rounded).weight(.semibold))
-                Text(experiment.goal.isEmpty ? "What am I trying to learn?" : experiment.goal)
+                Text(experiment.goal.isEmpty ? L10n.text("What am I trying to learn?") : experiment.goal)
                     .font(.title3)
                     .foregroundStyle(experiment.goal.isEmpty ? .secondary : .primary)
             }
             Spacer()
             Menu {
                 ForEach(ExperimentStatus.allCases, id: \.self) { status in
-                    Button(status.displayName) {
+                    Button(L10n.text(status.displayName)) {
                         experiment.status = status
                         try? appModel.repository.updateExperiment(experiment)
                         refresh()
                     }
                 }
             } label: {
-                Label(experiment.status.displayName, systemImage: "chevron.up.chevron.down")
+                Label(L10n.text(experiment.status.displayName), systemImage: "chevron.up.chevron.down")
             }
             .buttonStyle(.bordered)
         }
@@ -433,7 +433,7 @@ struct ExperimentWorkspaceView: View {
             if mode == .build {
                 ingredients
                 if duplicateNotice {
-                    Label("Setup copied from the selected Run. Change one ingredient, then create a new Run.", systemImage: "arrow.triangle.branch")
+                    Label(L10n.text("Setup copied from the selected Run. Change one ingredient, then create a new Run."), systemImage: "arrow.triangle.branch")
                         .font(.caption)
                         .foregroundStyle(.tint)
                 }
@@ -462,16 +462,16 @@ struct ExperimentWorkspaceView: View {
                             }
                     }
                     Button { isShowingReferencePicker = true } label: {
-                        Label("Add reference", systemImage: "plus")
+                        Label(L10n.text("Add reference"), systemImage: "plus")
                             .frame(width: 88, height: 72)
                             .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.tint)
-                    Button("Import", systemImage: "square.and.arrow.down") { isShowingReferenceImporter = true }.buttonStyle(.bordered)
-                    Button("Paste", systemImage: "doc.on.clipboard") { pasteReference() }.buttonStyle(.bordered)
+                    Button(L10n.text("Import"), systemImage: "square.and.arrow.down") { isShowingReferenceImporter = true }.buttonStyle(.bordered)
+                    Button(L10n.text("Paste"), systemImage: "doc.on.clipboard") { pasteReference() }.buttonStyle(.bordered)
                 }
-                if references.isEmpty { Text("Browse Collect, drag images here, or add an existing reference.").font(.subheadline).foregroundStyle(.secondary) }
+                if references.isEmpty { Text(L10n.text("Browse Collect, drag images here, or add an existing reference.")).font(.subheadline).foregroundStyle(.secondary) }
             }
             .onDrop(of: [UTType.image.identifier], isTargeted: nil) { providers in
                 guard let provider = providers.first else { return false }
@@ -488,33 +488,33 @@ struct ExperimentWorkspaceView: View {
                     .padding(10)
                     .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 HStack(spacing: 8) {
-                    Button("+ Block") { isShowingBlockPicker = true }.buttonStyle(.bordered)
-                    if !selectedPromptBlockIDs.isEmpty { Text("\(selectedPromptBlockIDs.count) block\(selectedPromptBlockIDs.count == 1 ? "" : "s") inserted").font(.caption).foregroundStyle(.secondary) }
+                    Button(L10n.text("+ Block")) { isShowingBlockPicker = true }.buttonStyle(.bordered)
+                    if !selectedPromptBlockIDs.isEmpty { Text(L10n.blockInsertion(selectedPromptBlockIDs.count)).font(.caption).foregroundStyle(.secondary) }
                     Spacer()
-                    Button("Copy Prompt", systemImage: "doc.on.doc") { copyToClipboard(prompt) }.buttonStyle(.bordered)
+                    Button(L10n.text("Copy Prompt"), systemImage: "doc.on.doc") { copyToClipboard(prompt) }.buttonStyle(.bordered)
                 }
             }
 
             WorkbenchSection(title: "TOOL", systemImage: "wrench.and.screwdriver") {
                 HStack(spacing: 10) {
-                    Picker("Tool", selection: $selectedToolID) {
-                        Text("Choose a tool").tag(Optional<UUID>.none)
+                    Picker(L10n.text("Tool"), selection: $selectedToolID) {
+                        Text(L10n.text("Choose a tool")).tag(Optional<UUID>.none)
                         ForEach(appModel.repository.tools()) { Text($0.name).tag(Optional($0.id)) }
                     }
                     .labelsHidden()
                     .frame(maxWidth: 240)
-                    Button("+ Add Tool") { isShowingToolCreator = true }.buttonStyle(.bordered)
-                    Button("Presets") { isShowingPresetPicker = true }.buttonStyle(.bordered).disabled(selectedToolID == nil)
-                    Button("Save Preset") { isShowingPresetCreator = true }.buttonStyle(.bordered).disabled(selectedToolID == nil)
+                    Button(L10n.text("+ Add Tool")) { isShowingToolCreator = true }.buttonStyle(.bordered)
+                    Button(L10n.text("Presets")) { isShowingPresetPicker = true }.buttonStyle(.bordered).disabled(selectedToolID == nil)
+                    Button(L10n.text("Save Preset")) { isShowingPresetCreator = true }.buttonStyle(.bordered).disabled(selectedToolID == nil)
                 }
                 HStack(spacing: 12) {
-                    TextField("Model", text: $model)
-                    Text("External")
+                    TextField(L10n.text("Model"), text: $model)
+                    Text(L10n.text("External"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .frame(width: 100, alignment: .leading)
                 }
-                if let selectedTool { Text(selectedTool.websiteURL.isEmpty ? "External workflow · copy prompt, open the tool, then bring the result back." : selectedTool.websiteURL).font(.caption).foregroundStyle(.secondary) }
+                if let selectedTool { Text(selectedTool.websiteURL.isEmpty ? L10n.text("External workflow · copy prompt, open the tool, then bring the result back.") : selectedTool.websiteURL).font(.caption).foregroundStyle(.secondary) }
             }
 
             WorkbenchSection(title: "SETTINGS", systemImage: "slider.horizontal.3") {
@@ -522,7 +522,7 @@ struct ExperimentWorkspaceView: View {
                     ForEach($settings) { $setting in
                         SettingEntryRow(setting: $setting) { settings.removeAll { $0.id == setting.id }; persistSetup() }
                     }
-                    Button("+ Add Setting", systemImage: "plus") {
+                    Button(L10n.text("+ Add Setting"), systemImage: "plus") {
                         settings.append(SettingEntry(key: "", value: ""))
                         persistSetup()
                     }
@@ -542,7 +542,7 @@ struct ExperimentWorkspaceView: View {
                 }
             }
 
-            Button("Create Run", systemImage: "play.fill") { createRun() }
+            Button(L10n.text("Create Run"), systemImage: "play.fill") { createRun() }
                 .buttonStyle(.borderedProminent)
                 .tint(FieldPalette.accent)
                 .controlSize(.large)
@@ -552,9 +552,9 @@ struct ExperimentWorkspaceView: View {
 
     private var runsSection: some View {
         VStack(alignment: .leading, spacing: 15) {
-            WorkbenchSectionTitle(title: "RUNS", detail: runs.isEmpty ? "No snapshots yet" : "\(runs.count) immutable setup snapshot\(runs.count == 1 ? "" : "s")")
+            WorkbenchSectionTitle(title: "RUNS", detail: runs.isEmpty ? L10n.text("No snapshots yet") : L10n.snapshotCount(runs.count))
             if runs.isEmpty {
-                Text("Create a Run when the setup is ready. It keeps its own prompt, references, tool and settings.")
+                Text(L10n.text("Create a Run when the setup is ready. It keeps its own prompt, references, tool and settings."))
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 8)
             } else {
@@ -577,7 +577,7 @@ struct ExperimentWorkspaceView: View {
                     if run.outputData == nil {
                         VStack(spacing: 6) {
                             Image(systemName: "arrow.down.to.line.compact").font(.title3)
-                            Text("DROP RESULT HERE").font(.caption.weight(.semibold))
+                            Text(L10n.text("DROP RESULT HERE")).font(.caption.weight(.semibold))
                         }
                         .foregroundStyle(.secondary)
                     }
@@ -588,20 +588,20 @@ struct ExperimentWorkspaceView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 HStack(alignment: .firstTextBaseline) {
-                    Text(run.title.isEmpty ? "Run \(run.order)" : run.title).font(.headline)
+                    Text(run.title.isEmpty ? L10n.runName(run.order) : run.title).font(.headline)
                     Spacer()
                     if run.evaluation == .best { Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint) }
                 }
                 HStack(spacing: 6) {
-                    Text(run.snapshotToolName.isEmpty ? "No tool" : run.snapshotToolName)
+                    Text(run.snapshotToolName.isEmpty ? L10n.text("No tool") : run.snapshotToolName)
                     if !run.model.isEmpty { Text("· \(run.model)") }
-                    Text("· \(run.evaluation.displayName)")
+                    Text("· \(L10n.text(run.evaluation.displayName))")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 if let parentID = run.parentRunID, let parent = runs.first(where: { $0.id == parentID }) {
                     let delta = appModel.repository.runDelta(from: parent, to: run)
-                    Text(delta.isEmpty ? "Duplicated from \(parent.title)" : "Changed from \(parent.title) · \(delta.count) change\(delta.count == 1 ? "" : "s")")
+                    Text(delta.isEmpty ? "\(L10n.text("Duplicated from")) \(parent.title)" : "\(L10n.text("Changed from")) \(parent.title) · \(L10n.pluralized(delta.count, singular: "change", plural: "changes"))")
                         .font(.caption2)
                         .foregroundStyle(.tint)
                 }
@@ -611,7 +611,7 @@ struct ExperimentWorkspaceView: View {
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(selectedRunID == run.id ? Color.accentColor.opacity(0.7) : Color.white.opacity(0.07), lineWidth: 1))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(run.title), \(run.evaluation.displayName)")
+        .accessibilityLabel("\(run.title), \(L10n.text(run.evaluation.displayName))")
     }
 
     private var compareSection: some View {
@@ -626,7 +626,7 @@ struct ExperimentWorkspaceView: View {
                     }
                 }
             } else {
-                Text("Compare becomes available after two Runs have results.").foregroundStyle(.secondary)
+                Text(L10n.text("Compare becomes available after two Runs have results.")).foregroundStyle(.secondary)
             }
         }
     }
@@ -641,15 +641,15 @@ struct ExperimentWorkspaceView: View {
                 .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .onChange(of: conclusion) { _, value in experiment.conclusion = value; try? appModel.repository.updateExperiment(experiment) }
             HStack(spacing: 10) {
-                Button("Save as Learning", systemImage: "lightbulb") { saveLearning() }
+                Button(L10n.text("Save as Learning"), systemImage: "lightbulb") { saveLearning() }
                     .buttonStyle(.borderedProminent)
                     .tint(FieldPalette.accent)
                     .disabled(conclusion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                Button("Save Best Run as Recipe", systemImage: "bookmark") { saveRecipe() }
+                Button(L10n.text("Save Best Run as Recipe"), systemImage: "bookmark") { saveRecipe() }
                     .buttonStyle(.bordered)
                     .disabled(experiment.bestRunID == nil)
-                if savedLearning { Label("Saved to Learn", systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.caption) }
-                if savedRecipe { Label("Recipe saved", systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.caption) }
+                if savedLearning { Label(L10n.text("Saved to Learn"), systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.caption) }
+                if savedRecipe { Label(L10n.text("Recipe saved"), systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.caption) }
             }
         }
     }
@@ -733,8 +733,8 @@ struct WorkbenchSectionTitle: View {
     let detail: String
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(title).font(.caption.weight(.bold)).tracking(1.2)
-            Text(detail).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.text(title)).font(.caption.weight(.bold)).tracking(1.2)
+            Text(L10n.text(detail)).font(.caption).foregroundStyle(.secondary)
             Spacer()
         }
         .foregroundStyle(.primary)
@@ -750,7 +750,7 @@ struct WorkbenchSection<Content: View>: View {
         VStack(alignment: .leading, spacing: 11) {
             HStack(spacing: 7) {
                 Image(systemName: systemImage).foregroundStyle(.tint)
-                Text(title).font(.subheadline.weight(.semibold))
+                Text(L10n.text(title)).font(.subheadline.weight(.semibold))
             }
             content()
         }
@@ -764,15 +764,15 @@ struct SettingEntryRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            TextField("Key", text: $setting.key)
-            TextField("Value", text: $setting.value)
-            TextField("Unit", text: Binding(get: { setting.unit ?? "" }, set: { setting.unit = $0.isEmpty ? nil : $0 }))
+            TextField(L10n.text("Key"), text: $setting.key)
+            TextField(L10n.text("Value"), text: $setting.value)
+            TextField(L10n.text("Unit"), text: Binding(get: { setting.unit ?? "" }, set: { setting.unit = $0.isEmpty ? nil : $0 }))
                 .frame(width: 90)
-            Button("Remove", systemImage: "minus.circle") { remove() }
+            Button(L10n.text("Remove"), systemImage: "minus.circle") { remove() }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                .accessibilityLabel("Remove setting")
+                .accessibilityLabel(L10n.text("Remove setting"))
         }
         .onChange(of: setting) { _, _ in }
     }
@@ -787,11 +787,11 @@ struct ExperimentReferencePickerView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("REFERENCES").font(.title2.weight(.semibold))
-                    Text("Reuse existing Collect entities. Nothing is duplicated.").foregroundStyle(.secondary)
+                    Text(L10n.text("REFERENCES")).font(.title2.weight(.semibold))
+                    Text(L10n.text("Reuse existing Collect entities. Nothing is duplicated.")).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Done") { dismiss() }.buttonStyle(.borderedProminent)
+                Button(L10n.text("Done")) { dismiss() }.buttonStyle(.borderedProminent)
             }
             if appModel.repository.references().isEmpty {
                 FieldEmptyState(systemImage: "photo.on.rectangle", title: "No references yet", message: "Save visual material in Collect first.", actionTitle: nil, action: nil)
@@ -807,7 +807,7 @@ struct ExperimentReferencePickerView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                             VStack(alignment: .leading) {
                                 Text(reference.title).lineLimit(1)
-                                Text(reference.source.name).font(.caption).foregroundStyle(.secondary)
+                                Text(L10n.text(reference.source.name)).font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -830,11 +830,11 @@ struct PromptBlockPicker: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Insert from Learn").font(.title2.weight(.semibold))
-                    Text("Choose Prompt Blocks to include in this setup.").foregroundStyle(.secondary)
+                    Text(L10n.text("Insert from Learn")).font(.title2.weight(.semibold))
+                    Text(L10n.text("Choose Prompt Blocks to include in this setup.")).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Done") { dismiss() }.buttonStyle(.borderedProminent)
+                Button(L10n.text("Done")) { dismiss() }.buttonStyle(.borderedProminent)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 9) {
@@ -850,12 +850,12 @@ struct PromptBlockPicker: View {
                                             Text(block.body).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                                         }
                                     }
-                                    Button("Insert") { selectedIDs.insert(block.id); onInsert(block) }.buttonStyle(.bordered)
+                                    Button(L10n.text("Insert")) { selectedIDs.insert(block.id); onInsert(block) }.buttonStyle(.bordered)
                                 }
                             }
                         }
                     }
-                    if appModel.repository.knowledge(kind: .promptBlock).isEmpty { Text("Create Prompt Blocks in Learn first.").foregroundStyle(.secondary) }
+                    if appModel.repository.knowledge(kind: .promptBlock).isEmpty { Text(L10n.text("Create Prompt Blocks in Learn first.")).foregroundStyle(.secondary) }
                 }
             }
         }
@@ -895,23 +895,23 @@ struct RunInspectorView: View {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(run.title.isEmpty ? "Run \(run.order)" : run.title).font(.title3.weight(.semibold))
-                        Text("Snapshot · \(run.createdAt.formatted(date: .abbreviated, time: .shortened))").font(.caption).foregroundStyle(.secondary)
+                        Text(run.title.isEmpty ? L10n.runName(run.order) : run.title).font(.title3.weight(.semibold))
+                        Text("\(L10n.text("Snapshot")) · \(run.createdAt.formatted(date: .abbreviated, time: .shortened))").font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     if isBest { Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint) }
                 }
 
                 VStack(alignment: .leading, spacing: 9) {
-                    Text("RESULT").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                    Text(L10n.text("RESULT")).font(.caption.weight(.bold)).foregroundStyle(.secondary)
                     ZStack {
                         ReferenceImageView(data: run.outputData)
                         if run.outputData == nil {
                             VStack(spacing: 8) {
-                                Text("DROP RESULT HERE").font(.caption.weight(.bold))
+                                Text(L10n.text("DROP RESULT HERE")).font(.caption.weight(.bold))
                                 HStack(spacing: 8) {
-                                    Button("Add Result") { isImportingImage = true }.buttonStyle(.bordered)
-                                    Button("Paste") { attach(data: clipboardImageData()) }.buttonStyle(.bordered)
+                                    Button(L10n.text("Add Result")) { isImportingImage = true }.buttonStyle(.bordered)
+                                    Button(L10n.text("Paste")) { attach(data: clipboardImageData()) }.buttonStyle(.bordered)
                                 }
                             }
                         }
@@ -923,15 +923,15 @@ struct RunInspectorView: View {
                     .onDrop(of: [UTType.image.identifier, UTType.fileURL.identifier], isTargeted: nil) { providers in
                         loadDrop(providers)
                     }
-                    if run.outputData != nil { Button("Replace Result") { isImportingImage = true }.buttonStyle(.bordered) }
+                    if run.outputData != nil { Button(L10n.text("Replace Result")) { isImportingImage = true }.buttonStyle(.bordered) }
                 }
 
-                LabeledContent("Tool", value: run.snapshotToolName.isEmpty ? "No tool" : run.snapshotToolName)
-                LabeledContent("Model", value: run.model.isEmpty ? "Not defined" : run.model)
-                LabeledContent("References", value: "\(run.inputReferenceIDs.count)")
+                LabeledContent(L10n.text("Tool"), value: run.snapshotToolName.isEmpty ? L10n.text("No tool") : run.snapshotToolName)
+                LabeledContent(L10n.text("Model"), value: run.model.isEmpty ? L10n.text("Not defined") : run.model)
+                LabeledContent(L10n.text("References"), value: "\(run.inputReferenceIDs.count)")
                 if !run.settingsEntries.isEmpty {
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("SETTINGS SNAPSHOT").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                        Text(L10n.text("SETTINGS SNAPSHOT")).font(.caption.weight(.bold)).foregroundStyle(.secondary)
                         ForEach(run.settingsEntries) { setting in
                             HStack { Text(setting.key).foregroundStyle(.secondary); Spacer(); Text(setting.value) }
                                 .font(.subheadline)
@@ -940,27 +940,27 @@ struct RunInspectorView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("STATUS").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                    Picker("Status", selection: $status) { ForEach(ExperimentRunStatus.allCases, id: \.self) { Text($0.displayName).tag($0) } }
-                    Picker("Evaluation", selection: $evaluation) { ForEach(ExperimentRunEvaluation.allCases, id: \.self) { Text($0.displayName).tag($0) } }
+                    Text(L10n.text("STATUS")).font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                    Picker(L10n.text("Status"), selection: $status) { ForEach(ExperimentRunStatus.allCases, id: \.self) { Text(L10n.text($0.displayName)).tag($0) } }
+                    Picker(L10n.text("Evaluation"), selection: $evaluation) { ForEach(ExperimentRunEvaluation.allCases, id: \.self) { Text(L10n.text($0.displayName)).tag($0) } }
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("OBSERVATION").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                    Text(L10n.text("OBSERVATION")).font(.caption.weight(.bold)).foregroundStyle(.secondary)
                     TextEditor(text: $observation).frame(minHeight: 110).scrollContentBackground(.hidden).padding(8).background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
 
                 VStack(spacing: 8) {
-                    Button("Copy Prompt & Open \(run.snapshotToolName.isEmpty ? "Tool" : run.snapshotToolName)", systemImage: "arrow.up.right") {
+                    Button("\(L10n.text("Copy Prompt & Open")) \(L10n.text(run.snapshotToolName.isEmpty ? "Tool" : run.snapshotToolName))", systemImage: "arrow.up.right") {
                         copyToClipboard(run.prompt)
                         if let url = URL(string: run.snapshotToolWebsiteURL), !run.snapshotToolWebsiteURL.isEmpty { openURL(url) }
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(FieldPalette.accent)
                     .frame(maxWidth: .infinity)
-                    Button("Save Run Changes") { save() }.buttonStyle(.bordered).frame(maxWidth: .infinity)
-                    Button("Duplicate Run to Ingredients", systemImage: "plus.square.on.square") { onDuplicate() }.buttonStyle(.bordered).frame(maxWidth: .infinity)
-                    if run.outputData != nil && !isBest { Button("Select Best Result", systemImage: "checkmark.seal") { save(); onSelectBest() }.buttonStyle(.bordered).frame(maxWidth: .infinity) }
+                    Button(L10n.text("Save Run Changes")) { save() }.buttonStyle(.bordered).frame(maxWidth: .infinity)
+                    Button(L10n.text("Duplicate Run to Ingredients"), systemImage: "plus.square.on.square") { onDuplicate() }.buttonStyle(.bordered).frame(maxWidth: .infinity)
+                    if run.outputData != nil && !isBest { Button(L10n.text("Select Best Result"), systemImage: "checkmark.seal") { save(); onSelectBest() }.buttonStyle(.bordered).frame(maxWidth: .infinity) }
                 }
             }
             .padding(22)
@@ -1022,11 +1022,11 @@ struct CompareRunColumn: View {
                 Text(run.title).font(.headline)
                 if isBest { Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint) }
             }
-            Text([run.snapshotToolName, run.model].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
-            if !run.settingsEntries.isEmpty { Text(run.settingsEntries.map { "\($0.key): \($0.value)" }.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
+            Text([run.snapshotToolName, run.model].filter { !$0.isEmpty }.joined(separator: L10n.text(" · "))).font(.caption).foregroundStyle(.secondary)
+            if !run.settingsEntries.isEmpty { Text(run.settingsEntries.map { "\($0.key): \($0.value)" }.joined(separator: L10n.text(" · "))).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
             if !run.observation.isEmpty { Text(run.observation).font(.caption).foregroundStyle(.secondary).lineLimit(4) }
-            Text(run.evaluation.displayName).font(.caption.weight(.medium)).foregroundStyle(isBest ? .tint : .secondary)
-            Button(isBest ? "Best Result" : "Select Best Result", action: selectBest).buttonStyle(.bordered)
+            Text(L10n.text(run.evaluation.displayName)).font(.caption.weight(.medium)).foregroundStyle(isBest ? Color.accentColor : Color.secondary)
+            Button(isBest ? L10n.text("Best Result") : L10n.text("Select Best Result"), action: selectBest).buttonStyle(.bordered)
         }
         .frame(width: 250, alignment: .leading)
     }
@@ -1036,8 +1036,8 @@ struct InspectorEmptyState: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Image(systemName: "sidebar.right").font(.title2).foregroundStyle(.tint)
-            Text("Select a Run").font(.headline)
-            Text("Its result, snapshot settings, status, evaluation and observation will appear here.").font(.subheadline).foregroundStyle(.secondary)
+            Text(L10n.text("Select a Run")).font(.headline)
+            Text(L10n.text("Its result, snapshot settings, status, evaluation and observation will appear here.")).font(.subheadline).foregroundStyle(.secondary)
         }
         .padding(28)
     }
@@ -1053,12 +1053,12 @@ struct ToolCreatorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Add Tool").font(.title2.weight(.semibold))
-            TextField("Name", text: $name)
-            TextField("Category", text: $category)
-            TextField("Website / launch URL", text: $websiteURL)
+            Text(L10n.text("Add Tool")).font(.title2.weight(.semibold))
+            TextField(L10n.text("Name"), text: $name)
+            TextField(L10n.text("Category"), text: $category)
+            TextField(L10n.text("Website / launch URL"), text: $websiteURL)
             Spacer()
-            HStack { Spacer(); Button("Cancel") { dismiss() }; Button("Add Tool") { create() }.buttonStyle(.borderedProminent).tint(FieldPalette.accent).disabled(name.isEmpty) }
+            HStack { Spacer(); Button(L10n.text("Cancel")) { dismiss() }; Button(L10n.text("Add Tool")) { create() }.buttonStyle(.borderedProminent).tint(FieldPalette.accent).disabled(name.isEmpty) }
         }
         .padding(24)
     }
@@ -1079,14 +1079,14 @@ struct PresetPickerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack { Text("Tool Presets").font(.title2.weight(.semibold)); Spacer(); Button("Done") { dismiss() } }
+            HStack { Text(L10n.text("Tool Presets")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Done")) { dismiss() } }
             if appModel.repository.toolPresets(toolID: toolID).isEmpty {
-                Text("No presets saved for this tool yet.").foregroundStyle(.secondary)
+                Text(L10n.text("No presets saved for this tool yet.")).foregroundStyle(.secondary)
                 Spacer()
             } else {
                 List(appModel.repository.toolPresets(toolID: toolID)) { preset in
                     Button { onSelect(preset); dismiss() } label: {
-                        VStack(alignment: .leading) { Text(preset.name); Text([preset.model, preset.settings.map { "\($0.key): \($0.value)" }.joined(separator: " · ")].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading) { Text(preset.name); Text([preset.model, preset.settings.map { "\($0.key): \($0.value)" }.joined(separator: L10n.text(" · "))].filter { !$0.isEmpty }.joined(separator: L10n.text(" · "))).font(.caption).foregroundStyle(.secondary) }
                     }.buttonStyle(.plain)
                 }
             }
@@ -1104,15 +1104,15 @@ struct ToolPresetCreatorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Save Tool Preset").font(.title2.weight(.semibold))
-            Text("Save the current model and settings for reuse.").foregroundStyle(.secondary)
-            TextField("Preset name", text: $name)
+            Text(L10n.text("Save Tool Preset")).font(.title2.weight(.semibold))
+            Text(L10n.text("Save the current model and settings for reuse.")).foregroundStyle(.secondary)
+            TextField(L10n.text("Preset name"), text: $name)
             VStack(alignment: .leading, spacing: 5) {
-                if !model.isEmpty { Text("Model · \(model)").font(.subheadline) }
+                if !model.isEmpty { Text("\(L10n.text("Model")) · \(model)").font(.subheadline) }
                 ForEach(settings) { setting in Text("\(setting.key) · \(setting.value)").font(.caption).foregroundStyle(.secondary) }
             }
             Spacer()
-            HStack { Spacer(); Button("Cancel") { dismiss() }; Button("Save Preset") { save() }.buttonStyle(.borderedProminent).tint(FieldPalette.accent).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
+            HStack { Spacer(); Button(L10n.text("Cancel")) { dismiss() }; Button(L10n.text("Save Preset")) { save() }.buttonStyle(.borderedProminent).tint(FieldPalette.accent).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
         }
         .padding(24)
     }
@@ -1137,17 +1137,17 @@ struct ReferenceUseInExperimentSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Use in Experiment").font(.title2.weight(.semibold))
-            Text("Reuse \"\(reference.title)\" in an existing setup or start a new one.").foregroundStyle(.secondary)
-            Picker("Existing Experiment", selection: $selectedExperimentID) {
-                Text("Choose later").tag(Optional<UUID>.none)
+            Text(L10n.text("Use in Experiment")).font(.title2.weight(.semibold))
+            Text(L10n.reuseReferencePrompt(reference.title)).foregroundStyle(.secondary)
+            Picker(L10n.text("Existing Experiment"), selection: $selectedExperimentID) {
+                Text(L10n.text("Choose later")).tag(Optional<UUID>.none)
                 ForEach(appModel.repository.experiments()) { Text($0.title).tag(Optional($0.id)) }
             }
             if selectedExperimentID == nil {
-                TextField("New experiment title", text: $title)
+                TextField(L10n.text("New experiment title"), text: $title)
             }
             Spacer()
-            HStack { Spacer(); Button("Cancel") { dismiss() }; Button("Use in Lab") { save() }.buttonStyle(.borderedProminent).tint(FieldPalette.accent) }
+            HStack { Spacer(); Button(L10n.text("Cancel")) { dismiss() }; Button(L10n.text("Use in Lab")) { save() }.buttonStyle(.borderedProminent).tint(FieldPalette.accent) }
         }
         .padding(24)
     }
@@ -1193,7 +1193,7 @@ struct LearnView: View {
             #if os(macOS)
             FieldPageHeader(title: "Learn", subtitle: "Keep the techniques and recipes worth reusing.", count: items.count, actionTitle: "Add", actionSystemImage: "plus") { isPresentingEditor = true }
             #endif
-            Picker("Knowledge type", selection: $filter) { ForEach(LearnFilter.allCases, id: \.self) { Text($0.title).tag($0) } }
+            Picker(L10n.text("Knowledge type"), selection: $filter) { ForEach(LearnFilter.allCases, id: \.self) { Text($0.title).tag($0) } }
                 .pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
             if items.isEmpty {
                 FieldEmptyState(systemImage: "lightbulb", title: "Your reusable knowledge lives here", message: "Conclusions become Learnings, Recipes and Prompt Blocks.", actionTitle: "Add Learning") { editorKind = .learning; isPresentingEditor = true }
@@ -1209,7 +1209,7 @@ struct LearnView: View {
             }
         }
         .background(FieldPalette.canvas)
-        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: "Search Learn")
+        .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Search Learn"))
         .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500) }
         .sheet(isPresented: $isShowingPromptDeck) { PromptDeckView(appModel: appModel).frame(minWidth: 760, minHeight: 560) }
         .sheet(isPresented: $isShowingSuggestions) { AIInboxView(appModel: appModel).frame(width: 720, height: 560) }
@@ -1218,7 +1218,15 @@ struct LearnView: View {
 
 enum LearnFilter: String, CaseIterable, Hashable {
     case all, learnings, recipes, blocks
-    var title: String { switch self { case .all: "All"; case .learnings: "Learnings"; case .recipes: "Recipes"; case .blocks: "Prompt Blocks" } }
+    var title: String {
+        let key: String = switch self {
+        case .all: "All"
+        case .learnings: "Learnings"
+        case .recipes: "Recipes"
+        case .blocks: "Prompt Blocks"
+        }
+        return L10n.text(key)
+    }
 }
 
 struct SettingsView: View {
@@ -1239,18 +1247,28 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Connections") {
+                Section(L10n.text("Connections")) {
                     Button { isShowingMCP = true } label: { SettingsRow(title: "AI connections", detail: connectionStatus, systemImage: "antenna.radiowaves.left.and.right") }
                     Button { isShowingActivity = true } label: { SettingsRow(title: "Activity", detail: "Review agent actions", systemImage: "waveform.path.ecg") }
                 }
-                Section("Context") {
+                Section(L10n.text("Context")) {
                     Button { isShowingProjects = true } label: { SettingsRow(title: "Projects", detail: "Organize your experiments", systemImage: "folder") }
                     Button { isShowingTools = true } label: { SettingsRow(title: "Tools", detail: "Shared tool metadata", systemImage: "wrench.and.screwdriver") }
                     Button { isShowingFlows = true } label: { SettingsRow(title: "Flows", detail: "Advanced reusable methods", systemImage: "arrow.triangle.branch") }
                 }
+                Section(L10n.text("Language")) {
+                    Picker(L10n.text("Language"), selection: $appModel.language) {
+                        ForEach(FieldLanguage.allCases) { language in
+                            Text(language.name).tag(language)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .accessibilityLabel(L10n.text("Language"))
+                }
             }
-            .navigationTitle("Settings")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+            .navigationTitle(L10n.text("Settings"))
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Done")) { dismiss() } } }
             .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620) }
             .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560) }
             .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
@@ -1283,7 +1301,10 @@ struct SettingsRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: systemImage).foregroundStyle(.tint).frame(width: 24)
-            VStack(alignment: .leading, spacing: 2) { Text(title); Text(detail).font(.caption).foregroundStyle(.secondary) }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(FieldLocalization.text(title))
+                Text(FieldLocalization.text(detail)).font(.caption).foregroundStyle(.secondary)
+            }
             Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
     }
