@@ -1,6 +1,7 @@
 .build/
 .swiftpm/
 DerivedData/
+dist/
 .DS_Store
 
 # Xcode per-user state
