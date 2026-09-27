@@ -178,6 +178,8 @@
     .reference-chip { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 6px; border: 1px solid var(--line-soft); border-radius: 7px; }
     .reference-chip:hover { border-color: #59486e; }
     .reference-chip .thumb { width: 34px; height: 34px; }
+    .reference-chip .thumb.has-art::before { display: none; }
+    .reference-chip .thumb svg { width: 100%; height: 100%; display: block; }
     .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
     .thumb.has-image::before { display: none; }
     .reference-chip strong { display: block; overflow: hidden; color: var(--text); font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -220,7 +222,7 @@
     .collection-item { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: #0d0b12; cursor: pointer; text-align: left; }
     .collection-item:hover, .collection-item.selected { border-color: #8d75b4; }
     .collection-art { position: relative; height: 152px; overflow: hidden; }
-    .collection-art img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .collection-art svg { width: 100%; height: 100%; display: block; }
     .collection-copy { padding: 11px 12px 12px; }
     .collection-copy strong { display: block; font-size: 12px; font-weight: 650; }
     .collection-copy span { display: block; margin-top: 4px; color: var(--faint); font-size: 10px; }
@@ -231,7 +233,8 @@
     .detail-panel h2 { font-size: 18px; letter-spacing: -.02em; }
     .detail-panel > p { margin-top: 7px; color: var(--muted); font-size: 12px; }
     .detail-preview { height: 190px; margin: 15px 0 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: #101015; }
-    .detail-preview img { width: 100%; height: 100%; display: block; object-fit: contain; }
+    .detail-preview #collectionImage { width: 100%; height: 100%; }
+    .detail-preview #collectionImage svg { width: 100%; height: 100%; display: block; }
     .detail-panel .detail-note { margin: 0 0 12px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .detail-list { display: grid; gap: 0; margin-top: 15px; border-top: 1px solid var(--line); }
     .detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 11px; }
@@ -363,7 +366,7 @@
         <button class="nav-item" data-screen="learn"><svg class="icon"><use href="#icon-learn"/></svg><span>Aprender</span><span class="nav-count">3</span></button>
       </nav>
       <div class="sidebar-spacer"></div>
-      <div class="sidebar-note"><strong>Espacio local</strong>Personal · 30 referencias</div>
+      <div class="sidebar-note"><strong>Espacio local</strong>Demo · 6 referencias</div>
       <button class="nav-item" data-screen="settings"><svg class="icon"><use href="#icon-settings"/></svg><span>Ajustes</span></button>
     </aside>
 
@@ -381,16 +384,16 @@
           <div class="lab-layout">
             <div class="experiment-list">
               <div class="list-heading"><span class="section-kicker">Recientes</span><span class="count" id="experimentCount">3</span></div>
-              <button class="experiment-item active" data-experiment-title="Fotografía natural de producto" data-experiment-goal="Encontrar una forma más suave de encuadrar objetos pequeños sin perder el detalle del material."><h3>Fotografía natural de producto</h3></button>
+              <button class="experiment-item active" data-experiment-title="Estudio de producto de ejemplo" data-experiment-goal="Encontrar una forma más suave de encuadrar objetos pequeños sin perder el detalle del material."><h3>Estudio de producto de ejemplo</h3></button>
               <button class="experiment-item" data-experiment-title="Movimiento en Runway" data-experiment-goal="Hacer que el movimiento se sienta editorial sin dirigir demasiado el gesto."><h3>Movimiento en Runway</h3></button>
               <button class="experiment-item" data-experiment-title="Estudio de luz editorial" data-experiment-goal="Comparar una luz principal dura con un relleno ambiental pálido para un lenguaje de retrato más sereno."><h3>Estudio de luz editorial</h3></button>
             </div>
             <article class="workspace">
-              <div class="workspace-heading"><div><div class="section-kicker">Experiment · Personal</div><h2 id="workspaceTitle">Materiales orgánicos en verde</h2><p id="workspaceGoal">Comparar pliegues translúcidos, formas botánicas y volúmenes escultóricos con una luz suave.</p></div><div class="segmented workbench-tabs" role="tablist" aria-label="Vista del experimento"><button class="segment active" data-lab-view="build" aria-selected="true">Build</button><button class="segment" data-lab-view="compare" aria-selected="false">Compare</button></div></div>
+              <div class="workspace-heading"><div><div class="section-kicker">Experiment · Demo</div><h2 id="workspaceTitle">Materiales orgánicos en verde</h2><p id="workspaceGoal">Comparar pliegues translúcidos, formas botánicas y volúmenes escultóricos con una luz suave.</p></div><div class="segmented workbench-tabs" role="tablist" aria-label="Vista del experimento"><button class="segment active" data-lab-view="build" aria-selected="true">Build</button><button class="segment" data-lab-view="compare" aria-selected="false">Compare</button></div></div>
               <div class="workbench-layout"><div class="workbench-main">
                 <section class="workspace-section"><div class="section-head"><h3>Ingredients</h3><button class="button" data-action="save-preset">Guardar como preset</button></div><div class="ingredient-grid">
                   <div class="ingredient-card"><div class="ingredient-card-head"><strong>References · <span id="referenceCount">3</span></strong><button class="button" data-action="browse-references">Añadir desde Collect</button></div><div class="references-row" id="referencesRow"></div></div>
-                  <div class="ingredient-card prompt-card"><div class="ingredient-card-head"><strong>Prompt</strong><button class="button" data-action="copy-prompt">Copiar</button></div><textarea class="ingredient-textarea" id="promptInput" aria-label="Prompt">Editorial macro study of sculptural natural forms, translucent ivory folds with fine gold veins, pleated emerald petals, clipped topiary, soft diffused light, tactile detail, restrained contrast.</textarea><div class="inline-field" style="margin-top:7px"><label for="negativePrompt">Negative prompt</label><input id="negativePrompt" placeholder="Qué debe evitar la herramienta" value="harsh specular highlights, crushed shadows, oversaturated green"></div></div>
+                  <div class="ingredient-card prompt-card"><div class="ingredient-card-head"><strong>Prompt</strong><button class="button" data-action="copy-prompt">Copiar</button></div><textarea class="ingredient-textarea" id="promptInput" aria-label="Prompt">Editorial study of simple geometric materials, rounded sculptural forms, soft ambient light, tactile surfaces, muted colors, and restrained contrast.</textarea><div class="inline-field" style="margin-top:7px"><label for="negativePrompt">Negative prompt</label><input id="negativePrompt" placeholder="Qué debe evitar la herramienta" value="harsh specular highlights, crushed shadows, oversaturated green"></div></div>
                   <div class="ingredient-card"><div class="ingredient-card-head"><strong>Tool & model</strong><span class="faint" style="font-size:9px">Setup snapshot</span></div><div class="tool-fields"><div class="inline-field"><label for="toolSelect">Tool</label><select id="toolSelect"><option>Krea</option><option>Midjourney</option><option>Runway</option></select></div><div class="inline-field"><label for="modelInput">Model</label><input id="modelInput" value="Flux 1.1 Pro"></div></div></div>
                   <div class="ingredient-card"><div class="ingredient-card-head"><strong>Settings</strong><button class="button" data-action="add-setting">+ Add</button></div><div class="settings-list" id="settingsList"><div class="setting-row"><input aria-label="Setting name" value="Aspect ratio"><input aria-label="Setting value" value="4:5"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button></div><div class="setting-row"><input aria-label="Setting name" value="Guidance"><input aria-label="Setting value" value="3.5"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button></div><div class="setting-row"><input aria-label="Setting name" value="Seed"><input aria-label="Setting value" value="Random"><button class="remove-setting" aria-label="Remove setting" data-action="remove-setting">×</button></div></div></div>
                 </div></section>
@@ -409,17 +412,17 @@
 
         <section class="screen" id="screen-collect">
           <div class="screen-toolbar"><div><div class="section-kicker">Biblioteca visual</div><div class="section-title">Recopila referencias, notas y fragmentos útiles</div></div><div style="display:flex;gap:8px;position:relative"><button class="button" data-action="toast" data-message="Los filtros están listos para tu recopilación."><svg class="icon small"><use href="#icon-filter"/></svg>Filtrar</button><button class="button primary" data-action="open-add-menu"><svg class="icon small"><use href="#icon-plus"/></svg>Añadir</button><div id="addMenu" hidden></div></div></div>
-          <div class="collection-layout"><div class="collection-grid" id="collectionGrid"></div><aside class="detail-panel"><div class="section-kicker">Elemento seleccionado</div><h2 id="collectionTitle">Veta de alabastro y oro</h2><p id="collectionType">Referencia · Cosmos</p><div class="detail-preview"><img id="collectionImage" src="Assets/Preview/References/alabaster-gold-flow.jpeg" alt="Detalle de pliegues translúcidos marfil con vetas doradas y acentos verde oscuro"></div><p class="detail-note" id="collectionNote">Capas translúcidas y delicadas vetas doradas sobre verde profundo: una referencia de material, fluidez y detalle.</p><div class="detail-tags" id="collectionTags"><span>pliegues orgánicos</span><span>textura macro</span><span>verde salvia</span></div><div class="detail-list"><div class="detail-row"><span>Fuente</span><strong id="collectionSource">Cosmos</strong></div><div class="detail-row"><span>Proyectos</span><strong>Personal</strong></div><div class="detail-row"><span>Experimentos</span><strong>Fotografía natural de producto</strong></div></div><button class="button" style="width:100%;margin-top:16px" data-action="use-reference">Usar en LAB</button></aside></div>
+          <div class="collection-layout"><div class="collection-grid" id="collectionGrid"></div><aside class="detail-panel"><div class="section-kicker">Elemento seleccionado</div><h2 id="collectionTitle">Estudio de material</h2><p id="collectionType">Referencia · Demo</p><div class="detail-preview"><div id="collectionImage" role="img" aria-label="Ilustración de ejemplo"></div></div><p class="detail-note" id="collectionNote">Una ilustración vectorial original para mostrar cómo se organiza una referencia.</p><div class="detail-tags" id="collectionTags"><span>material</span><span>forma</span><span>demo</span></div><div class="detail-list"><div class="detail-row"><span>Fuente</span><strong id="collectionSource">Demo</strong></div><div class="detail-row"><span>Proyectos</span><strong>Proyecto de ejemplo</strong></div><div class="detail-row"><span>Experimentos</span><strong>Estudio creativo de ejemplo</strong></div></div><button class="button" style="width:100%;margin-top:16px" data-action="use-reference">Usar en LAB</button></aside></div>
         </section>
 
         <section class="screen" id="screen-learn">
           <div class="learn-toolbar"><div><div class="section-kicker">Conocimiento</div><div class="section-title">Ten a mano lo que funciona</div></div><div class="segmented" role="tablist" aria-label="Tipo de conocimiento"><button class="segment active" data-filter="all">Todo</button><button class="segment" data-filter="learning">Aprendizajes</button><button class="segment" data-filter="recipe">Recetas</button><button class="segment" data-filter="block">Bloques</button></div></div>
           <div class="learn-layout"><div class="learn-list" id="learnList">
-            <article class="learn-item" data-kind="learning"><div class="learn-icon"><svg class="icon small"><use href="#icon-learn"/></svg></div><div><h3>Menos contraste conserva el detalle del material</h3><p>De Fotografía natural de producto · Guardado hoy</p></div><span class="kind">Aprendizaje</span></article>
+            <article class="learn-item" data-kind="learning"><div class="learn-icon"><svg class="icon small"><use href="#icon-learn"/></svg></div><div><h3>Menos contraste conserva el detalle del material</h3><p>De Estudio de producto de ejemplo · Guardado hoy</p></div><span class="kind">Aprendizaje</span></article>
             <article class="learn-item" data-kind="recipe"><div class="learn-icon"><svg class="icon small"><use href="#icon-lab"/></svg></div><div><h3>Estudio de objeto editorial suave</h3><p>Krea · Flux 1.1 Pro · 4 pasos</p></div><span class="kind">Receta</span></article>
             <article class="learn-item" data-kind="block"><div class="learn-icon"><svg class="icon small"><use href="#icon-spark"/></svg></div><div><h3>campo ambiental pálido, borde sereno, superficie táctil</h3><p>Bloque de lenguaje reutilizable · Usado 6 veces</p></div><span class="kind">Bloque de prompt</span></article>
             <article class="learn-item" data-kind="learning"><div class="learn-icon"><svg class="icon small"><use href="#icon-learn"/></svg></div><div><h3>Deja que la sombra esté presente, no que reclame atención</h3><p>Del Estudio de luz editorial · Guardado el lunes</p></div><span class="kind">Aprendizaje</span></article>
-          </div><aside class="suggestions"><h2>Sugerencias de IA</h2><p>Pequeñas conexiones que FIELD está encontrando para ti.</p><div class="suggestion"><strong>Convierte una conclusión en receta</strong><span>“Fotografía natural de producto” ya tiene suficiente evidencia para reutilizarse.</span><button class="button" data-action="toast" data-message="Borrador de receta creado en Aprendizajes.">Crear receta</button></div><div class="suggestion"><strong>Conecta dos referencias</strong><span>Estudio de objeto sereno y Textura azul nocturna comparten una pista material.</span><button class="button" data-action="toast" data-message="Conexión guardada para revisar.">Revisar enlace</button></div><button class="button primary" style="width:100%;margin-top:16px" data-action="build-prompt"><svg class="icon small"><use href="#icon-spark"/></svg>Build prompt in LAB</button></aside></div>
+          </div><aside class="suggestions"><h2>Sugerencias de IA</h2><p>Pequeñas conexiones que FIELD está encontrando para ti.</p><div class="suggestion"><strong>Convierte una conclusión en receta</strong><span>“Estudio de producto de ejemplo” ya tiene suficiente evidencia para reutilizarse.</span><button class="button" data-action="toast" data-message="Borrador de receta creado en Aprendizajes.">Crear receta</button></div><div class="suggestion"><strong>Conecta dos referencias</strong><span>Estudio de objeto sereno y Textura azul nocturna comparten una pista material.</span><button class="button" data-action="toast" data-message="Conexión guardada para revisar.">Revisar enlace</button></div><button class="button primary" style="width:100%;margin-top:16px" data-action="build-prompt"><svg class="icon small"><use href="#icon-spark"/></svg>Build prompt in LAB</button></aside></div>
         </section>
 
         <section class="screen" id="screen-settings">
@@ -427,16 +430,16 @@
           <div class="settings-grid">
             <article class="settings-card"><h2>Conexiones de IA</h2><p>Servicios disponibles para tus experimentos.</p><div class="settings-row"><div><strong>OpenAI</strong><span>Responses API · predeterminada</span></div><span class="connection-state">Conectado</span></div><div class="settings-row"><div><strong>Anthropic</strong><span>Messages API</span></div><button class="button">Conectar</button></div></article>
             <article class="settings-card"><h2>Servidor MCP</h2><p>Comparte el contexto de FIELD con otras herramientas.</p><div class="settings-row"><div><strong>Servidor local</strong><span>localhost:6274 · lectura/escritura</span></div><span class="connection-state">Activo</span></div><div class="settings-row"><div><strong>Contexto compartido</strong><span>Proyectos, herramientas y aprendizajes</span></div><button class="button">Gestionar</button></div></article>
-            <article class="settings-card"><h2>Proyectos</h2><p>Espacios de contexto para experimentos y memoria.</p><div class="settings-row"><div><strong>Personal</strong><span>18 referencias · 6 aprendizajes</span></div><button class="button">Abrir</button></div><div class="settings-row"><div><strong>Trabajo de cliente</strong><span>6 referencias · 2 experimentos</span></div><button class="button">Abrir</button></div></article>
+            <article class="settings-card"><h2>Proyectos</h2><p>Espacios de contexto para experimentos y memoria.</p><div class="settings-row"><div><strong>Proyecto de ejemplo</strong><span>18 referencias · 6 aprendizajes</span></div><button class="button">Abrir</button></div><div class="settings-row"><div><strong>Proyecto editorial</strong><span>6 referencias · 2 experimentos</span></div><button class="button">Abrir</button></div></article>
             <article class="settings-card"><h2>Herramientas</h2><p>Servicios y modelos disponibles en Lab.</p><div class="settings-row"><div><strong>Krea</strong><span>Generación de imágenes · activa</span></div><span class="connection-state">Lista</span></div><div class="settings-row"><div><strong>Runway</strong><span>Generación de vídeo · activa</span></div><span class="connection-state">Lista</span></div></article>
-            <article class="settings-card wide"><h2>Actividad</h2><p>Un rastro tranquilo de lo que FIELD ha hecho.</p><div class="settings-row"><div><strong>Conclusión guardada en Aprendizajes</strong><span>Fotografía natural de producto · 11:42</span></div><span class="faint">Hoy</span></div><div class="settings-row"><div><strong>Referencia añadida</strong><span>Estudio de objeto sereno · 09:18</span></div><span class="faint">Hoy</span></div></article>
+            <article class="settings-card wide"><h2>Actividad</h2><p>Un rastro tranquilo de lo que FIELD ha hecho.</p><div class="settings-row"><div><strong>Conclusión guardada en Aprendizajes</strong><span>Estudio de producto de ejemplo · 11:42</span></div><span class="faint">Hoy</span></div><div class="settings-row"><div><strong>Referencia añadida</strong><span>Estudio de objeto sereno · 09:18</span></div><span class="faint">Hoy</span></div></article>
           </div>
         </section>
       </div>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="modalBackdrop" hidden><form class="modal" id="modalForm"><div class="modal-head"><div><h2 id="modalTitle">Nuevo experimento</h2><p id="modalDescription">Empieza por una pregunta que quieras poner a prueba.</p></div><button class="icon-button" type="button" data-action="close-modal" aria-label="Cerrar"><svg class="icon small"><use href="#icon-close"/></svg></button></div><div class="form-grid"><div class="field"><label for="modalName">Nombre</label><input id="modalName" required placeholder="p. ej. Un lenguaje de retrato más sereno"></div><div class="field"><label for="modalGoal">Objetivo</label><textarea id="modalGoal" placeholder="¿Qué quieres averiguar?"></textarea></div><div class="field" id="modalContextField"><label for="modalContext">Proyecto</label><select id="modalContext"><option>Personal</option><option>Trabajo de cliente</option><option>Editorial</option></select></div></div><div class="modal-footer"><button class="button" type="button" data-action="close-modal">Cancelar</button><button class="button primary" type="submit">Crear</button></div></form></div>
+  <div class="modal-backdrop" id="modalBackdrop" hidden><form class="modal" id="modalForm"><div class="modal-head"><div><h2 id="modalTitle">Nuevo experimento</h2><p id="modalDescription">Empieza por una pregunta que quieras poner a prueba.</p></div><button class="icon-button" type="button" data-action="close-modal" aria-label="Cerrar"><svg class="icon small"><use href="#icon-close"/></svg></button></div><div class="form-grid"><div class="field"><label for="modalName">Nombre</label><input id="modalName" required placeholder="p. ej. Un lenguaje de retrato más sereno"></div><div class="field"><label for="modalGoal">Objetivo</label><textarea id="modalGoal" placeholder="¿Qué quieres averiguar?"></textarea></div><div class="field" id="modalContextField"><label for="modalContext">Proyecto</label><select id="modalContext"><option>Proyecto de ejemplo</option><option>Proyecto editorial</option><option>Proyecto creativo</option></select></div></div><div class="modal-footer"><button class="button" type="button" data-action="close-modal">Cancelar</button><button class="button primary" type="submit">Crear</button></div></form></div>
   <div class="toast" id="toast" hidden></div>
 
   <script>
@@ -449,20 +452,32 @@
     const $ = (selector, root = document) => root.querySelector(selector);
     const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
     const collectionReferences = [
-      { id: 9, title: "Veta de alabastro y oro", source: "Cosmos", image: "Assets/Preview/References/alabaster-gold-flow.jpeg", alt: "Pliegues translúcidos marfil con vetas doradas y acentos verde oscuro", note: "Capas translúcidas y delicadas vetas doradas sobre verde profundo: una referencia de material, fluidez y detalle.", tags: ["pliegues orgánicos", "textura macro", "verde salvia", "acentos dorados"] },
-      { id: 10, title: "Flor plisada esmeralda", source: "Cosmos", image: "Assets/Preview/References/emerald-pleated-bloom.jpeg", alt: "Flor verde radial con pétalos plisados y centro oscuro", note: "Una forma floral radial combina pliegues verdes finos con un centro casi negro y mucho contraste.", tags: ["botánica", "composición radial", "paleta esmeralda", "macro"] },
-      { id: 11, title: "Topiaria escultórica", source: "Cosmos", image: "Assets/Preview/References/sculpted-topiary.jpeg", alt: "Arbustos topiarios redondeados proyectan sombras suaves sobre césped verde", note: "Las formas vegetales recortadas convierten el jardín en una composición escultórica y serena.", tags: ["topiaria", "paisajismo", "formas escultóricas", "luz suave"] },
-      { id: 12, title: "Free at heart — Hermès", source: "Cosmos", image: "Assets/Preview/References/free-at-heart-hermes.jpeg", alt: "Campaña Hermès con un retrato de perfil y un caballo en un campo abierto", note: "El retrato de perfil y el caballo en el campo construyen una imagen de campaña en capas sobre movimiento y libertad.", tags: ["campaña de moda", "ecuestre", "retrato editorial", "encuadre cinematográfico"] },
-      { id: 13, title: "Encuentro en movimiento", source: "Cosmos", image: "Assets/Preview/References/motion-blurred-encounter.jpeg", alt: "Retrato de moda movido en tonos claros y oscuros", note: "El barrido de cámara difumina las figuras y convierte el retrato de moda en un gesto fugaz.", tags: ["desenfoque de movimiento", "moda editorial", "retrato espontáneo", "luz baja"] },
-      { id: 14, title: "Dosel velado", source: "Cosmos", image: "Assets/Preview/References/veiled-canopy.jpeg", alt: "Retrato de moda bajo una estructura translúcida y escultórica sobre fondo negro", note: "Una estructura translúcida, parecida a un paraguas, se transforma en un velo dramático. La imagen acredita a Sybile de Saint Louvent.", tags: ["moda experimental", "accesorio escultórico", "material translúcido", "campaña con IA"] }
+      { id: 1, title: 'Estudio de material', source: 'Demo', art: 'folds', note: 'Una ilustración vectorial original para explorar líneas suaves, color y capas.', tags: ['material', 'forma', 'vector'] },
+      { id: 2, title: 'Composición radial', source: 'Demo', art: 'bloom', note: 'Una composición geométrica original con formas dispuestas alrededor de un centro.', tags: ['composición', 'geometría', 'color'] },
+      { id: 3, title: 'Jardín abstracto', source: 'Demo', art: 'garden', note: 'Volúmenes redondeados y espacio abierto en una ilustración creada para esta demo.', tags: ['volumen', 'espacio', 'verde'] },
+      { id: 4, title: 'Estudio de movimiento', source: 'Demo', art: 'motion', note: 'Líneas y curvas originales que sugieren ritmo y cambio de dirección.', tags: ['línea', 'ritmo', 'movimiento'] },
+      { id: 5, title: 'Campo de color', source: 'Demo', art: 'color', note: 'Formas superpuestas para estudiar relaciones entre color y espacio.', tags: ['color', 'capas', 'forma'] },
+      { id: 6, title: 'Objeto suave', source: 'Demo', art: 'object', note: 'Una forma escultórica original como ejemplo de referencia visual.', tags: ['objeto', 'sombra', 'estudio'] }
     ];
-    const labReferenceIds = [9, 10, 11];
+    const labReferenceIds = [1, 2, 3];
     let toastTimer;
     let runNumber = 3;
     let selectedCollectionReference = collectionReferences[0];
+    function referenceArtwork(reference) {
+      const opening = '<svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + reference.title + '">';
+      if (reference.art === 'folds') return opening + '<rect width="320" height="180" fill="#24473d"/><path d="M-15 143C44 18 82 35 119 117s57 79 102-8 70-88 121-38" fill="none" stroke="#e5d9c2" stroke-width="29" opacity=".92"/><path d="M-20 158C40 47 79 57 116 132s62 47 104-23 73-69 124-20" fill="none" stroke="#bd9561" stroke-width="3"/><path d="M4 173C53 92 81 81 120 148s65 33 103-17 66-56 103-22" fill="none" stroke="#f2eee3" stroke-width="8" opacity=".65"/></svg>';
+      if (reference.art === 'bloom') {
+        const petals = Array.from({ length: 12 }, (_, index) => '<ellipse cx="160" cy="57" rx="13" ry="39" transform="rotate(' + (index * 30) + ' 160 92)" fill="hsl(' + (128 + index * 2) + ' 34% ' + (48 + index % 3 * 4) + '%)"/>').join('');
+        return opening + '<rect width="320" height="180" fill="#172c26"/><g>' + petals + '</g><circle cx="160" cy="92" r="23" fill="#d3b36b"/><circle cx="160" cy="92" r="10" fill="#28342b"/></svg>';
+      }
+      if (reference.art === 'garden') return opening + '<rect width="320" height="180" fill="#d8dfcf"/><path d="M0 128C74 104 113 135 164 117s102-37 156-14v77H0Z" fill="#98aa8b"/><path d="M0 153c73-18 118 7 183-2s93-26 137-8v37H0Z" fill="#657e67"/><circle cx="81" cy="84" r="35" fill="#58715c"/><circle cx="81" cy="84" r="23" fill="#718a6d"/><circle cx="205" cy="70" r="44" fill="#526e5a"/><circle cx="205" cy="70" r="29" fill="#82977a"/><path d="M80 113v27m125-25v31" stroke="#665847" stroke-width="8"/></svg>';
+      if (reference.art === 'motion') return opening + '<rect width="320" height="180" fill="#2c3b50"/><path d="M-20 133C63 42 94 44 159 118s98 67 183-46" fill="none" stroke="#e8b66f" stroke-width="27" opacity=".8"/><path d="M-20 151C63 70 106 72 164 132s93 47 177-40" fill="none" stroke="#e9e4d8" stroke-width="9" opacity=".8"/><path d="M-10 55c80 32 118 25 195-8s108-18 151 4" fill="none" stroke="#82a7b0" stroke-width="6" opacity=".9"/></svg>';
+      if (reference.art === 'color') return opening + '<rect width="320" height="180" fill="#dfd5c7"/><circle cx="101" cy="94" r="69" fill="#b26c59" opacity=".92"/><circle cx="161" cy="81" r="58" fill="#637f70" opacity=".85"/><circle cx="218" cy="105" r="48" fill="#d3aa70" opacity=".88"/><path d="M25 151h270" stroke="#34433e" stroke-width="2" opacity=".7"/></svg>';
+      return opening + '<rect width="320" height="180" fill="#d7c8b8"/><ellipse cx="160" cy="143" rx="76" ry="14" fill="#887265" opacity=".35"/><path d="M103 136c4-43 22-76 57-76s55 31 58 76c2 15-26 25-58 25s-59-9-57-25Z" fill="#a66d54"/><ellipse cx="160" cy="61" rx="35" ry="10" fill="#c48a6d"/><path d="M123 91c24 8 49 8 74 0" fill="none" stroke="#e0b296" stroke-width="4" opacity=".75"/></svg>';
+    }
     function renderCollection() {
       const grid = $("#collectionGrid");
-      grid.innerHTML = collectionReferences.map((reference, index) => `<button class="collection-item ${index === 0 ? 'selected' : ''}" data-collection-index="${index}" aria-label="Abrir referencia: ${reference.title}"><div class="collection-art"><img src="${reference.image}" alt="${reference.alt}" loading="lazy"></div><div class="collection-copy"><strong>${reference.title}</strong><span>Referencia · ${reference.source}</span><div class="collection-tags">${reference.tags.slice(0, 2).map(tag => `<span>${tag}</span>`).join('')}</div></div></button>`).join('');
+      grid.innerHTML = collectionReferences.map((reference, index) => '<button class="collection-item ' + (index === 0 ? 'selected' : '') + '" data-collection-index="' + index + '" aria-label="Abrir referencia: ' + reference.title + '"><div class="collection-art">' + referenceArtwork(reference) + '</div><div class="collection-copy"><strong>' + reference.title + '</strong><span>Referencia · ' + reference.source + '</span><div class="collection-tags">' + reference.tags.slice(0, 2).map(tag => '<span>' + tag + '</span>').join('') + '</div></div></button>').join('');
       $$(".collection-item", grid).forEach(item => item.addEventListener("click", () => {
         const reference = collectionReferences[Number(item.dataset.collectionIndex)];
         selectedCollectionReference = reference;
@@ -470,16 +485,18 @@
         $("#collectionTitle").textContent = reference.title;
         $("#collectionType").textContent = `Referencia · ${reference.source}`;
         $("#collectionSource").textContent = reference.source;
-        $("#collectionImage").src = reference.image;
-        $("#collectionImage").alt = reference.alt;
+        $("#collectionImage").innerHTML = referenceArtwork(reference);
+        $("#collectionImage").setAttribute("aria-label", reference.title);
         $("#collectionNote").textContent = reference.note;
-        $("#collectionTags").innerHTML = reference.tags.map(tag => `<span>${tag}</span>`).join('');
+        $("#collectionTags").innerHTML = reference.tags.map(tag => '<span>' + tag + '</span>').join('');
       }));
+      const first = collectionReferences[0];
+      $("#collectionImage").innerHTML = referenceArtwork(first);
     }
     function renderLabReferences() {
       const references = collectionReferences.filter(reference => labReferenceIds.includes(reference.id));
       $("#referenceCount").textContent = references.length;
-      $("#referencesRow").innerHTML = references.map(reference => `<div class="reference-chip" title="${reference.title}"><div class="thumb has-image"><img src="${reference.image}" alt="${reference.alt}" loading="lazy"></div><div><strong>${reference.title}</strong><span>${reference.tags[0]} · ${reference.source}</span></div></div>`).join('');
+      $("#referencesRow").innerHTML = references.map(reference => '<div class="reference-chip" title="' + reference.title + '"><div class="thumb has-art">' + referenceArtwork(reference) + '</div><div><strong>' + reference.title + '</strong><span>' + reference.tags[0] + ' · ' + reference.source + '</span></div></div>').join('');
     }
     function showToast(message) {
       const toast = $("#toast");
