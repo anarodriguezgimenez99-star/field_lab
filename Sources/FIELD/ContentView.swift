@@ -1672,6 +1672,7 @@ struct ActivityView: View {
 }
 
 struct MCPSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var mcpServer: MCPServerManager
     @State private var showToken = false
     @State private var copiedItem: String?
@@ -1683,7 +1684,17 @@ struct MCPSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                FieldSectionHeader(title: "Servidor MCP", subtitle: "Un puente de memoria local para Claude, Codex y agentes compatibles.")
+                HStack(alignment: .top, spacing: 16) {
+                    FieldSectionHeader(title: "Servidor MCP", subtitle: "Un puente de memoria local para Claude, Codex y agentes compatibles.")
+                    Spacer(minLength: 8)
+                    Button {
+                        dismiss()
+                    } label: {
+                        Label(L10n.text("Cerrar ajustes"), systemImage: "xmark")
+                    }
+                    .buttonStyle(.bordered)
+                    .keyboardShortcut(.cancelAction)
+                }
                 Divider()
                 HStack(spacing: 10) {
                     Circle()
@@ -1725,7 +1736,7 @@ struct MCPSettingsView: View {
                             .buttonStyle(.bordered)
                     }
                     Text(mcpServer.usesKeychainHeaderHelper
-                         ? L10n.text("Guardado en el Llavero de macOS. Codex y Claude Code lo consultan con un helper local al conectar; macOS puede pedir permiso la primera vez.")
+                         ? L10n.text("Guardado en el Llavero de macOS. FIELD LAB y el helper son procesos distintos; macOS puede pedir permiso para cada uno la primera vez. Elige Permitir siempre si aparece.")
                          : L10n.text("Guardado en el Llavero de macOS. Configura FIELD_MCP_TOKEN en el entorno del cliente MCP."))
                         .font(.caption)
                         .foregroundStyle(.secondary)

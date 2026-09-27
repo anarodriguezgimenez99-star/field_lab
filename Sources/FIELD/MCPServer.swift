@@ -30,7 +30,9 @@ final class MCPServerManager: ObservableObject {
         let storedToken = KeychainTokenStore.load().flatMap { $0.isEmpty ? nil : $0 }
         let resolvedToken = storedToken ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
         token = resolvedToken
-        KeychainTokenStore.save(resolvedToken)
+        if storedToken == nil {
+            KeychainTokenStore.save(resolvedToken)
+        }
         authHeaderHelperPath = MCPKeychainHeaderHelper.install()
     }
 
@@ -49,8 +51,8 @@ final class MCPServerManager: ObservableObject {
         [mcp_servers.field]
         url = "\(endpoint)"
         """
-        if let authHeaderHelperPath {
-            configuration += "\nhttp_headers_helper = \(Self.tomlString(Self.shellQuoted(authHeaderHelperPath)))\n"
+        if let authHeaderHelperCommand {
+            configuration += "\nhttp_headers_helper = \(Self.tomlString(authHeaderHelperCommand))\n"
         } else {
             configuration += "\nbearer_token_env_var = \"FIELD_MCP_TOKEN\"\n"
         }
@@ -59,8 +61,8 @@ final class MCPServerManager: ObservableObject {
 
     var claudeCodeSetup: String {
         var jsonObject: [String: Any] = ["type": "http", "url": endpoint]
-        if let authHeaderHelperPath {
-            jsonObject["headersHelper"] = Self.shellQuoted(authHeaderHelperPath)
+        if let authHeaderHelperCommand {
+            jsonObject["headersHelper"] = authHeaderHelperCommand
         } else {
             jsonObject["headers"] = ["Authorization": "Bearer ${FIELD_MCP_TOKEN}"]
         }
@@ -86,7 +88,7 @@ final class MCPServerManager: ObservableObject {
             For Claude Code, use this command:
             \(claudeCodeSetup)
 
-            \(authHeaderHelperPath == nil ? "The Keychain helper is unavailable. Use FIELD_MCP_TOKEN in the client environment and ask me to configure it locally if it is missing." : "The snippets use a local helper that reads the Keychain token when connecting.")
+            \(authHeaderHelperPath == nil ? "The Keychain helper is unavailable. Use FIELD_MCP_TOKEN in the client environment and ask me to configure it locally if it is missing." : "The snippets use a local helper that reads the Keychain token when connecting. macOS may ask to allow FIELD LAB and the helper to access the Keychain; choose Always Allow when available.")
             Do not include the token in this chat, command history, or project files. Then verify the connection and tell me how it is configured.
 
             If you use another MCP client, configure it with Streamable HTTP transport and the same authentication. If it cannot run a local header helper, use FIELD_MCP_TOKEN as an environment variable and ask me to configure it outside the chat.
@@ -107,7 +109,7 @@ final class MCPServerManager: ObservableObject {
         Para Claude Code, usa este comando:
         \(claudeCodeSetup)
 
-        \(authHeaderHelperPath == nil ? "El helper del Llavero no está disponible. Usa FIELD_MCP_TOKEN en el entorno del cliente y pídeme que la configure localmente si no existe." : "Los snippets usan un helper local que obtiene el token del Llavero al conectar.")
+        \(authHeaderHelperPath == nil ? "El helper del Llavero no está disponible. Usa FIELD_MCP_TOKEN en el entorno del cliente y pídeme que la configure localmente si no existe." : "Los snippets usan un helper local que obtiene el token del Llavero al conectar. macOS puede pedir permiso para FIELD LAB y para el helper; elige Permitir siempre cuando aparezca esa opción.")
         No incluyas el token en este chat, en el historial de comandos ni en archivos del proyecto. Después verifica la conexión y dime cómo quedó.
 
         Si usas otro cliente MCP, configúralo con transporte HTTP Streamable y la misma autenticación. Si no puede ejecutar un helper de cabeceras local, usa FIELD_MCP_TOKEN como variable de entorno y pídeme que la configure fuera del chat.
@@ -195,6 +197,10 @@ final class MCPServerManager: ObservableObject {
     }
 
     var usesKeychainHeaderHelper: Bool { authHeaderHelperPath != nil }
+
+    private var authHeaderHelperCommand: String? {
+        authHeaderHelperPath.map(MCPKeychainHeaderHelper.shellCommand(for:))
+    }
 
     private static func shellQuoted(_ value: String) -> String {
         "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
@@ -520,6 +526,23 @@ private enum MCPKeychainHeaderHelper {
         } catch {
             return nil
         }
+    }
+
+    static func shellCommand(for path: String) -> String {
+        let homePath = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL.path
+        let standardizedPath = URL(fileURLWithPath: path).standardizedFileURL.path
+        let homePrefix = homePath.hasSuffix("/") ? homePath : homePath + "/"
+        guard standardizedPath.hasPrefix(homePrefix) else {
+            return "'\(path.replacingOccurrences(of: "'", with: "'\\''"))'"
+        }
+
+        let relativePath = String(standardizedPath.dropFirst(homePrefix.count))
+        let escapedRelativePath = relativePath
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "$", with: "\\$")
+            .replacingOccurrences(of: "`", with: "\\`")
+        return "\"$HOME/\(escapedRelativePath)\""
     }
 }
 

@@ -140,6 +140,10 @@ FIELD LAB — macOS preview
 1. Drag FIELD LAB.app to Applications.
 2. Eject this disk image and open FIELD LAB from Applications.
 
+Opening FIELD LAB.app from this mounted image runs it from the image; it does
+not copy it to Applications. Drag it to Applications first to install it
+there and find it in Finder's Applications folder.
+
 Requires macOS 14 or later. This preview is unsigned and not notarized. If
 macOS blocks the first launch, only continue if this image came from the
 official repository and you trust the project. Open the app once, then use

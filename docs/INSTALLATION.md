@@ -10,6 +10,12 @@ available yet. The app keeps its data in a local store on the Mac.
 2. Open the disk image and drag `FIELD LAB` to `Applications`.
 3. Eject the mounted disk image, then open `FIELD LAB` from `Applications`.
 
+Opening the app while it is still inside the mounted disk image only runs it
+from there; it does not install or copy it to `Applications`. A locally built
+app also runs from its build folder until you move it to `Applications`. To
+find FIELD LAB in Finder's Applications folder and keep it installed there,
+drag `FIELD LAB.app` into `Applications` first.
+
 Current preview builds are unsigned and not notarized. If macOS blocks the
 first launch, first confirm that the DMG came from the official repository and
 that you trust the project. Then try opening the app once, open **System

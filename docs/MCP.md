@@ -83,15 +83,15 @@ The UI copies the active endpoint and client configuration snippets. Codex uses 
 ```toml
 [mcp_servers.field]
 url = "http://127.0.0.1:8765/mcp"
-http_headers_helper = "'/path/to/auth-headers'"
+http_headers_helper = "\"$HOME/Library/Application Support/Field LAB/MCP/auth-headers\""
 ```
 
 Claude Code uses its `headersHelper` field:
 
 ```sh
-claude mcp add-json field '{"type":"http","url":"http://127.0.0.1:8765/mcp","headersHelper":"'\''/path/to/auth-headers'\''"}' --scope user
+claude mcp add-json field '{"type":"http","url":"http://127.0.0.1:8765/mcp","headersHelper":"\"$HOME/Library/Application Support/Field LAB/MCP/auth-headers\""}' --scope user
 ```
 
-The snippets in Settings contain the actual helper path and active endpoint. The app keeps the token in macOS Keychain; it never includes the token in a copied configuration or setup prompt. If the helper cannot be installed, Settings falls back to `FIELD_MCP_TOKEN` and tells the user to provide it through the client process environment.
+The snippets in Settings use `$HOME` for the helper path, so they do not expose the account name. macOS may ask separately for FIELD LAB and the helper to access Keychain; choose **Always Allow** when available. The app keeps the token in macOS Keychain; it never includes the token in a copied configuration or setup prompt. If the helper cannot be installed, Settings falls back to `FIELD_MCP_TOKEN` and tells the user to provide it through the client process environment.
 
 The app does not edit `~/.codex/config.toml` automatically.

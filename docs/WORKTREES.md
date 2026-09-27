@@ -44,10 +44,11 @@ Complete and review the task in its Codex worktree, commit its `task/<task-slug>
 ```sh
 cd ~/Desktop/FIELD
 git switch main
-git merge --no-ff task/reference-search
+git merge --squash task/reference-search
+git commit -m "Describe the completed change"
 ```
 
-The task branch can be merged while its Codex worktree still has it checked out. Keep the branch unless you explicitly want to delete it. Mark the worktree inactive from inside that task checkout after stopping FIELD:
+The squash merge creates one integration commit on `main`; the task branch commits remain local. The task branch can be integrated while its Codex worktree still has it checked out. Keep the branch unless you explicitly want to delete it. Mark the worktree inactive from inside that task checkout after stopping FIELD:
 
 ```sh
 python3 scripts/worktree.py deactivate
