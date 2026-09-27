@@ -13,16 +13,12 @@ The repository is pinned to MCP Swift SDK `0.12.1`. The macOS app uses native sy
 
 Every future user-facing capability that is useful to an agent should be exposed through MCP when privacy and approval rules allow it. Add each MCP feature as one capability declaration containing its input schema, write effect and handler; the registry publishes and routes it automatically. See [docs/MCP.md](docs/MCP.md) for the feature contract and security boundary.
 
-## Test
+## Verification
 
 ```sh
 swift test
 ```
 
-The core and MCP tests use in-memory stores/transports. The active Command Line Tools installation on this host does not include the `SwiftDataMacros` plugin, so `swift test` cannot compile the `FieldCore` SwiftData models. Run the suite with a matching full Xcode toolchain selected through `xcode-select`.
+The core and MCP tests use in-memory stores and transports. Run them with a full Xcode toolchain selected through `xcode-select`; Command Line Tools alone may not include the SwiftData macros needed by the models.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/MCP.md](docs/MCP.md) and [PRIVACY.md](PRIVACY.md) for the product and security decisions.
-
-## Working with Codex
-
-Keep each Codex task in its own local Git worktree. At the start of a FIELD conversation, Codex should recommend opening the task in a Codex-managed worktree. The local resource manager assigns a separate MCP port and SwiftData store to each checkout. Codex creates and tracks the worktrees from `main`, and completed task branches are merged into local `main`. When more capacity is needed, archive a completed task in Codex so Codex can reclaim its worktree. See [docs/WORKTREES.md](docs/WORKTREES.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/MCP.md](docs/MCP.md), [PRIVACY.md](PRIVACY.md) and [docs/PUBLICATION.md](docs/PUBLICATION.md) for product, security and release notes.
