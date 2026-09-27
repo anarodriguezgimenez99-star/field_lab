@@ -331,10 +331,32 @@ struct ExperimentWorkspaceView: View {
 
             #if os(macOS)
             HSplitView {
-                ScrollView {
-                    workbenchMain
+                VStack(alignment: .leading, spacing: 0) {
+                    if mode == .build {
+                        ingredients
+                            .padding(20)
+                        if duplicateNotice {
+                            Label(L10n.text("Setup copied from the selected Run. Change one ingredient, then create a new Run."), systemImage: "arrow.triangle.branch")
+                                .font(.caption)
+                                .foregroundStyle(.tint)
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 12)
+                        }
+                    }
+
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            runsSection
+                            if mode == .compare {
+                                compareSection
+                            }
+                            conclusionSection
+                        }
+                        .padding(20)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
-                .frame(minWidth: 650)
+                .frame(minWidth: 650, maxHeight: .infinity, alignment: .topLeading)
 
                 if let selectedRun {
                     RunInspectorView(appModel: appModel, experiment: experiment, run: selectedRun, isBest: selectedRun.id == experiment.bestRunID, onDuplicate: { duplicateRun(selectedRun) }, onChanged: refresh, onSelectBest: { selectBest(selectedRun) })
@@ -344,6 +366,7 @@ struct ExperimentWorkspaceView: View {
                         .frame(minWidth: 310, idealWidth: 360, maxWidth: 420)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             #else
             ScrollView {
                 workbenchMain
