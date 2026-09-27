@@ -27,4 +27,5 @@ xcuserdata/
 
 # FIELD worktree state
 .field-worktree.env
+Apps/Config/FieldICloud.local.xcconfig
 .field-worktree.json

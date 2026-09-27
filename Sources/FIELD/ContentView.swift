@@ -100,7 +100,12 @@ struct FieldSidebar: View {
 
     private var fieldLogo: Image {
         #if os(macOS)
-        if let logoURL = Bundle.module.url(forResource: "FIELDLogo", withExtension: "png"),
+#if SWIFT_PACKAGE
+        let logoURL = Bundle.module.url(forResource: "FIELDLogo", withExtension: "png")
+#else
+        let logoURL = Bundle.main.url(forResource: "FIELDLogo", withExtension: "png")
+#endif
+        if let logoURL,
            let logo = NSImage(contentsOf: logoURL) {
             return Image(nsImage: logo)
         }

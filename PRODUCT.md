@@ -8,7 +8,7 @@ adaptive
 
 ## Stack
 
-Swift 6, SwiftUI y SwiftData; macOS-first con una futura superficie iPhone/iOS. Persistencia local-first preparada para CloudKit/iCloud. El servidor MCP se ejecutará dentro de la app macOS mediante el SDK oficial de MCP para Swift cuando sea viable.
+Swift 6, SwiftUI y SwiftData. La app macOS es el espacio principal de trabajo; iPhone es el complemento para capturar y consultar. Ambas comparten FieldCore y pueden sincronizar la biblioteca con una base privada de CloudKit. El servidor MCP solo se ejecuta dentro de la app macOS.
 
 ## Users
 
@@ -26,9 +26,9 @@ Field LAB no genera contenido ni sustituye las herramientas creativas. Su mecani
 
 ## Operating Context
 
-macOS es la primera superficie de trabajo: organizar biblioteca, referencias, prompts, workflows, proyectos y conexión MCP. iPhone será posteriormente la superficie de captura y consulta rápida. El ciclo de uso es COLLECT → LAB → LEARN; conectar y reutilizar son resultados del ciclo, no destinos de navegación.
+macOS es la superficie de trabajo: organizar biblioteca, referencias, prompts, workflows, proyectos y conexión MCP. iPhone ofrece captura y consulta rápida en las mismas tres áreas. El ciclo de uso es COLLECT → LAB → LEARN; conectar y reutilizar son resultados del ciclo, no destinos de navegación.
 
-La primera entrega debe ser una vertical slice macOS funcional que incluya Collect, Lab, Learn, búsqueda, contexto y MCP local sin convertir esas capacidades en una colección de secciones principales.
+La entrega incluye una vertical slice macOS con Collect, Lab, Learn, búsqueda, contexto y MCP local, junto a la app nativa de iPhone para esas tres áreas. Ambas usan el mismo esquema SwiftData; iCloud sincroniza opcionalmente los datos entre dispositivos.
 
 Collect es la superficie de primer nivel para **lo que encuentro**: una
 biblioteca visual local donde imágenes, URLs, notas e ideas conservan su origen,
@@ -36,13 +36,14 @@ contexto y relaciones para poder encontrarse y reutilizarse más tarde.
 
 ## Capabilities and Constraints
 
-- La primera implementación prioriza macOS; el modelo y los servicios deben poder extenderse a iPhone sin duplicar la lógica de dominio.
+- La lógica de dominio vive en FieldCore y se comparte entre macOS y iPhone.
 - MCP forma parte de la primera versión usable. Debe ser local-only, enlazado a `127.0.0.1`, protegido con token y con lectura libre pero escritura permanente mediante propuestas aprobables.
 - V1 debe cubrir como mínimo: CRUD de proyectos, herramientas, learnings, notes y prompt blocks; búsqueda local determinista; Prompt Deck con Copy Stack; contexto de proyecto; AI Inbox; Activity; y las herramientas MCP esenciales.
 - Objetos conceptuales del producto: Tool, Learning, Reference, Block/PromptBlock, Style, Recipe, Experiment, Flow, Project, Session, AgentProposal y AgentActivity. Los que no entren en la vertical slice se incorporarán progresivamente.
 - Field LAB no debe incorporar chatbot, generación de imágenes/vídeo/texto, APIs de terceros de IA, CRM, tareas, calendario, colaboración multiusuario, analytics, billing, embeddings ni vector database.
 - La persistencia debe funcionar offline y sin cuenta Field LAB. iCloud/CloudKit será opcional y deberá estar documentado, no asumido durante el desarrollo local.
 - La UI debe ser nativa Apple, accesible y compatible con modo claro/oscuro; macOS debe favorecer teclado, sidebar, búsqueda, menú contextual y densidad editorial legible.
+- Los targets nativos viven en `Apps/FIELD.xcodeproj` y requieren el Xcode completo. La configuración CloudKit incluida usa identificadores de ejemplo y necesita los identificadores del equipo antes de sincronizar datos reales.
 - Para compilar el target macOS se requiere un toolchain completo de Xcode.
 
 ## Brand Commitments
@@ -50,6 +51,8 @@ contexto y relaciones para poder encontrarse y reutilizarse más tarde.
 El nombre del producto es Field LAB. La frase de producto es “Your creative memory, shared with your AI tools.” / “Tu memoria creativa, compartida con las herramientas de IA con las que trabajas.” La experiencia debe sentirse personal, profesional, calmada, editorial y nativa de Apple, sin parecer un dashboard SaaS genérico.
 
 ## Sample Data
+
+Existe una definición funcional extensa proporcionada por la usuaria en los archivos adjuntos de la conversación. El repositorio contiene la app de macOS y su complemento nativo de iPhone, incluido el flujo de referencias, experimentos y aprendizaje. Los identificadores Apple de CloudKit y App Group siguen siendo marcadores; no hay datos de muestra en producción.
 
 Las instalaciones nuevas empiezan vacías. Cualquier dato incluido para demostraciones o capturas debe ser sintético, estar identificado como ejemplo y mantenerse fuera de los datos de producción.
 
