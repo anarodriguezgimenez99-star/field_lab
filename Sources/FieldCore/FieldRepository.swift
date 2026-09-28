@@ -1173,7 +1173,7 @@ public final class FieldRepository {
         switch agent.lowercased() {
         case "claude": .claude
         case "codex": .codex
-        case "user", "ana": .user
+        case "user": .user
         default: .otherAgent
         }
     }

@@ -9,7 +9,7 @@ Field LAB is a shared Swift Package with three production targets and two test t
 - `FIELD`: SwiftUI macOS application sources and platform integrations, including the localhost HTTP adapter.
 - `FIELDMobile`: SwiftUI iPhone app in `Apps/FIELD.xcodeproj`; uses `FieldCore` for capture and reading.
 - `FIELDShare`: iOS Share Extension in the same project; stages shared URLs, images and text in the App Group queue.
-- Xcode `FIELD`: macOS app target over the existing app sources; enables the same CloudKit container as iPhone.
+- Xcode `FIELDDesktop`: macOS app target over the existing app sources; can use the same CloudKit container as iPhone when account-owned settings and schema are configured.
 - `FieldCoreTests`: in-memory SwiftData tests for core behavior.
 - `FieldMCPTests`: official MCP in-memory transport integration tests.
 
@@ -17,8 +17,8 @@ References use the same layers through a dedicated `FieldReference` model,
 `ReferenceSourceResolver`, `ReferenceFilter`/`ReferenceQuery`, and repository
 methods. `ReferenceImportQueue` stages share/import payloads in the App Group
 outside the main SwiftData store. The iPhone Share Extension writes to this
-queue; the mobile app imports records into the CloudKit-backed store when it
-becomes active.
+queue; the mobile app imports records into its local store when it becomes
+active. Configured Xcode targets synchronize that store through CloudKit.
 
 The normal data path is:
 

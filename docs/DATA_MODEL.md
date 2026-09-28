@@ -29,7 +29,7 @@
 
 ## Future migration notes
 
-CloudKit sync is supported by the shared targets. Preserve raw-string enum fields, avoid required relationship cycles, and add schema versions for any normalization of tags or attachments. Non-optional attributes need defaults; large attachment data should use external storage and should not be included in context packs.
+The Xcode app targets contain a CloudKit-compatible schema, but sync is only a prototype until team-owned identifiers, signing, and a production schema are configured. The public DMG and Swift Package executable remain local-only. Preserve raw-string enum fields, avoid required relationship cycles, and add schema versions for any normalization of tags or attachments. Non-optional attributes need defaults; large attachment data should use external storage and should not be included in context packs.
 
 References follow those constraints deliberately: provider/source kinds, analysis
 state, collection kinds and attribute origins are raw strings; project/tool/

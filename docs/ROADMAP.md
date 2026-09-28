@@ -34,7 +34,8 @@ UI, Rediscover, Shuffle and Markdown/JSON export remain follow-up work.
 
 ## Future — iPhone companion
 
-The repository contains an iPhone app, Share Extension and CloudKit prototype.
+The repository contains maintained iPhone app and Share Extension targets,
+plus CloudKit sync support that requires team configuration.
 Finishing account configuration, testing sync and preparing the companion for
 distribution are future work; the current release is macOS-only and stores data
 locally.

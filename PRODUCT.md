@@ -8,7 +8,7 @@ adaptive
 
 ## Stack
 
-Swift 6, SwiftUI y SwiftData. La app macOS es el espacio principal de trabajo; iPhone es el complemento para capturar y consultar. Ambas comparten FieldCore y pueden sincronizar la biblioteca con una base privada de CloudKit. El servidor MCP solo se ejecuta dentro de la app macOS.
+Swift 6, SwiftUI y SwiftData. La app macOS es el espacio principal de trabajo; la app de iPhone mantenida permite capturar y consultar. Ambos targets Xcode comparten FieldCore y pueden sincronizar mediante CloudKit cuando se configura una cuenta de desarrollo. El DMG distribuible usa almacenamiento local. El servidor MCP solo se ejecuta dentro de la app macOS.
 
 ## Users
 
@@ -26,9 +26,9 @@ Field LAB no genera contenido ni sustituye las herramientas creativas. Su mecani
 
 ## Operating Context
 
-macOS es la superficie de trabajo: organizar biblioteca, referencias, prompts, workflows, proyectos y conexión MCP. iPhone ofrece captura y consulta rápida en las mismas tres áreas. El ciclo de uso es COLLECT → LAB → LEARN; conectar y reutilizar son resultados del ciclo, no destinos de navegación.
+macOS es la superficie de trabajo y distribución actual: organizar biblioteca, referencias, prompts, workflows, proyectos y conexión MCP. La app de iPhone y la Share Extension se mantienen en el repositorio como targets Xcode, sin instalador público. El ciclo de uso es COLLECT → LAB → LEARN; conectar y reutilizar son resultados del ciclo, no destinos de navegación.
 
-La entrega incluye una vertical slice macOS con Collect, Lab, Learn, búsqueda, contexto y MCP local, junto a la app nativa de iPhone para esas tres áreas. Ambas usan el mismo esquema SwiftData; iCloud sincroniza opcionalmente los datos entre dispositivos.
+La distribución de macOS se limita al DMG construido desde el ejecutable del Swift Package, con almacenamiento local. Los targets Xcode de Mac e iPhone incluyen sincronización CloudKit, pero requiere identificadores y firma de un equipo Apple y desplegar el esquema; no está habilitada en el DMG.
 
 Collect es la superficie de primer nivel para **lo que encuentro**: una
 biblioteca visual local donde imágenes, URLs, notas e ideas conservan su origen,
@@ -41,7 +41,7 @@ contexto y relaciones para poder encontrarse y reutilizarse más tarde.
 - V1 debe cubrir como mínimo: CRUD de proyectos, herramientas, learnings, notes y prompt blocks; búsqueda local determinista; Prompt Deck con Copy Stack; contexto de proyecto; AI Inbox; Activity; y las herramientas MCP esenciales.
 - Objetos conceptuales del producto: Tool, Learning, Reference, Block/PromptBlock, Style, Recipe, Experiment, Flow, Project, Session, AgentProposal y AgentActivity. Los que no entren en la vertical slice se incorporarán progresivamente.
 - Field LAB no debe incorporar chatbot, generación de imágenes/vídeo/texto, APIs de terceros de IA, CRM, tareas, calendario, colaboración multiusuario, analytics, billing, embeddings ni vector database.
-- La persistencia debe funcionar offline y sin cuenta Field LAB. iCloud/CloudKit será opcional y deberá estar documentado, no asumido durante el desarrollo local.
+- La persistencia debe funcionar offline y sin cuenta Field LAB. CloudKit es una capacidad opcional de los prototipos Xcode, condicionada a la configuración de un equipo Apple; la distribución DMG usa almacenamiento local.
 - La UI debe ser nativa Apple, accesible y compatible con modo claro/oscuro; macOS debe favorecer teclado, sidebar, búsqueda, menú contextual y densidad editorial legible.
 - Los targets nativos viven en `Apps/FIELD.xcodeproj` y requieren el Xcode completo. La configuración CloudKit incluida usa identificadores de ejemplo y necesita los identificadores del equipo antes de sincronizar datos reales.
 - Para compilar el target macOS se requiere un toolchain completo de Xcode.
@@ -52,7 +52,7 @@ El nombre del producto es Field LAB. La frase de producto es “Your creative me
 
 ## Sample Data
 
-Existe una definición funcional extensa proporcionada por la usuaria en los archivos adjuntos de la conversación. El repositorio contiene la app de macOS y su complemento nativo de iPhone, incluido el flujo de referencias, experimentos y aprendizaje. Los identificadores Apple de CloudKit y App Group siguen siendo marcadores; no hay datos de muestra en producción.
+El repositorio contiene la app de macOS y los prototipos de iPhone y Share Extension, incluido el flujo de referencias, experimentos y aprendizaje. Los identificadores de CloudKit y App Group son marcadores de ejemplo. No se incluyen bibliotecas de usuario ni datos privados. Los datos sintéticos solo se generan mediante una función de desarrollo que no se ejecuta automáticamente.
 
 Las instalaciones nuevas empiezan vacías. Cualquier dato incluido para demostraciones o capturas debe ser sintético, estar identificado como ejemplo y mantenerse fuera de los datos de producción.
 
