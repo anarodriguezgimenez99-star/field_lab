@@ -24,3 +24,8 @@ xcuserdata/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Local AI-tool installs (Impeccable skills, agent hooks): never versioned
+.claude/
+.agents/
+.codex/
