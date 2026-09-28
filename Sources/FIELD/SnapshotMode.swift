@@ -1,6 +1,7 @@
 #if DEBUG && os(macOS)
 import AppKit
 import SwiftUI
+import FieldCore
 
 /// Development-only: set `FIELD_SNAPSHOT_DIR` to seed sample data, render each
 /// primary route of the window to a PNG and quit. Uses the view's own
@@ -20,6 +21,7 @@ enum SnapshotMode {
         Task { @MainActor in
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try? appModel.repository.seedSampleDataIfEmpty()
+            seedExtras(appModel.repository)
             appModel.refresh()
             NSApp.activate(ignoringOtherApps: true)
             NSApp.windows.first(where: { $0.isVisible })?.makeKeyAndOrderFront(nil)
@@ -36,6 +38,39 @@ enum SnapshotMode {
             NSApp.terminate(nil)
         }
     }
+
+    /// Synthetic gradient references and one experiment so the detail
+    /// surfaces have something to show.
+    private static func seedExtras(_ repository: FieldRepository) {
+        guard repository.references().count < 3 else { return }
+        let palettes: [(NSColor, NSColor)] = [
+            (.systemIndigo, .systemPink), (.systemTeal, .systemBlue), (.systemOrange, .systemPurple),
+            (.systemGreen, .systemYellow), (.systemPink, .systemOrange), (.systemBlue, .systemIndigo)
+        ]
+        var referenceIDs: [UUID] = []
+        for (index, colors) in palettes.enumerated() {
+            let image = NSImage(size: NSSize(width: 640, height: index % 2 == 0 ? 800 : 480), flipped: false) { rect in
+                NSGradient(starting: colors.0, ending: colors.1)?.draw(in: rect, angle: 60 + CGFloat(index) * 20)
+                return true
+            }
+            guard let tiff = image.tiffRepresentation,
+                  let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { continue }
+            if let reference = try? repository.createReference(title: "Sample reference \(index + 1)", imageData: png, tags: ["sample"]) {
+                referenceIDs.append(reference.id)
+            }
+        }
+        if let experiment = try? repository.createExperiment(
+            title: "Natural product light",
+            goal: "Find the lighting recipe that keeps materials believable.",
+            prompt: "hard directional natural sunlight, 35mm documentary photography, fine analog grain",
+            model: "flux-1",
+            referenceIDs: Array(referenceIDs.prefix(3))
+        ) {
+            _ = try? repository.createExperimentRun(experimentID: experiment.id, title: "Run 1", prompt: experiment.prompt, observation: "Shadows are right, grain too heavy.", resultStatus: .completed, evaluation: .interesting)
+        }
+    }
+
+    static var isActive: Bool { directory != nil }
 
     private static func capture(named name: String, in directory: URL) {
         guard let view = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil })?.contentView?.superview,

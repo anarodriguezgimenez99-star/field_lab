@@ -41,7 +41,7 @@ struct ContentView: View {
         ZStack {
             NavigationSplitView {
                 FieldSidebar(appModel: appModel)
-                    .navigationSplitViewColumnWidth(min: 145, ideal: 160, max: 200)
+                    .navigationSplitViewColumnWidth(min: 178, ideal: 190, max: 230)
             } detail: {
                 FieldRouteView(appModel: appModel)
                     .id(appModel.refreshToken)
@@ -124,7 +124,7 @@ struct FieldSidebar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
                 fieldLogo
                     .resizable()
                     .scaledToFit()
@@ -141,46 +141,51 @@ struct FieldSidebar: View {
             .padding(.top, 14)
             .padding(.bottom, 10)
 
-            List(selection: $appModel.selectedRoute) {
-                Section {
-                    sidebarLink(.collect)
-                    sidebarLink(.lab)
-                    NavigationLink(value: FieldRoute.learn) {
-                        if proposalCount > 0 {
-                            Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
-                                .badge(proposalCount)
-                        } else {
-                            Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
-                        }
-                    }
-                    .listRowBackground(sidebarSelection(for: .learn))
-                }
-
-                Section {
-                    sidebarLink(.settings)
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                sidebarRow(.collect)
+                sidebarRow(.lab)
+                sidebarRow(.learn, badge: proposalCount)
+                Spacer().frame(height: 14)
+                sidebarRow(.settings)
+                Spacer(minLength: 0)
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-            .background(FieldPalette.sidebar)
+            .padding(.horizontal, 10)
+            .padding(.top, 4)
         }
         .background(FieldPalette.sidebar)
     }
 
-    @ViewBuilder
-    private func sidebarLink(_ route: FieldRoute) -> some View {
-        NavigationLink(value: route) {
-            Label(route.title, systemImage: route.systemImage)
+    /// The system list selection follows the user's accent color and clashes
+    /// with the violet palette, so rows are drawn from the palette.
+    private func sidebarRow(_ route: FieldRoute, badge: Int = 0) -> some View {
+        let isSelected = appModel.selectedRoute == route
+        return Button {
+            appModel.selectedRoute = route
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: route.systemImage)
+                    .frame(width: 20)
+                    .foregroundStyle(isSelected ? FieldPalette.accent : Color.secondary)
+                Text(route.title)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if badge > 0 {
+                    Text("\(badge)")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 1)
+                        .background(FieldPalette.accent.opacity(0.25), in: Capsule())
+                }
+            }
+            .font(.body.weight(isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? Color.primary : Color.primary.opacity(0.82))
+            .padding(.horizontal, 10)
+            .frame(minHeight: 32)
+            .background(isSelected ? FieldPalette.accent.opacity(0.18) : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
-        .listRowBackground(sidebarSelection(for: route))
-    }
-
-    /// The system selection follows the user's accent color and clashes with
-    /// the violet palette, so the selected row is drawn from the palette.
-    private func sidebarSelection(for route: FieldRoute) -> some View {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(appModel.selectedRoute == route ? FieldPalette.accent.opacity(0.20) : Color.clear)
-            .padding(.horizontal, 6)
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -1896,14 +1901,16 @@ struct FieldPageHeader: View {
     let count: Int?
     let actionTitle: String
     let actionSystemImage: String
+    var compact = false
     let action: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 20) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(L10n.text(title))
-                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                    .font(.system(compact ? .title2 : .largeTitle, design: .rounded).weight(.semibold))
                     .lineLimit(1)
+                if !compact {
                 HStack(spacing: 8) {
                     Text(L10n.text(subtitle))
                         .foregroundStyle(.secondary)
@@ -1916,6 +1923,7 @@ struct FieldPageHeader: View {
                 }
                 .font(.subheadline)
                 .lineLimit(2)
+                }
             }
 
             Spacer(minLength: 16)
@@ -1928,7 +1936,7 @@ struct FieldPageHeader: View {
             }
         }
         .padding(.horizontal, 28)
-        .padding(.vertical, 24)
+        .padding(.vertical, compact ? 14 : 24)
     }
 }
 

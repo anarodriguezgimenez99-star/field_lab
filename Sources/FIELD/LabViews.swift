@@ -65,7 +65,8 @@ struct LabView: View {
                 subtitle: "Test, compare and document what works.",
                 count: nil,
                 actionTitle: "New Experiment",
-                actionSystemImage: "plus"
+                actionSystemImage: "plus",
+                compact: !experiments.isEmpty
             ) { isPresentingNewExperiment = true }
 
             Divider()
@@ -75,22 +76,20 @@ struct LabView: View {
             } else {
                 HSplitView {
                     List(selection: $selectedID) {
-                        Section(L10n.text("Recent Experiments")) {
-                            ForEach(experiments) { experiment in
-                                ExperimentRow(experiment: experiment, appModel: appModel)
-                                    .tag(experiment.id)
-                                    .contextMenu {
-                                        Button(L10n.text("Delete"), role: .destructive) {
-                                            try? appModel.repository.deleteExperiment(experiment)
-                                            if selectedID == experiment.id { selectedID = nil }
-                                            appModel.refresh()
-                                        }
+                        ForEach(experiments) { experiment in
+                            ExperimentRow(experiment: experiment, appModel: appModel)
+                                .tag(experiment.id)
+                                .contextMenu {
+                                    Button(L10n.text("Delete"), role: .destructive) {
+                                        try? appModel.repository.deleteExperiment(experiment)
+                                        if selectedID == experiment.id { selectedID = nil }
+                                        appModel.refresh()
                                     }
-                            }
+                                }
                         }
                     }
                     .fieldListSurface()
-                    .frame(minWidth: 280, idealWidth: 350)
+                    .frame(minWidth: 240, idealWidth: 300, maxWidth: 380)
 
                     Group {
                         if let selectedExperiment {
@@ -99,7 +98,7 @@ struct LabView: View {
                             FieldContextHint(systemImage: "rectangle.split.3x1", title: "Choose an experiment", message: "Your Workbench is where references, prompts, tools and settings become reproducible Runs.")
                         }
                     }
-                    .frame(minWidth: 700)
+                    .frame(minWidth: 600)
                 }
             }
         }
@@ -272,6 +271,8 @@ struct ExperimentEditorView: View {
 private enum WorkbenchMode: String, CaseIterable {
     case build = "BUILD"
     case compare = "COMPARE"
+
+    var titleKey: String { self == .build ? "Build" : "Compare" }
 }
 
 struct ExperimentWorkspaceView: View {
@@ -328,6 +329,19 @@ struct ExperimentWorkspaceView: View {
         VStack(spacing: 0) {
             workbenchHeader
             Divider()
+            #if os(macOS)
+            HStack(spacing: 8) {
+                ForEach(WorkbenchMode.allCases, id: \.self) { option in
+                    FieldFilterChip(title: option.titleKey, isSelected: mode == option) { mode = option }
+                        .disabled(option == .compare && !canCompare)
+                        .opacity(option == .compare && !canCompare ? 0.5 : 1)
+                }
+                Spacer(minLength: 0)
+            }
+            .accessibilityLabel(L10n.text("Workbench mode"))
+            .padding(.horizontal, 28)
+            .padding(.vertical, 12)
+            #else
             Picker(L10n.text("Workbench mode"), selection: $mode) {
                 ForEach(WorkbenchMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
@@ -335,42 +349,40 @@ struct ExperimentWorkspaceView: View {
             .frame(width: 220)
             .padding(.vertical, 12)
             .disabled(mode == .compare && !canCompare)
+            #endif
 
             #if os(macOS)
-            HSplitView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if mode == .build {
-                        ingredients
-                            .padding(20)
-                        if duplicateNotice {
-                            Label(L10n.text("Setup copied from the selected Run. Change one ingredient, then create a new Run."), systemImage: "arrow.triangle.branch")
-                                .font(.caption)
-                                .foregroundStyle(.tint)
-                                .padding(.horizontal, 20)
-                                .padding(.bottom, 12)
-                        }
-                    }
-
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            runsSection
-                            if mode == .compare {
-                                compareSection
+            HStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 28) {
+                        if mode == .build {
+                            ingredients
+                            if duplicateNotice {
+                                Label(L10n.text("Setup copied from the selected Run. Change one ingredient, then create a new Run."), systemImage: "arrow.triangle.branch")
+                                    .font(.caption)
+                                    .foregroundStyle(.tint)
                             }
-                            conclusionSection
                         }
-                        .padding(20)
+                        runsSection
+                        if mode == .compare {
+                            compareSection
+                        }
+                        conclusionSection
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 20)
                 }
-                .frame(minWidth: 650, maxHeight: .infinity, alignment: .topLeading)
+                .frame(minWidth: 460, maxWidth: .infinity, maxHeight: .infinity)
+
+                Divider()
 
                 if let selectedRun {
                     RunInspectorView(appModel: appModel, experiment: experiment, run: selectedRun, isBest: selectedRun.id == experiment.bestRunID, onDuplicate: { duplicateRun(selectedRun) }, onChanged: refresh, onSelectBest: { selectBest(selectedRun) })
-                        .frame(minWidth: 310, idealWidth: 360, maxWidth: 420)
+                        .frame(width: 340)
                 } else {
                     InspectorEmptyState()
-                        .frame(minWidth: 310, idealWidth: 360, maxWidth: 420)
+                        .frame(width: 340)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -433,10 +445,10 @@ struct ExperimentWorkspaceView: View {
         HStack(alignment: .top, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
                 Text(experiment.title)
-                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                    .font(.system(.title, design: .rounded).weight(.semibold))
                 Text(experiment.goal.isEmpty ? L10n.text("What am I trying to learn?") : experiment.goal)
-                    .font(.title3)
-                    .foregroundStyle(experiment.goal.isEmpty ? .secondary : .primary)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Menu {
@@ -486,14 +498,17 @@ struct ExperimentWorkspaceView: View {
             WorkbenchSectionTitle(title: "INGREDIENTS", detail: "The setup you are testing")
 
             #if os(macOS)
-            LazyVGrid(columns: [
-                GridItem(.flexible(minimum: 260), spacing: 18),
-                GridItem(.flexible(minimum: 260), spacing: 18)
-            ], alignment: .leading, spacing: 14) {
-                referenceIngredient
-                promptIngredient
-                toolIngredient
-                settingsIngredient
+            HStack(alignment: .top, spacing: 32) {
+                VStack(alignment: .leading, spacing: 24) {
+                    referenceIngredient
+                    toolIngredient
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                VStack(alignment: .leading, spacing: 24) {
+                    promptIngredient
+                    settingsIngredient
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             #else
             VStack(alignment: .leading, spacing: 18) {
@@ -746,7 +761,11 @@ struct ExperimentWorkspaceView: View {
         VStack(alignment: .leading, spacing: 14) {
             WorkbenchSectionTitle(title: "CONCLUSION", detail: "What did you learn?")
             TextEditor(text: $conclusion)
+                #if os(macOS)
+                .frame(height: 110)
+                #else
                 .frame(minHeight: 110)
+                #endif
                 .scrollContentBackground(.hidden)
                 .padding(10)
                 .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -1343,6 +1362,9 @@ struct LearnView: View {
             }
         }
         .background(FieldPalette.canvas)
+        #if DEBUG && os(macOS)
+        .onAppear { if SnapshotMode.isActive, selectedID == nil { selectedID = items.first?.id } }
+        #endif
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Search Learn"))
         .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500) }
         .sheet(isPresented: $isShowingPromptDeck) { PromptDeckView(appModel: appModel).frame(minWidth: 760, minHeight: 560) }

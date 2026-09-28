@@ -27,6 +27,15 @@ final class MCPServerManager: ObservableObject {
         self.repository = repository
         preferredPort = Self.configuredPort()
         port = preferredPort
+        #if DEBUG
+        // Snapshot runs use a throwaway token: a freshly built debug binary
+        // would otherwise trigger a Keychain password prompt on every launch.
+        if ProcessInfo.processInfo.environment["FIELD_SNAPSHOT_DIR"] != nil {
+            token = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+            authHeaderHelperPath = nil
+            return
+        }
+        #endif
         let storedToken = KeychainTokenStore.load().flatMap { $0.isEmpty ? nil : $0 }
         let resolvedToken = storedToken ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
         token = resolvedToken

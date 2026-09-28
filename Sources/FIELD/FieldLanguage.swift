@@ -30,6 +30,8 @@ enum FieldLocalization {
         "RUNS": "EJECUCIONES",
         "COMPARE": "COMPARAR",
         "LEARN": "APRENDER",
+        "Build": "Construir",
+        "Compare": "Comparar",
         "Recent Experiments": "Experimentos recientes",
         "Your documented Runs will appear here.": "Aquí aparecerán las ejecuciones que documentes.",
         "New Experiment": "Nuevo experimento",

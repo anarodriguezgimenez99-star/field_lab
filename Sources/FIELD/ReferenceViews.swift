@@ -144,6 +144,9 @@ struct ReferencesView: View {
             }
         }
         .background(FieldPalette.canvas)
+        #if DEBUG && os(macOS)
+        .onAppear { if SnapshotMode.isActive, selectedID == nil { selectedID = allReferences.first?.id } }
+        #endif
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar referencias, OCR y etiquetas…"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
