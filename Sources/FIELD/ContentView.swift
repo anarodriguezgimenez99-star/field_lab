@@ -104,11 +104,11 @@ struct ContentView: View {
         }
         .sheet(isPresented: Binding(get: { appModel.snapshotSheet != nil }, set: { if !$0 { appModel.snapshotSheet = nil } })) {
             switch appModel.snapshotSheet {
-            case "projects": ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
-            case "tools": ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
-            case "flows": FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "projects": FieldSheet { ProjectsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "tools": FieldSheet { ToolsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "flows": FieldSheet { FlowsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
             case "mcp": MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
-            case "activity": ActivityView(appModel: appModel).frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "activity": FieldSheet { ActivityView(appModel: appModel) }.frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
             case "experiment": ExperimentEditorView(appModel: appModel) { _ in }.frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
             case "knowledge": KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: .learning).frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
             default: EmptyView()
@@ -749,8 +749,14 @@ struct KnowledgeEditorView: View {
                         Text(tool.name).tag(Optional(tool.id))
                     }
                 }
-                TextEditor(text: $knowledgeBody)
-                    .frame(minHeight: 150)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.text("Descripción"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    TextEditor(text: $knowledgeBody)
+                        .frame(minHeight: 150)
+                        .fieldTextEditorSurface()
+                }
             }
 
             HStack {
@@ -1066,7 +1072,7 @@ struct SaveRecipeView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack { Text(L10n.text("Guardar como receta")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Cancelar")) { dismiss() } }
             TextField(L10n.text("Título de la receta"), text: $title)
-            TextEditor(text: $notes).frame(minHeight: 100).overlay(RoundedRectangle(cornerRadius: 8).stroke(.quaternary))
+            TextEditor(text: $notes).frame(minHeight: 100).fieldTextEditorSurface()
             DetailSection(title: "Conjunto de prompts") { Text(stack).font(.caption).foregroundStyle(.secondary).lineLimit(3) }
             HStack { Spacer(); Button(L10n.text("Guardar receta")) {
                 _ = try? appModel.repository.createKnowledge(kind: .recipe, title: title, body: [stack, notes].filter { !$0.isEmpty }.joined(separator: "\n\n"), status: .works, tags: ["prompt-stack"])
@@ -1698,6 +1704,9 @@ struct ActivityView: View {
         VStack(alignment: .leading, spacing: 0) {
                 FieldSectionHeader(title: "Actividad", subtitle: "Acciones en FIELD LAB, nunca razonamiento privado.")
             Divider()
+            if appModel.repository.activities().isEmpty {
+                FieldContextHint(systemImage: "waveform.path.ecg", title: "Aún no hay actividad", message: "Aquí aparecerán las acciones de los agentes en FIELD LAB.")
+            } else {
             List {
                 ForEach(appModel.repository.activities()) { activity in
                     HStack(alignment: .top, spacing: 12) {
@@ -1705,6 +1714,7 @@ struct ActivityView: View {
                         VStack(alignment: .leading, spacing: 4) { Text(activity.agent).font(.headline); Text(L10n.activityAction(activity.action)).font(.caption).foregroundStyle(.secondary); if !activity.detail.isEmpty { Text(activity.detail).foregroundStyle(.secondary) }; Text(activity.timestamp.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.tertiary) }
                     }.padding(.vertical, 4)
                 }
+            }
             }
         }
     }
@@ -2067,5 +2077,35 @@ struct FieldFilterChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+extension View {
+    /// Multi-line text fields sit on a palette surface so they stay visible
+    /// once the system background is hidden.
+    func fieldTextEditorSurface() -> some View {
+        scrollContentBackground(.hidden)
+            .padding(10)
+            .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(FieldPalette.hairline))
+    }
+}
+
+/// Browsers presented as sheets need their own way out.
+struct FieldSheet<Content: View>: View {
+    @Environment(\.dismiss) private var dismiss
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button(L10n.text("Hecho")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            content()
+        }
     }
 }

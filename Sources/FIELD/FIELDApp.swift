@@ -41,7 +41,7 @@ struct FIELDApp: App {
                 .keyboardShortcut("n", modifiers: [.command, .shift])
 
                 Button(L10n.text("Focus Search")) {
-                    appModel.selectedRoute = .lab
+                    appModel.focusSearch()
                 }
                 .keyboardShortcut("f", modifiers: [.command])
             }

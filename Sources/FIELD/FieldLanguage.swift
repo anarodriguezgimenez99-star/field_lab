@@ -490,6 +490,9 @@ enum FieldLocalization {
     ]
 
     private static let english: [String: String] = [
+        "Descripción": "Description",
+        "Aún no hay actividad": "No activity yet",
+        "Aquí aparecerán las acciones de los agentes en FIELD LAB.": "Agent actions in FIELD LAB will appear here.",
         "Recopilar": "Collect",
         "Laboratorio": "Lab",
         "Aprender": "Learn",

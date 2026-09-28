@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 import FieldCore
 
 @MainActor
@@ -55,6 +58,19 @@ final class AppModel: ObservableObject {
     func presentCapture(kind: KnowledgeKind = .learning) {
         captureKind = kind
         isPresentingCapture = true
+    }
+
+    /// Moves the keyboard focus to the search field of the current section.
+    func focusSearch() {
+        #if os(macOS)
+        guard let window = NSApp.keyWindow, let root = window.contentView?.superview else { return }
+        func firstSearchField(in view: NSView) -> NSSearchField? {
+            if let field = view as? NSSearchField { return field }
+            for subview in view.subviews { if let field = firstSearchField(in: subview) { return field } }
+            return nil
+        }
+        if let field = firstSearchField(in: root) { window.makeFirstResponder(field) }
+        #endif
     }
 
     func openMCPSettings() {

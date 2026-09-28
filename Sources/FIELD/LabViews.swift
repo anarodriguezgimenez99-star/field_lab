@@ -250,6 +250,7 @@ struct ExperimentEditorView: View {
             }
         }
         .padding(24)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func create() {
@@ -1376,8 +1377,8 @@ struct LearnView: View {
         #endif
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Search Learn"))
         .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-        .sheet(isPresented: $isShowingPromptDeck) { PromptDeckView(appModel: appModel).frame(minWidth: 760, minHeight: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-        .sheet(isPresented: $isShowingSuggestions) { AIInboxView(appModel: appModel).frame(width: 720, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingPromptDeck) { FieldSheet { PromptDeckView(appModel: appModel) }.frame(minWidth: 760, minHeight: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingSuggestions) { FieldSheet { AIInboxView(appModel: appModel) }.frame(width: 720, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
     }
 }
 
@@ -1459,10 +1460,10 @@ struct SettingsView: View {
         }
         .background(FieldPalette.canvas)
         .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-        .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-        .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-        .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-        .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingActivity) { FieldSheet { ActivityView(appModel: appModel) }.frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingProjects) { FieldSheet { ProjectsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingTools) { FieldSheet { ToolsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingFlows) { FieldSheet { FlowsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
         .onAppear(perform: presentRequestedMCPSettings)
         .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
             if requested { presentRequestedMCPSettings() }
@@ -1531,10 +1532,10 @@ struct SettingsView: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Done")) { dismiss() } } }
             #endif
             .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-            .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-            .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-            .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
-            .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingActivity) { FieldSheet { ActivityView(appModel: appModel) }.frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingProjects) { FieldSheet { ProjectsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingTools) { FieldSheet { ToolsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingFlows) { FieldSheet { FlowsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
             .onAppear(perform: presentRequestedMCPSettings)
             .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
                 if requested { presentRequestedMCPSettings() }
