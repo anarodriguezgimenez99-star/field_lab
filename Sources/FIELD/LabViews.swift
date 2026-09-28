@@ -89,6 +89,7 @@ struct LabView: View {
                             }
                         }
                     }
+                    .fieldListSurface()
                     .frame(minWidth: 280, idealWidth: 350)
 
                     Group {
@@ -122,13 +123,17 @@ struct LabEmptyState: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            #if os(iOS)
             Text(L10n.text("LAB"))
                 .font(.system(.largeTitle, design: .rounded).weight(.semibold))
             Text(L10n.text("Test, compare and document what works."))
                 .font(.title3)
+            #endif
             Text(L10n.text("Build a visual workbench from references, a prompt, a tool and the settings that matter. Each Run stays reproducible while you learn."))
+                .font(.title3)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: 500, alignment: .leading)
+                .lineSpacing(3)
+                .frame(maxWidth: 520, alignment: .leading)
             Button(L10n.text("New Experiment"), action: action)
                 .buttonStyle(.borderedProminent)
                 .tint(FieldPalette.accent)
@@ -145,6 +150,7 @@ struct LabEmptyState: View {
                 Text(L10n.text("LEARN"))
             }
             .font(.caption.weight(.semibold))
+            .tracking(0.6)
             .foregroundStyle(.secondary)
             .padding(.top, 18)
 
@@ -155,7 +161,8 @@ struct LabEmptyState: View {
             .padding(.top, 22)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(36)
+        .padding(.horizontal, 28)
+        .padding(.vertical, 36)
     }
 }
 
@@ -1297,8 +1304,19 @@ struct LearnView: View {
             #if os(macOS)
             FieldPageHeader(title: "Learn", subtitle: "Keep the techniques and recipes worth reusing.", count: items.count, actionTitle: "Add", actionSystemImage: "plus") { isPresentingEditor = true }
             #endif
+            #if os(macOS)
+            HStack(spacing: 8) {
+                ForEach(LearnFilter.allCases, id: \.self) { option in
+                    FieldFilterChip(title: option.titleKey, isSelected: filter == option) { filter = option }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 14)
+            #else
             Picker(L10n.text("Knowledge type"), selection: $filter) { ForEach(LearnFilter.allCases, id: \.self) { Text($0.title).tag($0) } }
                 .pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
+            #endif
             if items.isEmpty {
                 if !appModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || filter != .all {
                     FieldEmptyState(
@@ -1316,7 +1334,7 @@ struct LearnView: View {
             } else {
                 #if os(macOS)
                 HSplitView {
-                    List(selection: $selectedID) { ForEach(items) { item in KnowledgeRow(item: item).tag(item.id) } }.frame(minWidth: 340, idealWidth: 420)
+                    List(selection: $selectedID) { ForEach(items) { item in KnowledgeRow(item: item).tag(item.id) } }.fieldListSurface().frame(minWidth: 340, idealWidth: 420)
                     if let item = items.first(where: { $0.id == selectedID }) { KnowledgeDetailView(item: item, appModel: appModel) { isPresentingEditor = true } } else { FieldContextHint(systemImage: "lightbulb", title: "Choose something to reuse", message: "Read each item in its complete context.") }
                 }
                 #else
@@ -1334,15 +1352,15 @@ struct LearnView: View {
 
 enum LearnFilter: String, CaseIterable, Hashable {
     case all, learnings, recipes, blocks
-    var title: String {
-        let key: String = switch self {
+    var titleKey: String {
+        switch self {
         case .all: "All"
         case .learnings: "Learnings"
         case .recipes: "Recipes"
         case .blocks: "Prompt Blocks"
         }
-        return L10n.text(key)
     }
+    var title: String { L10n.text(titleKey) }
 }
 
 struct SettingsView: View {
@@ -1361,6 +1379,93 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        macSettings
+        #else
+        iOSSettings
+        #endif
+    }
+
+    #if os(macOS)
+    private var macSettings: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 30) {
+                Text(L10n.text("Settings"))
+                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                settingsGroup("Connections") {
+                    macRow("AI connections", connectionStatus, "antenna.radiowaves.left.and.right") { isShowingMCP = true }
+                    macRow("Activity", "Review agent actions", "waveform.path.ecg") { isShowingActivity = true }
+                }
+                settingsGroup("Context") {
+                    macRow("Projects", "Organize your experiments", "folder") { isShowingProjects = true }
+                    macRow("Tools", "Shared tool metadata", "wrench.and.screwdriver") { isShowingTools = true }
+                    macRow("Flows", "Advanced reusable methods", "arrow.triangle.branch") { isShowingFlows = true }
+                }
+                settingsGroup("Language", card: false) {
+                    HStack(spacing: 8) {
+                        ForEach(FieldLanguage.allCases) { language in
+                            Button { appModel.language = language } label: {
+                                Text(language.name)
+                                    .font(.subheadline.weight(appModel.language == language ? .semibold : .regular))
+                                    .foregroundStyle(appModel.language == language ? FieldPalette.canvas : Color.primary.opacity(0.86))
+                                    .padding(.horizontal, 14)
+                                    .frame(minHeight: 30)
+                                    .background(appModel.language == language ? FieldPalette.accent : FieldPalette.raised, in: Capsule())
+                                    .overlay(Capsule().strokeBorder(appModel.language == language ? Color.clear : FieldPalette.line))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(appModel.language == language ? .isSelected : [])
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 2)
+                }
+            }
+            .frame(maxWidth: 720, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(FieldPalette.canvas)
+        .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620) }
+        .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560) }
+        .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
+        .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
+        .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
+        .onAppear(perform: presentRequestedMCPSettings)
+        .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
+            if requested { presentRequestedMCPSettings() }
+        }
+    }
+
+    private func settingsGroup<Content: View>(_ title: String, card: Bool = true, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.text(title))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 2)
+            if card {
+                VStack(spacing: 0) { content() }
+                    .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(FieldPalette.hairline))
+            } else {
+                content()
+            }
+        }
+    }
+
+    private func macRow(_ title: String, _ detail: String, _ systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            SettingsRow(title: title, detail: detail, systemImage: systemImage)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+    #endif
+
+    private var iOSSettings: some View {
         NavigationStack {
             List {
                 Section(L10n.text("Connections")) {
@@ -1383,8 +1488,17 @@ struct SettingsView: View {
                     .accessibilityLabel(L10n.text("Language"))
                 }
             }
+            .buttonStyle(.plain)
             .navigationTitle(L10n.text("Settings"))
+            #if os(macOS)
+            .listStyle(.inset)
+            .fieldListSurface()
+            .frame(maxWidth: 760)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(FieldPalette.canvas)
+            #else
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Done")) { dismiss() } } }
+            #endif
             .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620) }
             .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560) }
             .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620) }

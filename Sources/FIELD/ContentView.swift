@@ -72,6 +72,8 @@ struct ContentView: View {
                     .accessibilityValue(mcpServer.isRunning ? L10n.text("Activo") : mcpServer.isStarting ? L10n.text("Iniciando") : L10n.text("Detenido"))
                 }
             }
+            .toolbarBackground(.hidden, for: .windowToolbar)
+            .navigationTitle("")
             .background(FieldPalette.canvas)
 
             if appModel.isPresentingCapture {
@@ -91,6 +93,9 @@ struct ContentView: View {
         }
         .frame(minWidth: 1040, minHeight: 700)
         .animation(.easeOut(duration: 0.22), value: appModel.isPresentingCapture)
+        #if DEBUG
+        .task { SnapshotMode.runIfRequested(appModel: appModel) }
+        #endif
         #endif
     }
 }
@@ -148,6 +153,7 @@ struct FieldSidebar: View {
                             Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
                         }
                     }
+                    .listRowBackground(sidebarSelection(for: .learn))
                 }
 
                 Section {
@@ -166,6 +172,15 @@ struct FieldSidebar: View {
         NavigationLink(value: route) {
             Label(route.title, systemImage: route.systemImage)
         }
+        .listRowBackground(sidebarSelection(for: route))
+    }
+
+    /// The system selection follows the user's accent color and clashes with
+    /// the violet palette, so the selected row is drawn from the palette.
+    private func sidebarSelection(for route: FieldRoute) -> some View {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(appModel.selectedRoute == route ? FieldPalette.accent.opacity(0.20) : Color.clear)
+            .padding(.horizontal, 6)
     }
 }
 
@@ -545,7 +560,7 @@ struct KnowledgeRow: View {
                     Text(L10n.text(item.status.displayName))
                 }
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)
@@ -1850,6 +1865,8 @@ enum FieldPalette {
     static let line = Color.white.opacity(0.12)
     static let selected = Color.white.opacity(0.12)
     static let muted = Color(red: 0.15, green: 0.13, blue: 0.18)
+    static let raised = Color(red: 0.094, green: 0.082, blue: 0.118)
+    static let hairline = Color.white.opacity(0.08)
     static let accent = Color(red: 0.753, green: 0.518, blue: 0.988)
     static let edgeGlow = Color(red: 0.96, green: 0.853, blue: 0.64)
 }
@@ -1990,5 +2007,34 @@ struct FieldContextHint: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(40)
+    }
+}
+
+/// Lists and forms sit on the app canvas, not on AppKit's default gray.
+extension View {
+    func fieldListSurface() -> some View {
+        scrollContentBackground(.hidden)
+            .background(FieldPalette.canvas)
+    }
+}
+
+struct FieldFilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(L10n.text(title))
+                .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? FieldPalette.canvas : Color.primary.opacity(0.86))
+                .padding(.horizontal, 13)
+                .frame(minHeight: 30)
+                .background(isSelected ? FieldPalette.accent : FieldPalette.raised, in: Capsule())
+                .overlay(Capsule().strokeBorder(isSelected ? Color.clear : FieldPalette.line, lineWidth: 1))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

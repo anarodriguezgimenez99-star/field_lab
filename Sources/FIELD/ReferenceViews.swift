@@ -251,12 +251,12 @@ struct ReferencesView: View {
 
     private var filterBar: some View {
         HStack(spacing: 8) {
-            filterChip("Todo", isSelected: !showUnclassified && !showPinned) {
+            FieldFilterChip(title: "Todo", isSelected: !showUnclassified && !showPinned) {
                 showUnclassified = false
                 showPinned = false
             }
-            filterChip("Sin clasificar", isSelected: showUnclassified) { showUnclassified.toggle(); showPinned = false }
-            filterChip("Fijadas", isSelected: showPinned) { showPinned.toggle(); showUnclassified = false }
+            FieldFilterChip(title: "Sin clasificar", isSelected: showUnclassified) { showUnclassified.toggle(); showPinned = false }
+            FieldFilterChip(title: "Fijadas", isSelected: showPinned) { showPinned.toggle(); showUnclassified = false }
 
             Divider().frame(height: 20).padding(.horizontal, 4)
 
@@ -284,21 +284,6 @@ struct ReferencesView: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 12)
         .controlSize(.small)
-    }
-
-    private func filterChip(_ title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(L10n.text(title))
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .frame(minHeight: 44)
-                .background(isSelected ? FieldPalette.accent : FieldPalette.surface, in: Capsule())
-                .foregroundStyle(isSelected ? Color.white : Color.primary)
-                .overlay(Capsule().stroke(isSelected ? .clear : FieldPalette.line))
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
