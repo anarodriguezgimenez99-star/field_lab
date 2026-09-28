@@ -5,11 +5,11 @@ Field LAB uses the official Swift MCP SDK, pinned to `0.12.1`. The SDK documents
 ## Endpoint and security
 
 - Preferred endpoint: `http://127.0.0.1:8765/mcp`. The toolbar connection button starts the server and opens MCP Settings.
-- The listener defaults to port `8765` and tries the remainder of `8765` through `8800` if needed. A worktree can set `FIELD_MCP_PORT` to its reserved preferred port in that range. The server publishes the actual endpoint, and the client snippets update to match. If the whole range is occupied, the UI explains the failure.
+- The listener defaults to port `8765` and tries the remainder of `8765` through `8800` if needed. Set `FIELD_MCP_PORT` to choose a different preferred port in that range (useful when running two copies of the app). The server publishes the actual endpoint, and the client snippets update to match. If the whole range is occupied, the UI explains the failure.
 - The listener is explicitly bound to loopback; it is not exposed to LAN.
 - Every request requires `Authorization: Bearer <token>`.
 - The token is stored in macOS Keychain and is never logged or synced.
-- `FIELD_MCP_TOKEN` is only a fallback for MCP clients that cannot use the Keychain header helper. Do not put a token in a worktree env file.
+- `FIELD_MCP_TOKEN` is only a fallback for MCP clients that cannot use the Keychain header helper. Never commit it or put it in a shared env file.
 - The server is stopped by default. The toolbar button starts it and opens MCP Settings; the Settings page can also start or stop it.
 - On launch, the app installs a private executable at `~/Library/Application Support/Field LAB/MCP/auth-headers`. Codex and Claude Code can call it to read the bearer token from Keychain only when connecting.
 
