@@ -56,11 +56,12 @@ URL entry and manual notes.
 
 The iPhone Share Extension flow is:
 
-`Share → Save to Field LAB → App Group staging → Field LAB import → local SwiftData → iCloud/CloudKit`
+`Share → Save to Field LAB → App Group staging → Field LAB import → local SwiftData → CloudKit when configured`
 
 The extension stages the share to the App Group without opening SwiftData or
 waiting for CloudKit. The main app imports it on launch or when returning to
-the foreground, then the reference is available in the library.
+the foreground, then the reference is available in its local store. Configured
+Xcode app targets synchronize that store through CloudKit.
 
 ## Classification, filters and search
 
@@ -105,11 +106,12 @@ manual classifications.
 ## Sync, privacy and performance
 
 Canonical metadata, user notes, source provenance, classifications, collection
-definitions and Project relationships are ordinary SwiftData fields and are
-ready for the existing local-first/iCloud direction. Temporary imports,
-regenerable thumbnails/caches and MCP tokens are local-only. Large image fields
-use external storage; the UI uses lazy grids and does not load all originals at
-once.
+definitions and Project relationships are SwiftData fields. The maintained
+Xcode app targets synchronize them through CloudKit when team-owned identifiers,
+signing and schema are configured; the public DMG remains local-only.
+Temporary imports, regenerable thumbnails/caches and MCP tokens are local-only.
+Large image fields use external storage; the UI uses lazy grids and does not
+load all originals at once.
 
 The first analysis pass is local-only. Field LAB does not send images to OpenAI,
 Anthropic, Google, Pinterest or any other external service. Any future remote

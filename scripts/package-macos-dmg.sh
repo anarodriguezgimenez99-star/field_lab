@@ -149,8 +149,9 @@ macOS blocks the first launch, only continue if this image came from the
 official repository and you trust the project. Open the app once, then use
 System Settings > Privacy & Security > Open Anyway to approve it.
 
-The iPhone app and iCloud sync are not available yet. FIELD LAB currently
-stores its data locally on this Mac.
+The maintained iPhone app and Share Extension targets are not included in this
+DMG. This Swift Package build stores data locally; CloudKit sync is available
+only to configured Xcode app targets.
 INSTALL
 
 ln -s /Applications "$STAGING_DIR/Applications"
