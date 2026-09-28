@@ -89,7 +89,7 @@ struct LabView: View {
                         }
                     }
                     .fieldListSurface()
-                    .frame(minWidth: 240, idealWidth: 300, maxWidth: 380)
+                    .frame(minWidth: 220, idealWidth: 270, maxWidth: 340)
 
                     Group {
                         if let selectedExperiment {
@@ -98,7 +98,7 @@ struct LabView: View {
                             FieldContextHint(systemImage: "rectangle.split.3x1", title: "Choose an experiment", message: "Your Workbench is where references, prompts, tools and settings become reproducible Runs.")
                         }
                     }
-                    .frame(minWidth: 600)
+                    .frame(minWidth: 560)
                 }
             }
         }
@@ -352,37 +352,32 @@ struct ExperimentWorkspaceView: View {
             #endif
 
             #if os(macOS)
-            HStack(spacing: 0) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 28) {
-                        if mode == .build {
-                            ingredients
-                            if duplicateNotice {
-                                Label(L10n.text("Setup copied from the selected Run. Change one ingredient, then create a new Run."), systemImage: "arrow.triangle.branch")
-                                    .font(.caption)
-                                    .foregroundStyle(.tint)
+            GeometryReader { proxy in
+                if proxy.size.width >= 940 {
+                    HStack(spacing: 0) {
+                        ScrollView {
+                            workbenchMain
+                                .frame(width: proxy.size.width - 341, alignment: .topLeading)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                        Divider()
+
+                        inspector
+                            .frame(width: 340)
+                    }
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            workbenchMain
+                            if selectedRun != nil {
+                                Divider().padding(.horizontal, 28)
+                                inspector
                             }
                         }
-                        runsSection
-                        if mode == .compare {
-                            compareSection
-                        }
-                        conclusionSection
+                        .frame(width: proxy.size.width, alignment: .topLeading)
                     }
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 20)
-                }
-                .frame(minWidth: 460, maxWidth: .infinity, maxHeight: .infinity)
-
-                Divider()
-
-                if let selectedRun {
-                    RunInspectorView(appModel: appModel, experiment: experiment, run: selectedRun, isBest: selectedRun.id == experiment.bestRunID, onDuplicate: { duplicateRun(selectedRun) }, onChanged: refresh, onSelectBest: { selectBest(selectedRun) })
-                        .frame(width: 340)
-                } else {
-                    InspectorEmptyState()
-                        .frame(width: 340)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -441,6 +436,15 @@ struct ExperimentWorkspaceView: View {
         }
     }
 
+    @ViewBuilder
+    private var inspector: some View {
+        if let selectedRun {
+            RunInspectorView(appModel: appModel, experiment: experiment, run: selectedRun, isBest: selectedRun.id == experiment.bestRunID, onDuplicate: { duplicateRun(selectedRun) }, onChanged: refresh, onSelectBest: { selectBest(selectedRun) })
+        } else {
+            InspectorEmptyState()
+        }
+    }
+
     private var workbenchHeader: some View {
         HStack(alignment: .top, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
@@ -486,11 +490,8 @@ struct ExperimentWorkspaceView: View {
             }
             conclusionSection
         }
-        #if os(macOS)
-        .padding(20)
-        #else
-        .padding(28)
-        #endif
+        .padding(.horizontal, 28)
+        .padding(.vertical, 20)
     }
 
     private var ingredients: some View {
@@ -498,17 +499,25 @@ struct ExperimentWorkspaceView: View {
             WorkbenchSectionTitle(title: "INGREDIENTS", detail: "The setup you are testing")
 
             #if os(macOS)
-            HStack(alignment: .top, spacing: 32) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        referenceIngredient
+                        toolIngredient
+                    }
+                    .frame(minWidth: 300, maxWidth: .infinity, alignment: .topLeading)
+                    VStack(alignment: .leading, spacing: 24) {
+                        promptIngredient
+                        settingsIngredient
+                    }
+                    .frame(minWidth: 300, maxWidth: .infinity, alignment: .topLeading)
+                }
                 VStack(alignment: .leading, spacing: 24) {
                     referenceIngredient
-                    toolIngredient
-                }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                VStack(alignment: .leading, spacing: 24) {
                     promptIngredient
+                    toolIngredient
                     settingsIngredient
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             #else
             VStack(alignment: .leading, spacing: 18) {
@@ -1353,7 +1362,7 @@ struct LearnView: View {
             } else {
                 #if os(macOS)
                 HSplitView {
-                    List(selection: $selectedID) { ForEach(items) { item in KnowledgeRow(item: item).tag(item.id) } }.fieldListSurface().frame(minWidth: 340, idealWidth: 420)
+                    List(selection: $selectedID) { ForEach(items) { item in KnowledgeRow(item: item).tag(item.id) } }.fieldListSurface().frame(minWidth: 300, idealWidth: 400)
                     if let item = items.first(where: { $0.id == selectedID }) { KnowledgeDetailView(item: item, appModel: appModel) { isPresentingEditor = true } } else { FieldContextHint(systemImage: "lightbulb", title: "Choose something to reuse", message: "Read each item in its complete context.") }
                 }
                 #else

@@ -20,8 +20,14 @@ enum SnapshotMode {
         started = true
         Task { @MainActor in
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            try? appModel.repository.seedSampleDataIfEmpty()
-            seedExtras(appModel.repository)
+            let env = ProcessInfo.processInfo.environment
+            if env["FIELD_SNAPSHOT_EMPTY"] == nil {
+                try? appModel.repository.seedSampleDataIfEmpty()
+                seedExtras(appModel.repository)
+            }
+            if let size = env["FIELD_SNAPSHOT_SIZE"]?.split(separator: "x").compactMap({ Double($0) }), size.count == 2 {
+                NSApp.windows.first(where: { $0.isVisible })?.setContentSize(NSSize(width: size[0], height: size[1]))
+            }
             appModel.refresh()
             NSApp.activate(ignoringOtherApps: true)
             NSApp.windows.first(where: { $0.isVisible })?.makeKeyAndOrderFront(nil)

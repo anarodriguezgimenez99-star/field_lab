@@ -89,7 +89,7 @@ struct ReferencesView: View {
                     if references.isEmpty {
                         if hasActiveSearchOrFilter {
                             noMatchingReferencesState
-                                .frame(minWidth: 520, minHeight: 360)
+                                .frame(minWidth: 360, minHeight: 360)
                         } else {
                             FieldEmptyState(
                                 systemImage: "photo.on.rectangle.angled",
@@ -98,7 +98,7 @@ struct ReferencesView: View {
                                 actionTitle: "Añadir referencia",
                                 action: { editingReference = nil; isPresentingEditor = true }
                             )
-                            .frame(minWidth: 520, minHeight: 360)
+                            .frame(minWidth: 360, minHeight: 360)
                         }
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 184), spacing: 18)], spacing: 18) {
@@ -126,7 +126,7 @@ struct ReferencesView: View {
                         .padding(24)
                     }
                 }
-                .frame(minWidth: 540)
+                .frame(minWidth: 400)
                 .background(FieldPalette.canvas)
                 .onDrop(of: [UTType.image.identifier, UTType.url.identifier, UTType.fileURL.identifier, UTType.plainText.identifier], isTargeted: nil, perform: handleDrop)
 
@@ -140,7 +140,7 @@ struct ReferencesView: View {
                         FieldContextHint(systemImage: "sidebar.right", title: "Elige una referencia", message: "Selecciona una imagen para ver su fuente, nota, atributos y conexiones de proyecto.")
                     }
                 }
-                .frame(minWidth: 420)
+                .frame(minWidth: 340)
             }
         }
         .background(FieldPalette.canvas)

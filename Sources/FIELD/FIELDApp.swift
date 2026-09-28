@@ -32,6 +32,7 @@ struct FIELDApp: App {
                 .preferredColorScheme(.dark)
                 .scrollContentBackground(.hidden)
         }
+        .defaultSize(width: 1360, height: 860)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button(L10n.text("Quick Capture")) {

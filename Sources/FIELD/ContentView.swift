@@ -94,7 +94,13 @@ struct ContentView: View {
         .frame(minWidth: 1040, minHeight: 700)
         .animation(.easeOut(duration: 0.22), value: appModel.isPresentingCapture)
         #if DEBUG
-        .task { SnapshotMode.runIfRequested(appModel: appModel) }
+        .task {
+            // A bare `swift run` executable is not a bundled app: give it a Dock
+            // presence and bring its window forward.
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+            SnapshotMode.runIfRequested(appModel: appModel)
+        }
         .sheet(isPresented: Binding(get: { appModel.snapshotSheet != nil }, set: { if !$0 { appModel.snapshotSheet = nil } })) {
             switch appModel.snapshotSheet {
             case "projects": ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
@@ -1714,6 +1720,10 @@ struct MCPSettingsView: View {
     }
 
     var body: some View {
+        content.onAppear { mcpServer.loadCredentialsIfNeeded() }
+    }
+
+    private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(alignment: .top, spacing: 16) {
