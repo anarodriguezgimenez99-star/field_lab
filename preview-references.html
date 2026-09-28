@@ -11,8 +11,8 @@
       --surface: #ffffff;
       --surface-soft: #f7f7f3;
       --ink: #242521;
-      --muted: #74766f;
-      --faint: #a7a9a1;
+      --muted: #62645f;
+      --faint: #797b75;
       --line: rgba(36, 37, 33, .11);
       --line-strong: rgba(36, 37, 33, .19);
       --selection: #e4e5df;
@@ -50,7 +50,7 @@
     .brand { display: flex; align-items: center; gap: 10px; padding: 0 10px 23px; font-size: 15px; font-weight: 750; letter-spacing: -.02em; }
     .brand-mark { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: #fff; }
     .brand-mark svg { width: 14px; height: 14px; }
-    .nav-section { margin: 9px 8px 7px; color: var(--faint); font-size: 10px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+    .nav-section { margin: 9px 8px 7px; color: var(--faint); font-size: 11px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
     .nav { display: grid; gap: 2px; }
     .nav button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: #6b6d66; text-align: left; font-size: 12px; cursor: pointer; }
     .nav button:hover { background: rgba(255,255,255,.58); color: var(--ink); }
@@ -79,7 +79,7 @@
     .primary svg { width: 15px; height: 15px; }
 
     .filters { display: flex; align-items: center; gap: 9px; margin: 25px 0 19px; padding-bottom: 17px; border-bottom: 1px solid var(--line); }
-    .filter-label { margin-right: 1px; color: var(--faint); font-size: 10px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+    .filter-label { margin-right: 1px; color: var(--faint); font-size: 11px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
     .chip { min-height: 31px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
     .chip:hover { border-color: var(--line-strong); color: var(--ink); }
     .chip.active { border-color: var(--ink); background: var(--ink); color: #fff; }
@@ -101,15 +101,15 @@
     .pin svg { width: 13px; height: 13px; }
     .card-copy { padding: 9px 2px 0; }
     .card-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 730; }
-    .card-source { margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 10px; }
-    .card-tag { display: inline-block; margin-top: 7px; padding: 3px 6px; border-radius: 4px; background: var(--surface-soft); color: var(--muted); font-size: 9px; }
+    .card-source { margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11px; }
+    .card-tag { display: inline-block; margin-top: 7px; padding: 3px 6px; border-radius: 4px; background: var(--surface-soft); color: var(--muted); font-size: 11px; }
     .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
     .empty { display: none; padding: 70px 25px; border: 1px dashed var(--line-strong); border-radius: 12px; color: var(--muted); text-align: center; }
     .empty strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 14px; }
 
     .detail { min-width: 0; overflow: auto; padding: 0 0 12px 25px; border-left: 1px solid var(--line); }
     .detail-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .detail-label { color: var(--faint); font-size: 10px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+    .detail-label { color: var(--faint); font-size: 11px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
     .more { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; cursor: pointer; }
     .more svg { width: 15px; height: 15px; }
     .detail-hero { overflow: hidden; aspect-ratio: 1.34 / 1; border: 1px solid var(--line); border-radius: 12px; background: #d9ddd2; }
@@ -121,16 +121,16 @@
     .detail-source a { color: var(--ink); text-underline-offset: 3px; }
     .note { margin: 17px 0 19px; padding: 13px 14px; border-left: 2px solid #b7c9b2; background: #f4f7f1; color: #596355; font-size: 12px; line-height: 1.5; }
     .detail-section { padding: 17px 0; border-top: 1px solid var(--line); }
-    .section-heading { display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--faint); font-size: 10px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+    .section-heading { display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--faint); font-size: 11px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
     .status { color: #6a8169; letter-spacing: .03em; }
     .attributes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
-    .attribute dt { margin-bottom: 3px; color: var(--faint); font-size: 10px; }
+    .attribute dt { margin-bottom: 3px; color: var(--faint); font-size: 11px; }
     .attribute dd { margin: 0; font-size: 11px; font-weight: 650; }
     .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 10px; }
+    .tag { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 11px; }
     .project-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; color: var(--ink); font-size: 11px; }
     .project-row + .project-row { border-top: 1px solid var(--line); }
-    .project-row span:last-child { color: var(--muted); font-size: 10px; }
+    .project-row span:last-child { color: var(--muted); font-size: 11px; }
     .detail-actions { display: flex; gap: 8px; margin-top: 8px; }
     .secondary { min-height: 35px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--ink); font-size: 11px; font-weight: 650; cursor: pointer; }
     .secondary:hover { background: var(--surface-soft); border-color: var(--line-strong); }
@@ -293,7 +293,7 @@
 
     function renderDetail() {
       const r = refs.find(item => item.id === selectedId) || refs[0];
-      document.getElementById('detail').innerHTML = `<div class="detail-top"><span class="detail-label">Selected reference</span><button class="more" aria-label="More actions">${icon.more}</button></div><div class="detail-hero ${r.image ? 'photo' : ''}">${visualFor(r)}</div><h2>${r.title}</h2><div class="detail-source">${r.source} · ${r.domain} · <a href="#" onclick="return false">Open original ${icon.external}</a></div><div class="note">${r.note}</div><div class="detail-section"><div class="section-heading"><span>Visual attributes</span><span class="status">Analysis complete</span></div><dl class="attributes">${r.attrs.map(a => `<div class="attribute"><dt>${a[0]}</dt><dd>${a[1]}</dd></div>`).join('')}</dl></div><div class="detail-section"><div class="section-heading"><span>Tags</span><button class="secondary" style="min-height:26px;padding:0 8px;font-size:10px">Edit</button></div><div class="tag-list">${[...tagsFor(r), 'reference', r.filter === 'unclassified' ? 'needs review' : 'ready'].map(tag => `<span class="tag">${tag}</span>`).join('')}</div></div><div class="detail-section"><div class="section-heading"><span>Projects</span><span>1 linked</span></div><div class="project-row"><span>Demo project</span><span>Project ↗</span></div></div><div class="detail-actions"><button class="secondary" id="detailNote">Add note</button><button class="secondary" id="detailPin">${r.pinned ? 'Unpin' : 'Pin'} reference</button></div>`;
+      document.getElementById('detail').innerHTML = `<div class="detail-top"><span class="detail-label">Selected reference</span><button class="more" aria-label="More actions">${icon.more}</button></div><div class="detail-hero ${r.image ? 'photo' : ''}">${visualFor(r)}</div><h2>${r.title}</h2><div class="detail-source">${r.source} · ${r.domain} · <a href="#" onclick="return false">Open original ${icon.external}</a></div><div class="note">${r.note}</div><div class="detail-section"><div class="section-heading"><span>Visual attributes</span><span class="status">Analysis complete</span></div><dl class="attributes">${r.attrs.map(a => `<div class="attribute"><dt>${a[0]}</dt><dd>${a[1]}</dd></div>`).join('')}</dl></div><div class="detail-section"><div class="section-heading"><span>Tags</span><button class="secondary" style="min-height:26px;padding:0 8px;font-size: 11px">Edit</button></div><div class="tag-list">${[...tagsFor(r), 'reference', r.filter === 'unclassified' ? 'needs review' : 'ready'].map(tag => `<span class="tag">${tag}</span>`).join('')}</div></div><div class="detail-section"><div class="section-heading"><span>Projects</span><span>1 linked</span></div><div class="project-row"><span>Demo project</span><span>Project ↗</span></div></div><div class="detail-actions"><button class="secondary" id="detailNote">Add note</button><button class="secondary" id="detailPin">${r.pinned ? 'Unpin' : 'Pin'} reference</button></div>`;
       document.getElementById('detailPin').addEventListener('click', () => { r.pinned = !r.pinned; renderGrid(); renderDetail(); });
       document.getElementById('detailNote').addEventListener('click', openModal);
     }
