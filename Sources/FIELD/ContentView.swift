@@ -99,6 +99,7 @@ struct ContentView: View {
             // presence and bring its window forward.
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
+            for window in NSApp.windows where window.isVisible { window.orderFrontRegardless() }
             SnapshotMode.runIfRequested(appModel: appModel)
         }
         .sheet(isPresented: Binding(get: { appModel.snapshotSheet != nil }, set: { if !$0 { appModel.snapshotSheet = nil } })) {
