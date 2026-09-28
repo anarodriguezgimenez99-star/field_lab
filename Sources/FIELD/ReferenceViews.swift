@@ -41,6 +41,28 @@ struct ReferencesView: View {
         return appModel.repository.queryReferences(ReferenceQuery(text: query, filter: filter, limit: 500))
     }
 
+    private var hasActiveSearchOrFilter: Bool {
+        !appModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || showUnclassified
+            || showPinned
+            || selectedSource != "Todas las fuentes"
+    }
+
+    private var noMatchingReferencesState: some View {
+        FieldEmptyState(
+            systemImage: "magnifyingglass",
+            title: "No matching references",
+            message: "Try another search or change the selected filters.",
+            actionTitle: "Clear search and filters",
+            action: {
+                appModel.searchText = ""
+                showUnclassified = false
+                showPinned = false
+                selectedSource = "Todas las fuentes"
+            }
+        )
+    }
+
     private var selectedReference: FieldReference? { references.first { $0.id == selectedID } }
 
     var body: some View {
@@ -65,14 +87,19 @@ struct ReferencesView: View {
             HSplitView {
                 ScrollView {
                     if references.isEmpty {
-                        FieldEmptyState(
-                            systemImage: "photo.on.rectangle.angled",
-                            title: "Guarda inspiración desde cualquier lugar",
-                            message: "Trae una imagen, URL o nota desde Pinterest, Cosmos, Safari, Fotos, LinkedIn y más. La fuente queda vinculada para que la referencia siga siendo útil.",
-                            actionTitle: "Añadir referencia",
-                            action: { editingReference = nil; isPresentingEditor = true }
-                        )
-                        .frame(minWidth: 520, minHeight: 360)
+                        if hasActiveSearchOrFilter {
+                            noMatchingReferencesState
+                                .frame(minWidth: 520, minHeight: 360)
+                        } else {
+                            FieldEmptyState(
+                                systemImage: "photo.on.rectangle.angled",
+                                title: "Guarda inspiración desde cualquier lugar",
+                                message: "Trae una imagen, URL o nota desde Pinterest, Cosmos, Safari, Fotos, LinkedIn y más. La fuente queda vinculada para que la referencia siga siendo útil.",
+                                actionTitle: "Añadir referencia",
+                                action: { editingReference = nil; isPresentingEditor = true }
+                            )
+                            .frame(minWidth: 520, minHeight: 360)
+                        }
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 184), spacing: 18)], spacing: 18) {
                             ForEach(references) { reference in
@@ -155,14 +182,19 @@ struct ReferencesView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     filterBar
                     if references.isEmpty {
-                        FieldEmptyState(
-                            systemImage: "photo.on.rectangle.angled",
-                            title: "Guarda inspiración desde cualquier lugar",
-                            message: "Trae una imagen, URL o nota. Puedes clasificarla más tarde.",
-                            actionTitle: "Importar referencia",
-                            action: { editingReference = nil; isPresentingEditor = true }
-                        )
-                        .frame(minHeight: 320)
+                        if hasActiveSearchOrFilter {
+                            noMatchingReferencesState
+                                .frame(minHeight: 320)
+                        } else {
+                            FieldEmptyState(
+                                systemImage: "photo.on.rectangle.angled",
+                                title: "Guarda inspiración desde cualquier lugar",
+                                message: "Trae una imagen, URL o nota. Puedes clasificarla más tarde.",
+                                actionTitle: "Importar referencia",
+                                action: { editingReference = nil; isPresentingEditor = true }
+                            )
+                            .frame(minHeight: 320)
+                        }
                     } else {
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 14) {
                             ForEach(references) { reference in

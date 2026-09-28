@@ -1300,7 +1300,19 @@ struct LearnView: View {
             Picker(L10n.text("Knowledge type"), selection: $filter) { ForEach(LearnFilter.allCases, id: \.self) { Text($0.title).tag($0) } }
                 .pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
             if items.isEmpty {
-                FieldEmptyState(systemImage: "lightbulb", title: "Your reusable knowledge lives here", message: "Conclusions become Learnings, Recipes and Prompt Blocks.", actionTitle: "Add Learning") { editorKind = .learning; isPresentingEditor = true }
+                if !appModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || filter != .all {
+                    FieldEmptyState(
+                        systemImage: "magnifyingglass",
+                        title: "No matching knowledge",
+                        message: "Try another search or choose a different knowledge type.",
+                        actionTitle: "Clear search and filters"
+                    ) {
+                        appModel.searchText = ""
+                        filter = .all
+                    }
+                } else {
+                    FieldEmptyState(systemImage: "lightbulb", title: "Your reusable knowledge lives here", message: "Conclusions become Learnings, Recipes and Prompt Blocks.", actionTitle: "Add Learning") { editorKind = .learning; isPresentingEditor = true }
+                }
             } else {
                 #if os(macOS)
                 HSplitView {
