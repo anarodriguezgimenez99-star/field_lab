@@ -89,7 +89,7 @@ struct ReferencesView: View {
                     if references.isEmpty {
                         if hasActiveSearchOrFilter {
                             noMatchingReferencesState
-                                .frame(minWidth: 520, minHeight: 360)
+                                .frame(minWidth: 360, minHeight: 360)
                         } else {
                             FieldEmptyState(
                                 systemImage: "photo.on.rectangle.angled",
@@ -98,7 +98,7 @@ struct ReferencesView: View {
                                 actionTitle: "Añadir referencia",
                                 action: { editingReference = nil; isPresentingEditor = true }
                             )
-                            .frame(minWidth: 520, minHeight: 360)
+                            .frame(minWidth: 360, minHeight: 360)
                         }
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 184), spacing: 18)], spacing: 18) {
@@ -126,7 +126,7 @@ struct ReferencesView: View {
                         .padding(24)
                     }
                 }
-                .frame(minWidth: 540)
+                .frame(minWidth: 400)
                 .background(FieldPalette.canvas)
                 .onDrop(of: [UTType.image.identifier, UTType.url.identifier, UTType.fileURL.identifier, UTType.plainText.identifier], isTargeted: nil, perform: handleDrop)
 
@@ -140,10 +140,13 @@ struct ReferencesView: View {
                         FieldContextHint(systemImage: "sidebar.right", title: "Elige una referencia", message: "Selecciona una imagen para ver su fuente, nota, atributos y conexiones de proyecto.")
                     }
                 }
-                .frame(minWidth: 420)
+                .frame(minWidth: 340)
             }
         }
         .background(FieldPalette.canvas)
+        #if DEBUG && os(macOS)
+        .onAppear { if SnapshotMode.isActive, selectedID == nil { selectedID = allReferences.first?.id } }
+        #endif
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar referencias, OCR y etiquetas…"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -163,7 +166,7 @@ struct ReferencesView: View {
         }
         .sheet(isPresented: $isPresentingEditor) {
             ReferenceEditorView(appModel: appModel, reference: editingReference)
-                .frame(width: 620, height: 720)
+                .frame(width: 620, height: 720).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingSettings) { SettingsView(appModel: appModel) }
         .fileImporter(isPresented: $isImportingFile, allowedContentTypes: [.image], allowsMultipleSelection: false) { result in
@@ -251,12 +254,12 @@ struct ReferencesView: View {
 
     private var filterBar: some View {
         HStack(spacing: 8) {
-            filterChip("Todo", isSelected: !showUnclassified && !showPinned) {
+            FieldFilterChip(title: "Todo", isSelected: !showUnclassified && !showPinned) {
                 showUnclassified = false
                 showPinned = false
             }
-            filterChip("Sin clasificar", isSelected: showUnclassified) { showUnclassified.toggle(); showPinned = false }
-            filterChip("Fijadas", isSelected: showPinned) { showPinned.toggle(); showUnclassified = false }
+            FieldFilterChip(title: "Sin clasificar", isSelected: showUnclassified) { showUnclassified.toggle(); showPinned = false }
+            FieldFilterChip(title: "Fijadas", isSelected: showPinned) { showPinned.toggle(); showUnclassified = false }
 
             Divider().frame(height: 20).padding(.horizontal, 4)
 
@@ -284,21 +287,6 @@ struct ReferencesView: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 12)
         .controlSize(.small)
-    }
-
-    private func filterChip(_ title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(L10n.text(title))
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .frame(minHeight: 44)
-                .background(isSelected ? FieldPalette.accent : FieldPalette.surface, in: Capsule())
-                .foregroundStyle(isSelected ? Color.white : Color.primary)
-                .overlay(Capsule().stroke(isSelected ? .clear : FieldPalette.line))
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
@@ -528,7 +516,7 @@ struct ReferenceDetailView: View {
         .background(FieldPalette.surface)
         .sheet(isPresented: $isShowingUseInExperiment) {
             ReferenceUseInExperimentSheet(appModel: appModel, reference: reference)
-                .frame(width: 520, height: 360)
+                .frame(width: 520, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 }

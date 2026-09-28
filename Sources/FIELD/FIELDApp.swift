@@ -30,7 +30,9 @@ struct FIELDApp: App {
                 .environment(\.locale, appModel.language.locale)
                 .tint(FieldPalette.accent)
                 .preferredColorScheme(.dark)
+                .scrollContentBackground(.hidden)
         }
+        .defaultSize(width: 1360, height: 860)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button(L10n.text("Quick Capture")) {
@@ -39,7 +41,7 @@ struct FIELDApp: App {
                 .keyboardShortcut("n", modifiers: [.command, .shift])
 
                 Button(L10n.text("Focus Search")) {
-                    appModel.selectedRoute = .lab
+                    appModel.focusSearch()
                 }
                 .keyboardShortcut("f", modifiers: [.command])
             }

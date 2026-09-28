@@ -65,7 +65,8 @@ struct LabView: View {
                 subtitle: "Test, compare and document what works.",
                 count: nil,
                 actionTitle: "New Experiment",
-                actionSystemImage: "plus"
+                actionSystemImage: "plus",
+                compact: !experiments.isEmpty
             ) { isPresentingNewExperiment = true }
 
             Divider()
@@ -75,21 +76,20 @@ struct LabView: View {
             } else {
                 HSplitView {
                     List(selection: $selectedID) {
-                        Section(L10n.text("Recent Experiments")) {
-                            ForEach(experiments) { experiment in
-                                ExperimentRow(experiment: experiment, appModel: appModel)
-                                    .tag(experiment.id)
-                                    .contextMenu {
-                                        Button(L10n.text("Delete"), role: .destructive) {
-                                            try? appModel.repository.deleteExperiment(experiment)
-                                            if selectedID == experiment.id { selectedID = nil }
-                                            appModel.refresh()
-                                        }
+                        ForEach(experiments) { experiment in
+                            ExperimentRow(experiment: experiment, appModel: appModel)
+                                .tag(experiment.id)
+                                .contextMenu {
+                                    Button(L10n.text("Delete"), role: .destructive) {
+                                        try? appModel.repository.deleteExperiment(experiment)
+                                        if selectedID == experiment.id { selectedID = nil }
+                                        appModel.refresh()
                                     }
-                            }
+                                }
                         }
                     }
-                    .frame(minWidth: 280, idealWidth: 350)
+                    .fieldListSurface()
+                    .frame(minWidth: 220, idealWidth: 270, maxWidth: 340)
 
                     Group {
                         if let selectedExperiment {
@@ -98,7 +98,7 @@ struct LabView: View {
                             FieldContextHint(systemImage: "rectangle.split.3x1", title: "Choose an experiment", message: "Your Workbench is where references, prompts, tools and settings become reproducible Runs.")
                         }
                     }
-                    .frame(minWidth: 700)
+                    .frame(minWidth: 560)
                 }
             }
         }
@@ -111,7 +111,7 @@ struct LabView: View {
         }
         .sheet(isPresented: $isPresentingNewExperiment) {
             ExperimentEditorView(appModel: appModel) { selectedID = $0.id }
-                .frame(width: 620, height: 520)
+                .frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         #endif
     }
@@ -122,13 +122,17 @@ struct LabEmptyState: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            #if os(iOS)
             Text(L10n.text("LAB"))
                 .font(.system(.largeTitle, design: .rounded).weight(.semibold))
             Text(L10n.text("Test, compare and document what works."))
                 .font(.title3)
+            #endif
             Text(L10n.text("Build a visual workbench from references, a prompt, a tool and the settings that matter. Each Run stays reproducible while you learn."))
+                .font(.title3)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: 500, alignment: .leading)
+                .lineSpacing(3)
+                .frame(maxWidth: 520, alignment: .leading)
             Button(L10n.text("New Experiment"), action: action)
                 .buttonStyle(.borderedProminent)
                 .tint(FieldPalette.accent)
@@ -145,6 +149,7 @@ struct LabEmptyState: View {
                 Text(L10n.text("LEARN"))
             }
             .font(.caption.weight(.semibold))
+            .tracking(0.6)
             .foregroundStyle(.secondary)
             .padding(.top, 18)
 
@@ -155,7 +160,8 @@ struct LabEmptyState: View {
             .padding(.top, 22)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(36)
+        .padding(.horizontal, 28)
+        .padding(.vertical, 36)
     }
 }
 
@@ -244,6 +250,7 @@ struct ExperimentEditorView: View {
             }
         }
         .padding(24)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func create() {
@@ -265,6 +272,8 @@ struct ExperimentEditorView: View {
 private enum WorkbenchMode: String, CaseIterable {
     case build = "BUILD"
     case compare = "COMPARE"
+
+    var titleKey: String { self == .build ? "Build" : "Compare" }
 }
 
 struct ExperimentWorkspaceView: View {
@@ -321,6 +330,19 @@ struct ExperimentWorkspaceView: View {
         VStack(spacing: 0) {
             workbenchHeader
             Divider()
+            #if os(macOS)
+            HStack(spacing: 8) {
+                ForEach(WorkbenchMode.allCases, id: \.self) { option in
+                    FieldFilterChip(title: option.titleKey, isSelected: mode == option) { mode = option }
+                        .disabled(option == .compare && !canCompare)
+                        .opacity(option == .compare && !canCompare ? 0.5 : 1)
+                }
+                Spacer(minLength: 0)
+            }
+            .accessibilityLabel(L10n.text("Workbench mode"))
+            .padding(.horizontal, 28)
+            .padding(.vertical, 12)
+            #else
             Picker(L10n.text("Workbench mode"), selection: $mode) {
                 ForEach(WorkbenchMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
@@ -328,42 +350,35 @@ struct ExperimentWorkspaceView: View {
             .frame(width: 220)
             .padding(.vertical, 12)
             .disabled(mode == .compare && !canCompare)
+            #endif
 
             #if os(macOS)
-            HSplitView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if mode == .build {
-                        ingredients
-                            .padding(20)
-                        if duplicateNotice {
-                            Label(L10n.text("Setup copied from the selected Run. Change one ingredient, then create a new Run."), systemImage: "arrow.triangle.branch")
-                                .font(.caption)
-                                .foregroundStyle(.tint)
-                                .padding(.horizontal, 20)
-                                .padding(.bottom, 12)
+            GeometryReader { proxy in
+                if proxy.size.width >= 940 {
+                    HStack(spacing: 0) {
+                        ScrollView {
+                            workbenchMain
+                                .frame(width: proxy.size.width - 341, alignment: .topLeading)
                         }
-                    }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            runsSection
-                            if mode == .compare {
-                                compareSection
-                            }
-                            conclusionSection
-                        }
-                        .padding(20)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
-                .frame(minWidth: 650, maxHeight: .infinity, alignment: .topLeading)
+                        Divider()
 
-                if let selectedRun {
-                    RunInspectorView(appModel: appModel, experiment: experiment, run: selectedRun, isBest: selectedRun.id == experiment.bestRunID, onDuplicate: { duplicateRun(selectedRun) }, onChanged: refresh, onSelectBest: { selectBest(selectedRun) })
-                        .frame(minWidth: 310, idealWidth: 360, maxWidth: 420)
+                        inspector
+                            .frame(width: 340)
+                    }
                 } else {
-                    InspectorEmptyState()
-                        .frame(minWidth: 310, idealWidth: 360, maxWidth: 420)
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            workbenchMain
+                            if selectedRun != nil {
+                                Divider().padding(.horizontal, 28)
+                                inspector
+                            }
+                        }
+                        .frame(width: proxy.size.width, alignment: .topLeading)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -380,7 +395,7 @@ struct ExperimentWorkspaceView: View {
         .onDisappear { persistSetup() }
         .sheet(isPresented: $isShowingReferencePicker) {
             ExperimentReferencePickerView(appModel: appModel, selectedIDs: $selectedReferenceIDs)
-                .frame(width: 580, height: 540)
+                .frame(width: 580, height: 540).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingBlockPicker) {
             PromptBlockPicker(appModel: appModel, selectedIDs: $selectedPromptBlockIDs) { block in
@@ -388,14 +403,14 @@ struct ExperimentWorkspaceView: View {
                 prompt += block.body
                 persistSetup()
             }
-                .frame(width: 500, height: 460)
+                .frame(width: 500, height: 460).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingToolCreator) {
             ToolCreatorView(appModel: appModel) { tool in
                 selectedToolID = tool.id
                 persistSetup()
             }
-            .frame(width: 480, height: 360)
+            .frame(width: 480, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingPresetPicker) {
             PresetPickerView(appModel: appModel, toolID: selectedToolID) { preset in
@@ -403,11 +418,11 @@ struct ExperimentWorkspaceView: View {
                 settings = preset.settings
                 persistSetup()
             }
-            .frame(width: 500, height: 420)
+            .frame(width: 500, height: 420).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingPresetCreator) {
             ToolPresetCreatorView(appModel: appModel, toolID: selectedToolID, model: model, settings: settings)
-                .frame(width: 500, height: 420)
+                .frame(width: 500, height: 420).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .fileImporter(isPresented: $isShowingFileImporter, allowedContentTypes: [.image], allowsMultipleSelection: false) { result in
             guard case .success(let urls) = result, let url = urls.first, let run = selectedRun else { return }
@@ -422,14 +437,23 @@ struct ExperimentWorkspaceView: View {
         }
     }
 
+    @ViewBuilder
+    private var inspector: some View {
+        if let selectedRun {
+            RunInspectorView(appModel: appModel, experiment: experiment, run: selectedRun, isBest: selectedRun.id == experiment.bestRunID, onDuplicate: { duplicateRun(selectedRun) }, onChanged: refresh, onSelectBest: { selectBest(selectedRun) })
+        } else {
+            InspectorEmptyState()
+        }
+    }
+
     private var workbenchHeader: some View {
         HStack(alignment: .top, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
                 Text(experiment.title)
-                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                    .font(.system(.title, design: .rounded).weight(.semibold))
                 Text(experiment.goal.isEmpty ? L10n.text("What am I trying to learn?") : experiment.goal)
-                    .font(.title3)
-                    .foregroundStyle(experiment.goal.isEmpty ? .secondary : .primary)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Menu {
@@ -467,11 +491,8 @@ struct ExperimentWorkspaceView: View {
             }
             conclusionSection
         }
-        #if os(macOS)
-        .padding(20)
-        #else
-        .padding(28)
-        #endif
+        .padding(.horizontal, 28)
+        .padding(.vertical, 20)
     }
 
     private var ingredients: some View {
@@ -479,14 +500,25 @@ struct ExperimentWorkspaceView: View {
             WorkbenchSectionTitle(title: "INGREDIENTS", detail: "The setup you are testing")
 
             #if os(macOS)
-            LazyVGrid(columns: [
-                GridItem(.flexible(minimum: 260), spacing: 18),
-                GridItem(.flexible(minimum: 260), spacing: 18)
-            ], alignment: .leading, spacing: 14) {
-                referenceIngredient
-                promptIngredient
-                toolIngredient
-                settingsIngredient
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        referenceIngredient
+                        toolIngredient
+                    }
+                    .frame(minWidth: 300, maxWidth: .infinity, alignment: .topLeading)
+                    VStack(alignment: .leading, spacing: 24) {
+                        promptIngredient
+                        settingsIngredient
+                    }
+                    .frame(minWidth: 300, maxWidth: .infinity, alignment: .topLeading)
+                }
+                VStack(alignment: .leading, spacing: 24) {
+                    referenceIngredient
+                    promptIngredient
+                    toolIngredient
+                    settingsIngredient
+                }
             }
             #else
             VStack(alignment: .leading, spacing: 18) {
@@ -739,7 +771,11 @@ struct ExperimentWorkspaceView: View {
         VStack(alignment: .leading, spacing: 14) {
             WorkbenchSectionTitle(title: "CONCLUSION", detail: "What did you learn?")
             TextEditor(text: $conclusion)
+                #if os(macOS)
+                .frame(height: 110)
+                #else
                 .frame(minHeight: 110)
+                #endif
                 .scrollContentBackground(.hidden)
                 .padding(10)
                 .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -1121,7 +1157,7 @@ struct CompareRunColumn: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ReferenceImageView(data: run.outputData).frame(width: 250, height: 220).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            ReferenceImageView(data: run.outputData).frame(width: 250, height: 220).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             HStack {
                 Text(run.title).font(.headline)
                 if isBest { Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint) }
@@ -1297,8 +1333,19 @@ struct LearnView: View {
             #if os(macOS)
             FieldPageHeader(title: "Learn", subtitle: "Keep the techniques and recipes worth reusing.", count: items.count, actionTitle: "Add", actionSystemImage: "plus") { isPresentingEditor = true }
             #endif
+            #if os(macOS)
+            HStack(spacing: 8) {
+                ForEach(LearnFilter.allCases, id: \.self) { option in
+                    FieldFilterChip(title: option.titleKey, isSelected: filter == option) { filter = option }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 14)
+            #else
             Picker(L10n.text("Knowledge type"), selection: $filter) { ForEach(LearnFilter.allCases, id: \.self) { Text($0.title).tag($0) } }
                 .pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
+            #endif
             if items.isEmpty {
                 if !appModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || filter != .all {
                     FieldEmptyState(
@@ -1316,7 +1363,7 @@ struct LearnView: View {
             } else {
                 #if os(macOS)
                 HSplitView {
-                    List(selection: $selectedID) { ForEach(items) { item in KnowledgeRow(item: item).tag(item.id) } }.frame(minWidth: 340, idealWidth: 420)
+                    List(selection: $selectedID) { ForEach(items) { item in KnowledgeRow(item: item).tag(item.id) } }.fieldListSurface().frame(minWidth: 300, idealWidth: 400)
                     if let item = items.first(where: { $0.id == selectedID }) { KnowledgeDetailView(item: item, appModel: appModel) { isPresentingEditor = true } } else { FieldContextHint(systemImage: "lightbulb", title: "Choose something to reuse", message: "Read each item in its complete context.") }
                 }
                 #else
@@ -1325,24 +1372,27 @@ struct LearnView: View {
             }
         }
         .background(FieldPalette.canvas)
+        #if DEBUG && os(macOS)
+        .onAppear { if SnapshotMode.isActive, selectedID == nil { selectedID = items.first?.id } }
+        #endif
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Search Learn"))
-        .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500) }
-        .sheet(isPresented: $isShowingPromptDeck) { PromptDeckView(appModel: appModel).frame(minWidth: 760, minHeight: 560) }
-        .sheet(isPresented: $isShowingSuggestions) { AIInboxView(appModel: appModel).frame(width: 720, height: 560) }
+        .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingPromptDeck) { FieldSheet { PromptDeckView(appModel: appModel) }.frame(minWidth: 760, minHeight: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingSuggestions) { FieldSheet { AIInboxView(appModel: appModel) }.frame(width: 720, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
     }
 }
 
 enum LearnFilter: String, CaseIterable, Hashable {
     case all, learnings, recipes, blocks
-    var title: String {
-        let key: String = switch self {
+    var titleKey: String {
+        switch self {
         case .all: "All"
         case .learnings: "Learnings"
         case .recipes: "Recipes"
         case .blocks: "Prompt Blocks"
         }
-        return L10n.text(key)
     }
+    var title: String { L10n.text(titleKey) }
 }
 
 struct SettingsView: View {
@@ -1361,6 +1411,93 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        macSettings
+        #else
+        iOSSettings
+        #endif
+    }
+
+    #if os(macOS)
+    private var macSettings: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 30) {
+                Text(L10n.text("Settings"))
+                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                settingsGroup("Connections") {
+                    macRow("AI connections", connectionStatus, "antenna.radiowaves.left.and.right") { isShowingMCP = true }
+                    macRow("Activity", "Review agent actions", "waveform.path.ecg") { isShowingActivity = true }
+                }
+                settingsGroup("Context") {
+                    macRow("Projects", "Organize your experiments", "folder") { isShowingProjects = true }
+                    macRow("Tools", "Shared tool metadata", "wrench.and.screwdriver") { isShowingTools = true }
+                    macRow("Flows", "Advanced reusable methods", "arrow.triangle.branch") { isShowingFlows = true }
+                }
+                settingsGroup("Language", card: false) {
+                    HStack(spacing: 8) {
+                        ForEach(FieldLanguage.allCases) { language in
+                            Button { appModel.language = language } label: {
+                                Text(language.name)
+                                    .font(.subheadline.weight(appModel.language == language ? .semibold : .regular))
+                                    .foregroundStyle(appModel.language == language ? FieldPalette.canvas : Color.primary.opacity(0.86))
+                                    .padding(.horizontal, 14)
+                                    .frame(minHeight: 30)
+                                    .background(appModel.language == language ? FieldPalette.accent : FieldPalette.raised, in: Capsule())
+                                    .overlay(Capsule().strokeBorder(appModel.language == language ? Color.clear : FieldPalette.line))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(appModel.language == language ? .isSelected : [])
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 2)
+                }
+            }
+            .frame(maxWidth: 720, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(FieldPalette.canvas)
+        .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingActivity) { FieldSheet { ActivityView(appModel: appModel) }.frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingProjects) { FieldSheet { ProjectsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingTools) { FieldSheet { ToolsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingFlows) { FieldSheet { FlowsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .onAppear(perform: presentRequestedMCPSettings)
+        .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
+            if requested { presentRequestedMCPSettings() }
+        }
+    }
+
+    private func settingsGroup<Content: View>(_ title: String, card: Bool = true, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.text(title))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 2)
+            if card {
+                VStack(spacing: 0) { content() }
+                    .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(FieldPalette.hairline))
+            } else {
+                content()
+            }
+        }
+    }
+
+    private func macRow(_ title: String, _ detail: String, _ systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            SettingsRow(title: title, detail: detail, systemImage: systemImage)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+    #endif
+
+    private var iOSSettings: some View {
         NavigationStack {
             List {
                 Section(L10n.text("Connections")) {
@@ -1383,13 +1520,22 @@ struct SettingsView: View {
                     .accessibilityLabel(L10n.text("Language"))
                 }
             }
+            .buttonStyle(.plain)
             .navigationTitle(L10n.text("Settings"))
+            #if os(macOS)
+            .listStyle(.inset)
+            .fieldListSurface()
+            .frame(maxWidth: 760)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(FieldPalette.canvas)
+            #else
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Done")) { dismiss() } } }
-            .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620) }
-            .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560) }
-            .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
-            .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
-            .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
+            #endif
+            .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingActivity) { FieldSheet { ActivityView(appModel: appModel) }.frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingProjects) { FieldSheet { ProjectsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingTools) { FieldSheet { ToolsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingFlows) { FieldSheet { FlowsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
             .onAppear(perform: presentRequestedMCPSettings)
             .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
                 if requested { presentRequestedMCPSettings() }

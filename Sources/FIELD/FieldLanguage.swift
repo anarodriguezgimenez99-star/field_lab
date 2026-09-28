@@ -30,6 +30,8 @@ enum FieldLocalization {
         "RUNS": "EJECUCIONES",
         "COMPARE": "COMPARAR",
         "LEARN": "APRENDER",
+        "Build": "Construir",
+        "Compare": "Comparar",
         "Recent Experiments": "Experimentos recientes",
         "Your documented Runs will appear here.": "Aquí aparecerán las ejecuciones que documentes.",
         "New Experiment": "Nuevo experimento",
@@ -488,6 +490,9 @@ enum FieldLocalization {
     ]
 
     private static let english: [String: String] = [
+        "Descripción": "Description",
+        "Aún no hay actividad": "No activity yet",
+        "Aquí aparecerán las acciones de los agentes en FIELD LAB.": "Agent actions in FIELD LAB will appear here.",
         "Recopilar": "Collect",
         "Laboratorio": "Lab",
         "Aprender": "Learn",

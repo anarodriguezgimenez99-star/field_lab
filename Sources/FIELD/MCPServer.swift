@@ -15,18 +15,36 @@ final class MCPServerManager: ObservableObject {
     @Published private(set) var isStarting = false
     @Published private(set) var isStopping = false
     @Published private(set) var port: UInt16 = 8765
-    @Published private(set) var token: String
+    @Published private(set) var token = ""
     @Published private(set) var lastError: String?
 
     private var preferredPort: UInt16
     private let repository: FieldRepository
-    private let authHeaderHelperPath: String?
+    private var authHeaderHelperPath: String?
+    private var credentialsLoaded = false
     private var server: LocalMCPServer?
 
     init(repository: FieldRepository) {
         self.repository = repository
         preferredPort = Self.configuredPort()
         port = preferredPort
+    }
+
+    /// The token lives in the Keychain. Reading it can raise a macOS password
+    /// prompt, so it is loaded only when the MCP server is started or its
+    /// settings are opened, never while the app is launching.
+    func loadCredentialsIfNeeded() {
+        guard !credentialsLoaded else { return }
+        credentialsLoaded = true
+        #if DEBUG
+        // Snapshot and preview runs (FIELD_SKIP_KEYCHAIN) use a throwaway token.
+        let env = ProcessInfo.processInfo.environment
+        if env["FIELD_SNAPSHOT_DIR"] != nil || env["FIELD_SKIP_KEYCHAIN"] != nil {
+            token = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+            authHeaderHelperPath = nil
+            return
+        }
+        #endif
         let storedToken = KeychainTokenStore.load().flatMap { $0.isEmpty ? nil : $0 }
         let resolvedToken = storedToken ?? UUID().uuidString.replacingOccurrences(of: "-", with: "")
         token = resolvedToken
@@ -120,6 +138,7 @@ final class MCPServerManager: ObservableObject {
 
     func start() {
         guard !isRunning, !isStarting, !isStopping else { return }
+        loadCredentialsIfNeeded()
         isStarting = true
         lastError = nil
         let repository = repository
@@ -158,6 +177,7 @@ final class MCPServerManager: ObservableObject {
 
     func regenerateToken() {
         guard !isStarting, !isStopping else { return }
+        loadCredentialsIfNeeded()
         let replacementToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
         guard isRunning else {
             token = replacementToken
@@ -560,6 +580,7 @@ final class MCPServerManager: ObservableObject {
     var claudeCodeSetup: String { "Run Field LAB on macOS to enable its local MCP server." }
     var setupPrompt: String { "Run Field LAB on macOS to enable its local MCP server." }
     var usesKeychainHeaderHelper: Bool { false }
+    func loadCredentialsIfNeeded() {}
     init(repository: FieldRepository) {}
     func start() {}
     func stop() {}

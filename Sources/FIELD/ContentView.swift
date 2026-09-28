@@ -41,7 +41,7 @@ struct ContentView: View {
         ZStack {
             NavigationSplitView {
                 FieldSidebar(appModel: appModel)
-                    .navigationSplitViewColumnWidth(min: 145, ideal: 160, max: 200)
+                    .navigationSplitViewColumnWidth(min: 178, ideal: 190, max: 230)
             } detail: {
                 FieldRouteView(appModel: appModel)
                     .id(appModel.refreshToken)
@@ -72,6 +72,8 @@ struct ContentView: View {
                     .accessibilityValue(mcpServer.isRunning ? L10n.text("Activo") : mcpServer.isStarting ? L10n.text("Iniciando") : L10n.text("Detenido"))
                 }
             }
+            .toolbarBackground(.hidden, for: .windowToolbar)
+            .navigationTitle("")
             .background(FieldPalette.canvas)
 
             if appModel.isPresentingCapture {
@@ -81,7 +83,7 @@ struct ContentView: View {
                     .zIndex(10)
 
                 QuickCaptureView(appModel: appModel, initialKind: appModel.captureKind)
-                    .frame(width: 620, height: 360)
+                    .frame(width: 620, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
                     .background(FieldPalette.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
@@ -91,6 +93,28 @@ struct ContentView: View {
         }
         .frame(minWidth: 1040, minHeight: 700)
         .animation(.easeOut(duration: 0.22), value: appModel.isPresentingCapture)
+        #if DEBUG
+        .task {
+            // A bare `swift run` executable is not a bundled app: give it a Dock
+            // presence and bring its window forward.
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+            for window in NSApp.windows where window.isVisible { window.orderFrontRegardless() }
+            SnapshotMode.runIfRequested(appModel: appModel)
+        }
+        .sheet(isPresented: Binding(get: { appModel.snapshotSheet != nil }, set: { if !$0 { appModel.snapshotSheet = nil } })) {
+            switch appModel.snapshotSheet {
+            case "projects": FieldSheet { ProjectsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "tools": FieldSheet { ToolsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "flows": FieldSheet { FlowsBrowserView(appModel: appModel) }.frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "mcp": MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "activity": FieldSheet { ActivityView(appModel: appModel) }.frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "experiment": ExperimentEditorView(appModel: appModel) { _ in }.frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "knowledge": KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: .learning).frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            default: EmptyView()
+            }
+        }
+        #endif
         #endif
     }
 }
@@ -119,7 +143,7 @@ struct FieldSidebar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
                 fieldLogo
                     .resizable()
                     .scaledToFit()
@@ -136,36 +160,51 @@ struct FieldSidebar: View {
             .padding(.top, 14)
             .padding(.bottom, 10)
 
-            List(selection: $appModel.selectedRoute) {
-                Section {
-                    sidebarLink(.collect)
-                    sidebarLink(.lab)
-                    NavigationLink(value: FieldRoute.learn) {
-                        if proposalCount > 0 {
-                            Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
-                                .badge(proposalCount)
-                        } else {
-                            Label(L10n.text("Aprender"), systemImage: FieldRoute.learn.systemImage)
-                        }
-                    }
-                }
-
-                Section {
-                    sidebarLink(.settings)
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                sidebarRow(.collect)
+                sidebarRow(.lab)
+                sidebarRow(.learn, badge: proposalCount)
+                Spacer().frame(height: 14)
+                sidebarRow(.settings)
+                Spacer(minLength: 0)
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-            .background(FieldPalette.sidebar)
+            .padding(.horizontal, 10)
+            .padding(.top, 4)
         }
         .background(FieldPalette.sidebar)
     }
 
-    @ViewBuilder
-    private func sidebarLink(_ route: FieldRoute) -> some View {
-        NavigationLink(value: route) {
-            Label(route.title, systemImage: route.systemImage)
+    /// The system list selection follows the user's accent color and clashes
+    /// with the violet palette, so rows are drawn from the palette.
+    private func sidebarRow(_ route: FieldRoute, badge: Int = 0) -> some View {
+        let isSelected = appModel.selectedRoute == route
+        return Button {
+            appModel.selectedRoute = route
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: route.systemImage)
+                    .frame(width: 20)
+                    .foregroundStyle(isSelected ? FieldPalette.accent : Color.secondary)
+                Text(route.title)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if badge > 0 {
+                    Text("\(badge)")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 1)
+                        .background(FieldPalette.accent.opacity(0.25), in: Capsule())
+                }
+            }
+            .font(.body.weight(isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? Color.primary : Color.primary.opacity(0.82))
+            .padding(.horizontal, 10)
+            .frame(minHeight: 32)
+            .background(isSelected ? FieldPalette.accent.opacity(0.18) : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -509,7 +548,7 @@ struct KnowledgeBrowserView: View {
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar en FIELD LAB"))
         .sheet(isPresented: $isPresentingEditor) {
             KnowledgeEditorView(appModel: appModel, item: editingItem, defaultKind: kind ?? .note)
-                .frame(width: 560, height: 500)
+                .frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 }
@@ -545,7 +584,7 @@ struct KnowledgeRow: View {
                     Text(L10n.text(item.status.displayName))
                 }
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)
@@ -710,8 +749,14 @@ struct KnowledgeEditorView: View {
                         Text(tool.name).tag(Optional(tool.id))
                     }
                 }
-                TextEditor(text: $knowledgeBody)
-                    .frame(minHeight: 150)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.text("Descripción"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    TextEditor(text: $knowledgeBody)
+                        .frame(minHeight: 150)
+                        .fieldTextEditorSurface()
+                }
             }
 
             HStack {
@@ -1002,7 +1047,7 @@ struct PromptDeckView: View {
             }
         }
         .sheet(isPresented: $isSavingRecipe) {
-            SaveRecipeView(appModel: appModel, stack: stack).frame(width: 520, height: 320)
+            SaveRecipeView(appModel: appModel, stack: stack).frame(width: 520, height: 320).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 
@@ -1027,7 +1072,7 @@ struct SaveRecipeView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack { Text(L10n.text("Guardar como receta")).font(.title2.weight(.semibold)); Spacer(); Button(L10n.text("Cancelar")) { dismiss() } }
             TextField(L10n.text("Título de la receta"), text: $title)
-            TextEditor(text: $notes).frame(minHeight: 100).overlay(RoundedRectangle(cornerRadius: 8).stroke(.quaternary))
+            TextEditor(text: $notes).frame(minHeight: 100).fieldTextEditorSurface()
             DetailSection(title: "Conjunto de prompts") { Text(stack).font(.caption).foregroundStyle(.secondary).lineLimit(3) }
             HStack { Spacer(); Button(L10n.text("Guardar receta")) {
                 _ = try? appModel.repository.createKnowledge(kind: .recipe, title: title, body: [stack, notes].filter { !$0.isEmpty }.joined(separator: "\n\n"), status: .works, tags: ["prompt-stack"])
@@ -1087,9 +1132,9 @@ struct FlowsBrowserView: View {
                 }
             }
         }
-        .sheet(isPresented: $isPresentingEditor) { FlowEditorView(appModel: appModel, flow: editingFlow).frame(width: 560, height: 360) }
+        .sheet(isPresented: $isPresentingEditor) { FlowEditorView(appModel: appModel, flow: editingFlow).frame(width: 560, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
         .sheet(isPresented: $isStartingFlow) {
-            if let selected { StartFlowView(flow: selected, appModel: appModel).frame(width: 620, height: 520) }
+            if let selected { StartFlowView(flow: selected, appModel: appModel).frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
         }
     }
 }
@@ -1153,7 +1198,7 @@ struct FlowDetailView: View {
         .sheet(isPresented: $isPresentingStepEditor) {
             if let editingStep {
                 FlowStepEditorView(appModel: appModel, step: editingStep)
-                    .frame(width: 620, height: 560)
+                    .frame(width: 620, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
             }
         }
     }
@@ -1352,7 +1397,7 @@ struct ProjectsBrowserView: View {
             }
         }
         .sheet(isPresented: $isPresentingEditor) {
-            ProjectEditorView(appModel: appModel, project: editingProject).frame(width: 560, height: 520)
+            ProjectEditorView(appModel: appModel, project: editingProject).frame(width: 560, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 }
@@ -1511,7 +1556,7 @@ struct ToolsBrowserView: View {
                 else { FieldContextHint(systemImage: "wrench.and.screwdriver", title: "Elige una herramienta", message: "La página de una herramienta reúne el conocimiento acumulado sobre cómo funciona para ti.") }
             }
         }
-        .sheet(isPresented: $isPresentingEditor) { ToolEditorView(appModel: appModel, tool: editingTool).frame(width: 520, height: 360) }
+        .sheet(isPresented: $isPresentingEditor) { ToolEditorView(appModel: appModel, tool: editingTool).frame(width: 520, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
     }
 }
 
@@ -1659,6 +1704,9 @@ struct ActivityView: View {
         VStack(alignment: .leading, spacing: 0) {
                 FieldSectionHeader(title: "Actividad", subtitle: "Acciones en FIELD LAB, nunca razonamiento privado.")
             Divider()
+            if appModel.repository.activities().isEmpty {
+                FieldContextHint(systemImage: "waveform.path.ecg", title: "Aún no hay actividad", message: "Aquí aparecerán las acciones de los agentes en FIELD LAB.")
+            } else {
             List {
                 ForEach(appModel.repository.activities()) { activity in
                     HStack(alignment: .top, spacing: 12) {
@@ -1666,6 +1714,7 @@ struct ActivityView: View {
                         VStack(alignment: .leading, spacing: 4) { Text(activity.agent).font(.headline); Text(L10n.activityAction(activity.action)).font(.caption).foregroundStyle(.secondary); if !activity.detail.isEmpty { Text(activity.detail).foregroundStyle(.secondary) }; Text(activity.timestamp.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.tertiary) }
                     }.padding(.vertical, 4)
                 }
+            }
             }
         }
     }
@@ -1682,6 +1731,10 @@ struct MCPSettingsView: View {
     }
 
     var body: some View {
+        content.onAppear { mcpServer.loadCredentialsIfNeeded() }
+    }
+
+    private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(alignment: .top, spacing: 16) {
@@ -1850,6 +1903,8 @@ enum FieldPalette {
     static let line = Color.white.opacity(0.12)
     static let selected = Color.white.opacity(0.12)
     static let muted = Color(red: 0.15, green: 0.13, blue: 0.18)
+    static let raised = Color(red: 0.094, green: 0.082, blue: 0.118)
+    static let hairline = Color.white.opacity(0.08)
     static let accent = Color(red: 0.753, green: 0.518, blue: 0.988)
     static let edgeGlow = Color(red: 0.96, green: 0.853, blue: 0.64)
 }
@@ -1879,14 +1934,16 @@ struct FieldPageHeader: View {
     let count: Int?
     let actionTitle: String
     let actionSystemImage: String
+    var compact = false
     let action: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 20) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(L10n.text(title))
-                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                    .font(.system(compact ? .title2 : .largeTitle, design: .rounded).weight(.semibold))
                     .lineLimit(1)
+                if !compact {
                 HStack(spacing: 8) {
                     Text(L10n.text(subtitle))
                         .foregroundStyle(.secondary)
@@ -1899,6 +1956,7 @@ struct FieldPageHeader: View {
                 }
                 .font(.subheadline)
                 .lineLimit(2)
+                }
             }
 
             Spacer(minLength: 16)
@@ -1911,7 +1969,7 @@ struct FieldPageHeader: View {
             }
         }
         .padding(.horizontal, 28)
-        .padding(.vertical, 24)
+        .padding(.vertical, compact ? 14 : 24)
     }
 }
 
@@ -1990,5 +2048,64 @@ struct FieldContextHint: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(40)
+    }
+}
+
+/// Lists and forms sit on the app canvas, not on AppKit's default gray.
+extension View {
+    func fieldListSurface() -> some View {
+        scrollContentBackground(.hidden)
+            .background(FieldPalette.canvas)
+    }
+}
+
+struct FieldFilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(L10n.text(title))
+                .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? FieldPalette.canvas : Color.primary.opacity(0.86))
+                .padding(.horizontal, 13)
+                .frame(minHeight: 30)
+                .background(isSelected ? FieldPalette.accent : FieldPalette.raised, in: Capsule())
+                .overlay(Capsule().strokeBorder(isSelected ? Color.clear : FieldPalette.line, lineWidth: 1))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+extension View {
+    /// Multi-line text fields sit on a palette surface so they stay visible
+    /// once the system background is hidden.
+    func fieldTextEditorSurface() -> some View {
+        scrollContentBackground(.hidden)
+            .padding(10)
+            .background(FieldPalette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(FieldPalette.hairline))
+    }
+}
+
+/// Browsers presented as sheets need their own way out.
+struct FieldSheet<Content: View>: View {
+    @Environment(\.dismiss) private var dismiss
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button(L10n.text("Hecho")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            content()
+        }
     }
 }
