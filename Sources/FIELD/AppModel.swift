@@ -14,6 +14,9 @@ final class AppModel: ObservableObject {
     @Published var isPresentingCapture = false
     @Published var isRequestingMCPSettings = false
     @Published var captureKind: KnowledgeKind = .learning
+    #if DEBUG
+    @Published var snapshotSheet: String?
+    #endif
     @Published var language: FieldLanguage {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: FieldLanguage.preferenceKey) }
     }

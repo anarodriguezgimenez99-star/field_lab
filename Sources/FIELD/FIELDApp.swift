@@ -30,6 +30,7 @@ struct FIELDApp: App {
                 .environment(\.locale, appModel.language.locale)
                 .tint(FieldPalette.accent)
                 .preferredColorScheme(.dark)
+                .scrollContentBackground(.hidden)
         }
         .commands {
             CommandGroup(replacing: .newItem) {

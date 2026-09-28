@@ -35,6 +35,14 @@ enum SnapshotMode {
             appModel.presentCapture()
             try? await Task.sleep(for: .seconds(1))
             capture(named: "capture", in: directory)
+            appModel.isPresentingCapture = false
+            for sheet in ["projects", "tools", "flows", "mcp", "activity", "experiment", "knowledge"] {
+                appModel.snapshotSheet = sheet
+                try? await Task.sleep(for: .seconds(1.5))
+                captureSheet(named: "sheet-\(sheet)", in: directory)
+                appModel.snapshotSheet = nil
+                try? await Task.sleep(for: .seconds(0.8))
+            }
             NSApp.terminate(nil)
         }
     }
@@ -71,6 +79,15 @@ enum SnapshotMode {
     }
 
     static var isActive: Bool { directory != nil }
+
+    private static func captureSheet(named name: String, in directory: URL) {
+        guard let window = NSApp.windows.first(where: { $0.isSheet && $0.isVisible }),
+              let view = window.contentView?.superview,
+              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        try? rep.representation(using: .png, properties: [:])?
+            .write(to: directory.appendingPathComponent("\(name).png"))
+    }
 
     private static func capture(named name: String, in directory: URL) {
         guard let view = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil })?.contentView?.superview,

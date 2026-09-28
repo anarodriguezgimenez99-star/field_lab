@@ -111,7 +111,7 @@ struct LabView: View {
         }
         .sheet(isPresented: $isPresentingNewExperiment) {
             ExperimentEditorView(appModel: appModel) { selectedID = $0.id }
-                .frame(width: 620, height: 520)
+                .frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         #endif
     }
@@ -399,7 +399,7 @@ struct ExperimentWorkspaceView: View {
         .onDisappear { persistSetup() }
         .sheet(isPresented: $isShowingReferencePicker) {
             ExperimentReferencePickerView(appModel: appModel, selectedIDs: $selectedReferenceIDs)
-                .frame(width: 580, height: 540)
+                .frame(width: 580, height: 540).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingBlockPicker) {
             PromptBlockPicker(appModel: appModel, selectedIDs: $selectedPromptBlockIDs) { block in
@@ -407,14 +407,14 @@ struct ExperimentWorkspaceView: View {
                 prompt += block.body
                 persistSetup()
             }
-                .frame(width: 500, height: 460)
+                .frame(width: 500, height: 460).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingToolCreator) {
             ToolCreatorView(appModel: appModel) { tool in
                 selectedToolID = tool.id
                 persistSetup()
             }
-            .frame(width: 480, height: 360)
+            .frame(width: 480, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingPresetPicker) {
             PresetPickerView(appModel: appModel, toolID: selectedToolID) { preset in
@@ -422,11 +422,11 @@ struct ExperimentWorkspaceView: View {
                 settings = preset.settings
                 persistSetup()
             }
-            .frame(width: 500, height: 420)
+            .frame(width: 500, height: 420).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingPresetCreator) {
             ToolPresetCreatorView(appModel: appModel, toolID: selectedToolID, model: model, settings: settings)
-                .frame(width: 500, height: 420)
+                .frame(width: 500, height: 420).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .fileImporter(isPresented: $isShowingFileImporter, allowedContentTypes: [.image], allowsMultipleSelection: false) { result in
             guard case .success(let urls) = result, let url = urls.first, let run = selectedRun else { return }
@@ -1147,7 +1147,7 @@ struct CompareRunColumn: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ReferenceImageView(data: run.outputData).frame(width: 250, height: 220).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            ReferenceImageView(data: run.outputData).frame(width: 250, height: 220).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             HStack {
                 Text(run.title).font(.headline)
                 if isBest { Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint) }
@@ -1366,9 +1366,9 @@ struct LearnView: View {
         .onAppear { if SnapshotMode.isActive, selectedID == nil { selectedID = items.first?.id } }
         #endif
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Search Learn"))
-        .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500) }
-        .sheet(isPresented: $isShowingPromptDeck) { PromptDeckView(appModel: appModel).frame(minWidth: 760, minHeight: 560) }
-        .sheet(isPresented: $isShowingSuggestions) { AIInboxView(appModel: appModel).frame(width: 720, height: 560) }
+        .sheet(isPresented: $isPresentingEditor) { KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: editorKind).frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingPromptDeck) { PromptDeckView(appModel: appModel).frame(minWidth: 760, minHeight: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingSuggestions) { AIInboxView(appModel: appModel).frame(width: 720, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
     }
 }
 
@@ -1449,11 +1449,11 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(FieldPalette.canvas)
-        .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620) }
-        .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560) }
-        .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
-        .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
-        .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
+        .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+        .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
         .onAppear(perform: presentRequestedMCPSettings)
         .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
             if requested { presentRequestedMCPSettings() }
@@ -1521,11 +1521,11 @@ struct SettingsView: View {
             #else
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Done")) { dismiss() } } }
             #endif
-            .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620) }
-            .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560) }
-            .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
-            .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
-            .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620) }
+            .sheet(isPresented: $isShowingMCP) { MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingActivity) { ActivityView(appModel: appModel).frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingProjects) { ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingTools) { ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
+            .sheet(isPresented: $isShowingFlows) { FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
             .onAppear(perform: presentRequestedMCPSettings)
             .onChange(of: appModel.isRequestingMCPSettings) { _, requested in
                 if requested { presentRequestedMCPSettings() }

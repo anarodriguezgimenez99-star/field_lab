@@ -166,7 +166,7 @@ struct ReferencesView: View {
         }
         .sheet(isPresented: $isPresentingEditor) {
             ReferenceEditorView(appModel: appModel, reference: editingReference)
-                .frame(width: 620, height: 720)
+                .frame(width: 620, height: 720).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
         .sheet(isPresented: $isShowingSettings) { SettingsView(appModel: appModel) }
         .fileImporter(isPresented: $isImportingFile, allowedContentTypes: [.image], allowsMultipleSelection: false) { result in
@@ -516,7 +516,7 @@ struct ReferenceDetailView: View {
         .background(FieldPalette.surface)
         .sheet(isPresented: $isShowingUseInExperiment) {
             ReferenceUseInExperimentSheet(appModel: appModel, reference: reference)
-                .frame(width: 520, height: 360)
+                .frame(width: 520, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 }

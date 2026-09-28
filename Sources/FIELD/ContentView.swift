@@ -83,7 +83,7 @@ struct ContentView: View {
                     .zIndex(10)
 
                 QuickCaptureView(appModel: appModel, initialKind: appModel.captureKind)
-                    .frame(width: 620, height: 360)
+                    .frame(width: 620, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
                     .background(FieldPalette.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
@@ -95,6 +95,18 @@ struct ContentView: View {
         .animation(.easeOut(duration: 0.22), value: appModel.isPresentingCapture)
         #if DEBUG
         .task { SnapshotMode.runIfRequested(appModel: appModel) }
+        .sheet(isPresented: Binding(get: { appModel.snapshotSheet != nil }, set: { if !$0 { appModel.snapshotSheet = nil } })) {
+            switch appModel.snapshotSheet {
+            case "projects": ProjectsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "tools": ToolsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "flows": FlowsBrowserView(appModel: appModel).frame(width: 900, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "mcp": MCPSettingsView(appModel: appModel).frame(width: 700, height: 620).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "activity": ActivityView(appModel: appModel).frame(width: 700, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "experiment": ExperimentEditorView(appModel: appModel) { _ in }.frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            case "knowledge": KnowledgeEditorView(appModel: appModel, item: nil, defaultKind: .learning).frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
+            default: EmptyView()
+            }
+        }
         #endif
         #endif
     }
@@ -529,7 +541,7 @@ struct KnowledgeBrowserView: View {
         .searchable(text: $appModel.searchText, placement: .toolbar, prompt: L10n.text("Buscar en FIELD LAB"))
         .sheet(isPresented: $isPresentingEditor) {
             KnowledgeEditorView(appModel: appModel, item: editingItem, defaultKind: kind ?? .note)
-                .frame(width: 560, height: 500)
+                .frame(width: 560, height: 500).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 }
@@ -1022,7 +1034,7 @@ struct PromptDeckView: View {
             }
         }
         .sheet(isPresented: $isSavingRecipe) {
-            SaveRecipeView(appModel: appModel, stack: stack).frame(width: 520, height: 320)
+            SaveRecipeView(appModel: appModel, stack: stack).frame(width: 520, height: 320).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 
@@ -1107,9 +1119,9 @@ struct FlowsBrowserView: View {
                 }
             }
         }
-        .sheet(isPresented: $isPresentingEditor) { FlowEditorView(appModel: appModel, flow: editingFlow).frame(width: 560, height: 360) }
+        .sheet(isPresented: $isPresentingEditor) { FlowEditorView(appModel: appModel, flow: editingFlow).frame(width: 560, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
         .sheet(isPresented: $isStartingFlow) {
-            if let selected { StartFlowView(flow: selected, appModel: appModel).frame(width: 620, height: 520) }
+            if let selected { StartFlowView(flow: selected, appModel: appModel).frame(width: 620, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
         }
     }
 }
@@ -1173,7 +1185,7 @@ struct FlowDetailView: View {
         .sheet(isPresented: $isPresentingStepEditor) {
             if let editingStep {
                 FlowStepEditorView(appModel: appModel, step: editingStep)
-                    .frame(width: 620, height: 560)
+                    .frame(width: 620, height: 560).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
             }
         }
     }
@@ -1372,7 +1384,7 @@ struct ProjectsBrowserView: View {
             }
         }
         .sheet(isPresented: $isPresentingEditor) {
-            ProjectEditorView(appModel: appModel, project: editingProject).frame(width: 560, height: 520)
+            ProjectEditorView(appModel: appModel, project: editingProject).frame(width: 560, height: 520).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden)
         }
     }
 }
@@ -1531,7 +1543,7 @@ struct ToolsBrowserView: View {
                 else { FieldContextHint(systemImage: "wrench.and.screwdriver", title: "Elige una herramienta", message: "La página de una herramienta reúne el conocimiento acumulado sobre cómo funciona para ti.") }
             }
         }
-        .sheet(isPresented: $isPresentingEditor) { ToolEditorView(appModel: appModel, tool: editingTool).frame(width: 520, height: 360) }
+        .sheet(isPresented: $isPresentingEditor) { ToolEditorView(appModel: appModel, tool: editingTool).frame(width: 520, height: 360).presentationBackground(FieldPalette.canvas).scrollContentBackground(.hidden) }
     }
 }
 
